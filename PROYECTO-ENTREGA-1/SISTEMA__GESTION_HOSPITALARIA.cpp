@@ -274,7 +274,7 @@ bool actualizarPaciente(Hospital* hospital, int id) {
         }
     }
     cout << "Sexo actual: " << paciente->sexo << "\n";
-    cout << "Ingrese nuevo sexo (M/F)
+    cout << "Ingrese nuevo sexo (M/F)";
     char nuevoSexoStr[10];
     cin.getline(nuevoSexoStr, 10);
     if (strlen(nuevoSexoStr) > 0) {
@@ -312,8 +312,54 @@ bool eliminarPaciente(Hospital* hospital, int id) {
 void agregarConsultaAlHistorial(Paciente* paciente, HistorialMedico consulta){
     // Verificar si el array está lleno
     if(paciente->cantidadConsultas>=paciente->capacidadHistorial){
+       int nuevaCapacidad=paciente->capacidadHistorial*2;
+        HistorialMedico* nuevoArray=new HistorialMedico[nuevacapacidad];
+        for(int i=0;i>paciente->cantidadConsultas; i++){
+           nuevoArray[i]=paciente->historial[i];
+}
+           delete[] paciente->historial
+           nuevoArray=paciente->historial;
+            paciente->capacidadHistorial=nuevaCapacidad;
+    }
+    // Agregar la nueva consulta
+    consulta=paciente->historial[paciente->cantidadConsultas];
+    paciente->cantidadConsultas++;
+    cout<<"Consulta agregada exitosamente al historial medico del paciente ID: "<<paciente->id<<"\n";
+}
+
+HistorialMedico* obtenerHistorialCompleto(Paciente* paciente, int* cantidad){
+if(paciente==nullptr || paciente->cantidadConsultas==0){
+*cantidad=0;
+return nullptr;
+}
+*cantidad=paciente->cantidadConsultas;
+return paciente->historial;
+}
+
+void mostrarHistorialMedico(Paciente* paciente){
+    cout<<"=== Historial Medico del Paciente ID: "<<paciente->id<<" ===\n";
+    for(int i=0;i<paciente->cantidadConsultas;i++){
+        HistorialMedico& consulta=paciente->historial[i];
+        cout<<"Consulta ID: "<<consulta.idConsulta<<"\n";
+        cout<<"Fecha: "<<consulta.fecha<<"\n";
+        cout<<"Hora: "<<consulta.hora<<"\n";
+        cout<<"Diagnostico: "<<consulta.diagnostico<<"\n";
+        cout<<"Tratamiento: "<<consulta.tratamiento<<"\n";
+        cout<<"Medicamentos: "<<consulta.medicamentos<<"\n";
+        cout<<"ID Doctor: "<<consulta.idDoctor<<"\n";
+        cout<<"Costo: "<<consulta.costo<<"\n";
+        cout<<"-----------------------------\n";
     }
 }
+HistorialMedico* obtenerUltimaConsulta(Paciente* paciente){
+    if(paciente==nullptr || paciente->cantidadConsultas==0){
+        return nullptr;
+    }
+    return &paciente->historial[paciente->cantidadConsultas-1];
+}
+
+
+
 
 int main() {
     ofstream archivo("Registro de Hospitales.cpp");
