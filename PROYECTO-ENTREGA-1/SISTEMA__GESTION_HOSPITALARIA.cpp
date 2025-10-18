@@ -101,8 +101,6 @@ struct Hospital {
     int siguienteIdConsulta;
 }; 
 
-
-
 void RegistrarHospital(Hospital* hospital) {
     cout << "=== Registro del Hospital ===\n";
     cout << "Ingrese el nombre del hospital: ";
@@ -132,10 +130,9 @@ void RegistrarHospital(Hospital* hospital) {
     cout << "\n Hospital registrado exitosamente.\n\n";
 }
 
-
 Paciente* crearPaciente(Hospital* hospital, const char* nombre, 
- const char* apellido, const char* cedula, int edad, char sexo){
- //Verificar que la cedula no exista previamente en el sistema
+                                     const char* apellido, const char* cedula, int edad, char sexo) {
+    //Verificar que la cedula no exista previamente en el sistema
     for (int i = 0; i < hospital->cantidadPacientes; i++) {
         if (strcmp(hospital->pacientes[i].cedula, cedula) == 0) {
             cout << "Error: La cédula ya existe en el sistema.\n";
@@ -187,34 +184,144 @@ Paciente* crearPaciente(Hospital* hospital, const char* nombre,
     return nuevoPaciente;
 }
 
- 
+#include <cctype> // para tolower
+
+bool compararCaseInsensitive(const char* a, const char* b) {
+    while (*a && *b) {
+        if (tolower((unsigned char)*a) != tolower((unsigned char)*b))
+            return false;
+        ++a;
+        ++b;
+    }
+    return *a == *b;
+}
+
+Paciente* buscarPacientePorCedula(Hospital* hospital, const char* cedula) {
+    for (int i = 0; i < hospital->cantidadPacientes; i++) {
+        if (compararCaseInsensitive(hospital->pacientes[i].cedula, cedula)) {
+            return &hospital->pacientes[i]; //
+        }
+    }
+
+    cout << "Paciente no encontrado.\n";
+    return nullptr;
+}
+
+Paciente* buscarPacientePorId(Hospital* hospital, int id) {
+    for (int i = 0; i < hospital->cantidadPacientes; i++) {
+        if (hospital->pacientes[i].id == id) {
+            return &hospital->pacientes[i];
+        }
+    }
+
+    cout << "Paciente no encontrado.\n";
+    return nullptr;
+}
+
+Paciente** buscarPacientesPorNombre(Hospital* hospital, 
+ const char* nombre, int* cantidad) {
+    Paciente** resultados = new Paciente*[hospital->cantidadPacientes];
+    *cantidad = 0;
+
+    for (int i = 0; i < hospital->cantidadPacientes; i++) {
+        if (compararCaseInsensitive(hospital->pacientes[i].nombre, nombre)) {
+            resultados[*cantidad] = &hospital->pacientes[i];
+            (*cantidad)++;
+        }
+    }
+
+    if (*cantidad == 0) {
+        delete[] resultados;
+        return nullptr;
+    }
+
+    return resultados;
+}
+
+bool actualizarPaciente(Hospital* hospital, int id) {
+    Paciente* paciente = buscarPacientePorId(hospital, id);
+    if (paciente == nullptr) {
+        cout << "Paciente no encontrado.\n";
+        return false;
+    }
+    cout << "Actualizando datos del paciente ID: " << id << "\n";
+    cout << "Nombre actual: " << paciente->nombre << "\n";
+    cout << "Ingrese nuevo nombre (o presione Enter para mantener): ";
+    char nuevoNombre[50];
+    cin.ignore();
+    cin.getline(nuevoNombre, 50);
+    if (strlen(nuevoNombre) > 0) {
+        strcpy(paciente->nombre, nuevoNombre);
+    }
+    cout << "Apellido actual: " << paciente->apellido << "\n";
+    cout << "Ingrese nuevo apellido (o presione Enter para mantener): ";
+    char nuevoApellido[50];
+
+    cin.getline(nuevoApellido, 50);
+    if (strlen(nuevoApellido) > 0) {
+        strcpy(paciente->apellido, nuevoApellido);
+    }
+    cout << "Edad actual: " << paciente->edad << "\n";
+    cout << "Ingrese nueva edad (o presione Enter para mantener): ";
+    char nuevaEdadStr[10];
+    cin.getline(nuevaEdadStr, 10);
+    if (strlen(nuevaEdadStr) > 0) {
+        int nuevaEdad = atoi(nuevaEdadStr);
+        if (nuevaEdad > 0) {
+            paciente->edad = nuevaEdad;
+        } else {
+            cout << "Edad invalida. Manteniendo valor actual.\n";
+        }
+    }
+    cout << "Sexo actual: " << paciente->sexo << "\n";
+    cout << "Ingrese nuevo sexo (M/F)
+    char nuevoSexoStr[10];
+    cin.getline(nuevoSexoStr, 10);
+    if (strlen(nuevoSexoStr) > 0) {
+        char nuevoSexo = toupper(nuevoSexoStr[0]);
+        if (nuevoSexo == 'M' || nuevoSexo == 'F') {
+            paciente->sexo = nuevoSexo;
+        } else {
+            cout << "Sexo invalido. Manteniendo valor actual.\n";
+        }
+    }
+    cout << "Datos actualizados exitosamente.\n";
+    return true;
+}
+
+bool eliminarPaciente(Hospital* hospital, int id) {
+    for (int i = 0; i < hospital->cantidadPacientes; i++) {
+        if (hospital->pacientes[i].id == id) {
+            hospital->pacientes[i].activo = false;
+            hospital->pacientes[i] = hospital->pacientes[hospital->cantidadPacientes - 1];
+            hospital->cantidadPacientes--;
+            cout << "Paciente eliminado exitosamente.\n";
+            return true;
+        }
+    }
+    cout << "Paciente no encontrado.\n";
+    return false;
+}
+ void listarPacientes(Hospital* hospital){
+ cout<<"=== Lista de Pacientes ===\n";
+ for(int i=0;i<hospital->cantidadPacientes;i++){
+ Paciente& p=hospital->pacientes[i];
+ cout<<"ID:"<<p.id<<", Nombre:"<<p.nombre<<", Apellido:"<<p.apellido<<", Cedula:"<<p.cedula<<", Edad:"<<p.edad<<", Sexo:"<<p.sexo<<"\n";
+
+ }
+void agregarConsultaAlHistorial(Paciente* paciente, HistorialMedico consulta){
+    // Verificar si el array está lleno
+    if(paciente->cantidadConsultas>=paciente->capacidadHistorial){
+    }
+}
+
 int main() {
     ofstream archivo("Registro de Hospitales.cpp");
 
-    Hospital *ptr=new Hospital;
+    Hospital* ptr = new Hospital;
     RegistrarHospital(ptr);
-    cout<<ptr->nombre;
- //Prueba fichero (TEMPORAL)
-    if (archivo.is_open()) {
-        archivo << "#include <iostream>\n";
-        archivo << "#include <cstring>\n";
-        archivo << "#include <ctime>\n";
-        archivo << "#include <iomanip>\n";
-        archivo << "using namespace std;\n\n";
-        archivo << "int main() {\n\n";
-        archivo << "    cout << \"Nombre del hospital registrado: \";\n";
-        archivo << ptr->nombre;
-        archivo << "\n\n";
-        archivo << "    return 0;\n";
-        archivo << "}\n";
-        archivo.close();
-        cout << "Archivo creado exitosamente.\n";   
-    } else {
+    cout << ptr->nombre;
 
-        cout << "No se pudo abrir el archivo para escritura." << endl;
-    }
-   
-
-   
     return 0;
 }
+
