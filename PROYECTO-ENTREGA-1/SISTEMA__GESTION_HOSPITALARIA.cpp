@@ -646,3 +646,316 @@ bool eliminarDoctor(Hospital* hospital, int id) {
     cout << "Doctor no encontrado.\n";
     return false;
 }
+//PARTE 4 GESTION DE CITAS
+Cita* buscarCitaPorId(Hospital* hospital, int id) {
+    for (int i = 0; i < hospital->cantidadCitas; i++) {
+        if (hospital->citas[i].id == id){
+
+         return &hospital->citas[i];
+        }
+    }
+    cout << "Cita no encontrada.\n";
+    return nullptr;
+}
+//validar fecha
+bool validarFormatoFecha(const char* fecha) {
+    int anio, mes, dia;
+    return (sscanf(fecha, "%4d-%2d-%2d", &anio, &mes, &dia) == 3 &&
+            anio > 1900 && mes >= 1 && mes <= 12 && dia >= 1 && dia <= 31);
+}
+ 
+// Validar formato de hora (HH:MM)
+bool validarFormatoHora(const char* hora) {
+    int hh, mm;
+    return (sscanf(hora, "%2d:%2d", &hh, &mm) == 2 && hh >= 0 && hh < 24 && mm >= 0 && mm < 60);
+}
+//Redimensionar con tipo de dato citas
+Cita* redimensionarArrayCita(Cita* array, int& capacidadActual) {
+    int nuevaCapacidad = capacidadActual * 2;
+    Cita* nuevoArray = new Cita[nuevaCapacidad];
+    for (int i = 0; i < capacidadActual; i++) {
+        nuevoArray[i] = array[i];
+    }
+    delete[] array;
+    capacidadActual = nuevaCapacidad;
+    return nuevoArray;
+}
+
+Cita* agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
+const char* fecha, const char* hora, const char* motivo){
+
+    Paciente*paciente= buscarPacientePorId(hospital,idPaciente);
+    Doctor*doctor=buscarDoctorPorId(hospital,idDoctor);
+   
+    if (!validarFormatoFecha(fecha)) {
+        cout << "Error: formato de fecha inválido. Use YYYY-MM-DD.\n";
+        return nullptr;
+    }
+    if (!validarFormatoHora(hora)) {
+        cout << "Error: formato de hora inválido. Use HH:MM.\n";
+        return nullptr;
+    }
+
+     if (hospital->cantidadCitas >= hospital->capacidadCitas) {
+        hospital->citas = redimensionarArrayCita(hospital->citas, hospital->capacidadCitas);
+     }
+
+ Cita* nuevaCita = &hospital->citas[hospital->cantidadCitas];
+    nuevaCita->id = hospital->siguienteIdCita++;
+    nuevaCita->idPaciente = idPaciente;
+    nuevaCita->idDoctor = idDoctor;
+    strcpy(nuevaCita->fecha, fecha);
+    strcpy(nuevaCita->hora, hora);
+    strcpy(nuevaCita->motivo, motivo);
+    strcpy(nuevaCita->estado, "Agendada");
+    strcpy(nuevaCita->observaciones, "");
+    nuevaCita->atendida = false;
+      if (paciente->cantidadCitas >= paciente->capacidadCitas) {
+        paciente->citasAgendadas = redimensionarArrayInt(paciente->citasAgendadas, paciente->capacidadCitas);
+      }
+
+      if (doctor->cantidadCitas>=doctor->capacidadCitas){
+        doctor->citasAgendadas=redimensionarArrayInt(doctor->citasAgendadas,doctor->capacidadCitas);
+      }
+      hospital->cantidadCitas++;
+
+    cout << "Cita agendada exitosamente con ID: " << nuevaCita->id
+         << " entre el Dr. " << doctor->nombre << " y el paciente " << paciente->nombre << ".\n";
+
+    return nuevaCita;
+}
+bool cancelarCita(Hospital* hospital, int idCita){
+
+    for (int i = 0; i < hospital->cantidadCitas; i++) {
+        if (hospital->citas[i].id == idCita) {
+            // Marcar la cita como cancelada
+            strcpy(hospital->citas[i].estado, "Cancelada");
+            hospital->citas[i].atendida = false;
+
+            // Remover referencia de la cita en el paciente (si existe)
+            int idPaciente = hospital->citas[i].idPaciente;
+            Paciente* paciente = buscarPacientePorId(hospital, idPaciente);
+            if (paciente != nullptr) {
+                for (int j = 0; j < paciente->cantidadCitas; j++) {
+                    if (paciente->citasAgendadas[j] == idCita) {
+                        for (int k = j; k < paciente->cantidadCitas - 1; k++) {
+                            paciente->citasAgendadas[k] = paciente->citasAgendadas[k + 1];
+                        }
+                        paciente->cantidadCitas--;
+                        break;
+                    }
+                }
+            }
+
+            // Remover referencia de la cita en el doctor (si existe)
+            int idDoctor = hospital->citas[i].idDoctor;
+            Doctor* doctor = buscarDoctorPorId(hospital, idDoctor);
+            if (doctor != nullptr) {
+                for (int j = 0; j < doctor->cantidadCitas; j++) {
+                    if (doctor->citasAgendadas[j] == idCita) {
+                        for (int k = j; k < doctor->cantidadCitas - 1; k++) {
+                            doctor->citasAgendadas[k] = doctor->citasAgendadas[k + 1];
+                        }
+                        doctor->cantidadCitas--;
+                        break;
+                    }
+                }
+            }
+
+            cout << "Cita con ID " << idCita << " cancelada.\n";
+            return true;
+        }
+    }
+
+    cout << "Cita no encontrada.\n";
+    return false;
+}
+
+bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,
+const char* tratamiento, const char* medicamentos){
+ Cita*cita= buscarCitaPorId(hospital,idCita);
+ if (cita==nullptr){
+    return false;
+ }
+ if(cita->estado!="Agendada"){
+    cout<< "Error la cita no esta agendada.\n";
+    return false;
+ }
+ strcpy(cita->estado,"Atendida");
+ bool citaAtendida=true;
+
+ Paciente* paciente= buscarPacientePorId(hospital,cita->idPaciente);
+ Doctor*doctor=buscarDoctorPorId(hospital,cita->idDoctor);
+ 
+ if(paciente==nullptr||doctor==nullptr){
+    cout<<"Error. Paciente o doctor no encontrados.\n";
+    return false;
+ }
+ HistorialMedico nuevaConsulta;
+
+    nuevaConsulta.idConsulta = hospital->siguienteIdConsulta;
+    strcpy(nuevaConsulta.fecha, cita->fecha);
+    strcpy(nuevaConsulta.hora, cita->hora);
+    strcpy(nuevaConsulta.diagnostico, diagnostico);
+    strcpy(nuevaConsulta.tratamiento, tratamiento);
+    strcpy(nuevaConsulta.medicamentos, medicamentos);
+    nuevaConsulta.idDoctor = cita->idDoctor;
+
+    // Obtener el costo de la consulta desde el doctor correspondiente
+    Doctor* doctor = buscarDoctorPorId(hospital, cita->idDoctor);
+    if (doctor == nullptr) {
+        cout << "Error: Doctor asociado a la cita no encontrado.\n";
+        return false;
+    }
+    nuevaConsulta.costo = doctor->costoConsulta;
+
+    //  Agregar la nueva consulta al historial del paciente
+    Paciente* paciente = buscarPacientePorId(hospital, cita->idPaciente);
+    if (paciente == nullptr) {
+        cout << "Error: Paciente asociado a la cita no encontrado.\n";
+        return false;
+    }
+
+    agregarConsultaAlHistorial(paciente, nuevaConsulta);
+
+    // Incrementar el contador global de consultas
+    hospital->siguienteIdConsulta++;
+
+    cout << " Cita atendida correctamente y registrada en el historial médico.\n";
+    return true;
+}
+Cita** obtenerCitasDePaciente(Hospital* hospital, int idPaciente, int* cantidad) {
+    //  Inicializar cantidad
+    *cantidad = 0;
+
+    //  Buscar al paciente por ID
+    Paciente* paciente = buscarPacientePorId(hospital, idPaciente);
+    if (paciente == nullptr) {
+        cout << "Error: Paciente no encontrado.\n";
+        return nullptr;
+    }
+
+    //  Verificar si el paciente tiene citas registradas
+    if (paciente->cantidadCitas == 0) {
+        cout << "El paciente no tiene citas registradas.\n";
+        return nullptr;
+    }
+
+    //  Crear un arreglo dinámico de punteros a Cita
+    Cita** resultados = new Cita*[paciente->cantidadCitas];
+
+    //  Recorrer todas las citas del paciente
+    for (int i = 0; i < paciente->cantidadCitas; i++) {
+        int idCita = paciente->citasAgendadas[i];
+
+        // Buscar la cita dentro del hospital
+        Cita* cita = buscarCitaPorId(hospital, idCita);
+
+        // Si existe, agregarla al arreglo de resultados
+        if (cita != nullptr) {
+            resultados[*cantidad] = cita;
+            (*cantidad)++;
+        }
+    }
+
+    //  Si no se encontró ninguna cita válida
+    if (*cantidad == 0) {
+        delete[] resultados;
+        cout << "No se encontraron citas válidas para este paciente.\n";
+        return nullptr;
+    }
+
+    // Retornar el arreglo dinámico con punteros a las citas válidas
+    return resultados;
+}
+Cita** obtenerCitasDeDoctor(Hospital* hospital, int idDoctor, int* cantidad) {
+    *cantidad = 0;
+    Doctor* doctor = buscarDoctorPorId(hospital, idDoctor);
+    if (doctor == nullptr) {
+        cout << "Error: Doctor no encontrado.\n";
+        return nullptr;
+    }
+
+    if (doctor->cantidadCitas == 0) {
+        cout << "El doctor no tiene citas registradas.\n";
+        return nullptr;
+    }
+
+    Cita** resultados = new Cita*[doctor->cantidadCitas];
+
+    for (int i = 0; i < doctor->cantidadCitas; i++) {
+        int idCita = doctor->citasAgendadas[i];
+        Cita* cita = buscarCitaPorId(hospital, idCita);
+        if (cita != nullptr) {
+            resultados[*cantidad] = cita;
+            (*cantidad)++;
+        }
+    }
+
+    if (*cantidad == 0) {
+        delete[] resultados;
+        return nullptr;
+    }
+
+    return resultados;
+}
+Cita** obtenerCitasPorFecha(Hospital* hospital, const char* fecha, int* cantidad) {
+    *cantidad = 0;
+    Cita** resultados = new Cita*[hospital->cantidadCitas];
+
+    for (int i = 0; i < hospital->cantidadCitas; i++) {
+        if (strcmp(hospital->citas[i].fecha, fecha) == 0) {
+            resultados[*cantidad] = &hospital->citas[i];
+            (*cantidad)++;
+        }
+    }
+
+    if (*cantidad == 0) {
+        delete[] resultados;
+        return nullptr;
+    }
+
+    return resultados;
+}
+void listarCitasPendientes(Hospital* hospital) {
+    cout << "\n=== Citas Pendientes ===\n";
+    cout << left << setw(6) << "ID"
+         << setw(12) << "Fecha"
+         << setw(8) << "Hora"
+         << setw(10) << "ID_Doc"
+         << setw(12) << "ID_Pac"
+         << setw(25) << "Motivo" << "\n";
+    cout << string(75, '-') << "\n";
+
+    int contador = 0;
+
+    for (int i = 0; i < hospital->cantidadCitas; i++) {
+        Cita& c = hospital->citas[i];
+        if (strcmp(c.estado, "Agendada") == 0) {
+            cout << left << setw(6) << c.id
+                 << setw(12) << c.fecha
+                 << setw(8) << c.hora
+                 << setw(10) << c.idDoctor
+                 << setw(12) << c.idPaciente
+                 << setw(25) << c.motivo << "\n";
+            contador++;
+        }
+    }
+
+    if (contador == 0)
+        cout << "No hay citas pendientes.\n";
+    else
+        cout << string(75, '-') << "\nTotal de citas pendientes: " << contador << "\n";
+}
+bool verificarDisponibilidad(Hospital* hospital, int idDoctor, const char* fecha, const char* hora) {
+    for (int i = 0; i < hospital->cantidadCitas; i++) {
+        Cita& cita = hospital->citas[i];
+        if (cita.idDoctor == idDoctor && strcmp(cita.estado, "Agendada") == 0) {
+            if (strcmp(cita.fecha, fecha) == 0 && strcmp(cita.hora, hora) == 0) {
+                return false;  // El doctor ya tiene cita en esa fecha/hora
+            }
+        }
+    }
+    return true;  // Disponible
+}
+
