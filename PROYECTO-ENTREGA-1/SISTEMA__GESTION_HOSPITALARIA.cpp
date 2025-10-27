@@ -1025,6 +1025,28 @@ Cita** obtenerCitasPorFecha(Hospital* hospital, const char* fecha, int* cantidad
 
     return resultados;
 }
+void mostrarCitas(Cita** citas, int cantidad) {
+    if (citas == nullptr || cantidad == 0) {
+        cout << "No hay citas para mostrar.\n";
+        return;
+    }
+
+    for (int i = 0; i < cantidad; i++) {
+        Cita* c = citas[i];
+        if (c == nullptr) continue;
+        cout << "Cita #" << i + 1 << ":\n";
+        cout << "ID: " << c->id << "\n";
+        cout << "Paciente ID: " << c->idPaciente << "\n";
+        cout << "Doctor ID: " << c->idDoctor << "\n";
+        cout << "Fecha: " << c->fecha << "\n";
+        cout << "Hora: " << c->hora << "\n";
+        cout << "Motivo: " << c->motivo << "\n";
+        cout << "Estado: " << c->estado << "\n";
+        cout << "----------------------------------------\n";
+    }
+}
+
+
 void listarCitasPendientes(Hospital* hospital) {
     cout << "\n=== Citas Pendientes ===\n";
     cout << left << setw(6) << "ID"
@@ -1070,14 +1092,8 @@ bool verificarDisponibilidad(Hospital* hospital, int idDoctor, const char* fecha
 
 
 int main() {
-    Hospital hospitalObj;
-    Hospital* hospital = &hospitalObj;
-
+    Hospital* hospital = new Hospital;
     RegistrarHospital(hospital);
-
-    char nombre[50], apellido[50], cedula[20];
-    int edad;
-    char sexo;
 
     int opMenu;
     do {
@@ -1093,7 +1109,7 @@ int main() {
         cin >> opMenu;
 
         switch (opMenu) {
-            case 1: {
+            case 1: { // Gestion de Pacientes
                 int opPaciente;
                 do {
                     system("cls");
@@ -1106,248 +1122,368 @@ int main() {
                     cout << "4. Ver historial medico completo\n";
                     cout << "5. Actualizar datos del paciente\n";
                     cout << "6. Listar todos los pacientes\n";
-                    cout << "7. Eliminar paciente\n";
+                    cout << "7. Eliminar paciente.\n";
                     cout << "0. Volver al menu principal\n";
                     cout << "Seleccione una opcion: ";
                     cin >> opPaciente;
 
                     switch (opPaciente) {
-                        case 1: {
+                        case 1: { // Registrar nuevo paciente
                             system("cls");
-                            cout << "========================================\n";
-                            cout << "||     REGISTRAR NUEVO PACIENTE        ||\n";
-                            cout << "========================================\n";
+                            char nombre[50], apellido[50], cedula[20];
+                            int edad;
+                            char sexo;
 
-                            cin.ignore(); // Limpia el buffer antes de getline
-
-                            cout << "Ingrese nombre: ";
-                            cin.getline(nombre, 50);
-
-                            cout << "Ingrese apellido: ";
-                            cin.getline(apellido, 50);
-
-                            cout << "Ingrese cedula: ";
-                            cin.getline(cedula, 20);
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cout << "Ingrese nombre: "; cin.getline(nombre, 50);
+                            cout << "Ingrese apellido: "; cin.getline(apellido, 50);
+                            cout << "Ingrese cedula: "; cin.getline(cedula, 20);
 
                             if (!validarCedula(cedula)) {
-                                cout << "Cedula invalida. Intente nuevamente.\n";
-                                cin.get();
-                                break;
+                                cout << "Cedula invalida.\n"; cin.get(); break;
                             }
 
-                            cout << "Ingrese edad: ";
-                            cin >> edad;
+                            cout << "Ingrese edad: "; cin >> edad;
+                            cout << "Ingrese sexo (M/F): "; cin >> sexo;
 
-                            cout << "Ingrese sexo (M/F): ";
-                            cin >> sexo;
-
-                            Paciente* nuevo = crearPaciente(hospital, nombre, apellido, cedula, edad, sexo);
-                            if (nuevo != nullptr) {
-                                cout << "Paciente registrado correctamente.\n";
-                            } else {
-                                cout << "Error al registrar paciente.\n";
-                            }
-
-                            cin.ignore();
-                            cin.get();
-                            break;
-                        }
-
-                        case 2: {
-                            system("cls");
-                            cout << "========================================\n";
-                            cout << "||     BUSCAR PACIENTE POR CEDULA      ||\n";
-                            cout << "========================================\n";
-
-                            cout << "Ingrese cedula para buscar: ";
-                            cin.ignore();
-                            cin.getline(cedula, 20);
-
-                            buscarPacientePorCedula(hospital, cedula);
-                            cin.get();
-                            break;
-                        }
-
-                        case 3: {
-                            system("cls");
-                            cout << "========================================\n";
-                            cout << "||     BUSCAR PACIENTE POR NOMBRE      ||\n";
-                            cout << "========================================\n";
-
-                            cin.ignore();
-                            cout << "Ingrese nombre para buscar: ";
-                            cin.getline(nombre, 50);
-
-                            int cantidad = 0;
-                            Paciente** encontrados = buscarPacientesPorNombre(hospital, nombre, &cantidad);
-
-                            cout << "Coincidencias encontradas: " << cantidad << endl;
-                            if (encontrados) delete[] encontrados;
-                            cin.get();
-                            break;
-                        }
-
-                        case 4: {
-                            system("cls");
-                            cout << "========================================\n";
-                            cout << "||  VER HISTORIAL MEDICO COMPLETO     ||\n";
-                            cout << "========================================\n";
-
-                            cout << "Ingrese la cedula del paciente: ";
-                            cin.ignore();
-                            cin.getline(cedula, 20);
-
-                            Paciente* pac = buscarPacientePorCedula(hospital, cedula);
-                            if (pac == nullptr) {
-                                cout << "Paciente no encontrado.\n";
-                                cin.get();
-                                break;
-                            }
-
-                            int cantidad = 0;
-                            HistorialMedico* historial = obtenerHistorialCompleto(pac, &cantidad);
-
-                            if (historial == nullptr || cantidad == 0) {
-                                cout << "No hay historial médico disponible para este paciente.\n";
-                            } else {
-                                cout << "\nHistorial médico de " << pac->nombre << ":\n";
-                                for (int i = 0; i < cantidad; i++) {
-                                    cout << "Consulta #" << i + 1 << ":\n";
-                                    cout << "  Fecha: " << historial[i].fecha << endl;
-                                    cout << "  Diagnóstico: " << historial[i].diagnostico << endl;
-                                    cout << "  Tratamiento: " << historial[i].tratamiento << endl;
-                                    cout << "-------------------------------------\n";
-                                }
-                            }
-
-                            cin.get();
-                            break;
-                        }
-
-                        case 5: {
-                            system("cls");
-                            cout << "========================================\n";
-                            cout << "||   ACTUALIZAR DATOS DEL PACIENTE     ||\n";
-                            cout << "========================================\n";
-
-                            cout << "Ingrese la cédula del paciente a actualizar: ";
-                            cin.ignore();
-                            cin.getline(cedula, 20);
-
-                            Paciente* pac = buscarPacientePorCedula(hospital, cedula);
-                            if (!pac) {
-                                cout << "Paciente no encontrado.\n";
-                                cin.get();
-                                break;
-                            }
-
-                            cout << "\nDatos actuales del paciente:\n";
-                            cout << "Nombre: " << pac->nombre << endl;
-                            cout << "Apellido: " << pac->apellido << endl;
-                            cout << "Edad: " << pac->edad << endl;
-                            cout << "Sexo: " << pac->sexo << endl;
-
-                            cout << "\nIngrese nuevos datos (deje vacío para mantener el actual):\n";
-
-                            char nuevoNombre[50] = "";
-                            char nuevoApellido[50] = "";
-                            int nuevaEdad = 0;
-                            char nuevoSexo = 'X';
-
-                            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                            cout << "Nuevo nombre: ";
-                            cin.getline(nuevoNombre, 50);
-
-                            cout << "Nuevo apellido: ";
-                            cin.getline(nuevoApellido, 50);
-
-                            cout << "Nueva edad (0 para no cambiar): ";
-                            cin >> nuevaEdad;
-
-                            cout << "Nuevo sexo (M/F, o X para no cambiar): ";
-                            cin >> nuevoSexo;
-
-                            // Aplicar cambios validados
-                            if (strlen(nuevoNombre) > 0)
-                                strcpy(pac->nombre, nuevoNombre);
-                            if (strlen(nuevoApellido) > 0)
-                                strcpy(pac->apellido, nuevoApellido);
-                            if (nuevaEdad > 0)
-                                pac->edad = nuevaEdad;
-                            char sexoMay = toupper((unsigned char)nuevoSexo);
-                            if (sexoMay == 'M' || sexoMay == 'F')
-                                pac->sexo = sexoMay;
-
-                            cout << "Datos actualizados correctamente.\n";
-                            cin.ignore();
-                            cin.get();
-                            break;
-                        }
-
-                        case 6: {
-                            system("cls");
-                            cout << "========================================\n";
-                            cout << "||           LISTAR PACIENTES          ||\n";
-                            cout << "========================================\n";
-
-                            listarPacientes(hospital);
-                            cout << "\nPresione Enter para volver al menú...";
+                            Paciente* paciente = crearPaciente(hospital, nombre, apellido, cedula, edad, sexo);
+                            if (paciente) cout << "Paciente registrado correctamente.\n";
                             cin.ignore(numeric_limits<streamsize>::max(), '\n');
                             cin.get();
-
                             break;
                         }
 
-                        case 7: {
+                        case 2: { // Buscar por cedula
                             system("cls");
-                            cout << "========================================\n";
-                            cout << "||           ELIMINAR PACIENTE         ||\n";
-                            cout << "========================================\n";
-
-                            cout << "FUNCION EN ESPERA...\n";
+                            char cedula[20];
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cout << "Ingrese cedula: "; cin.getline(cedula, 20);
+                            Paciente* p = buscarPacientePorCedula(hospital, cedula);
+                            if (!p) cout << "Paciente no encontrado.\n";
                             cin.get();
                             break;
                         }
 
-                        case 0:
-                            cout << "Volviendo al menu principal...\n";
-                            break;
+                        case 3: { // Buscar por nombre
+                            system("cls");
+                            char nombre[50];
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cout << "Ingrese nombre: "; cin.getline(nombre, 50);
 
-                        default:
-                            cout << "Opcion no valida.\n";
+                            int cantidad = 0;
+                            Paciente** lista = buscarPacientesPorNombre(hospital, nombre, &cantidad);
+                            cout << "Coincidencias: " << cantidad << endl;
+                            if (lista) delete[] lista;
                             cin.get();
                             break;
-                    } // switch opPaciente
+                        }
 
+                        case 4: { // Historial medico
+                            system("cls");
+                            char cedula[20];
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cout << "Ingrese cedula del paciente: "; cin.getline(cedula, 20);
+                            Paciente* p = buscarPacientePorCedula(hospital, cedula);
+                            if (!p) { cout << "Paciente no encontrado.\n"; cin.get(); break; }
+
+                            int cant = 0;
+                            HistorialMedico* hist = obtenerHistorialCompleto(p, &cant);
+                            if (cant == 0) cout << "No hay historial.\n";
+                            else {
+                                for (int i = 0; i < cant; i++)
+                                    cout << hist[i].fecha << " - " << hist[i].diagnostico << endl;
+                            }
+                            cin.get();
+                            break;
+                        }
+
+                        case 5: { // Actualizar paciente
+                            system("cls");
+                            char cedula[20];
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cout << "Ingrese cedula del paciente a actualizar: "; cin.getline(cedula, 20);
+                            Paciente* pac = buscarPacientePorCedula(hospital, cedula);
+                            if (!pac) { cout << "Paciente no encontrado.\n"; cin.get(); break; }
+
+                            char nuevoNombre[50], nuevoApellido[50]; int nuevaEdad = 0; char nuevoSexo = 'X';
+                            cout << "\nNuevos datos (deje vacio o X para mantener):\n";
+                            cout << "Nuevo nombre: "; cin.getline(nuevoNombre, 50);
+                            cout << "Nuevo apellido: "; cin.getline(nuevoApellido, 50);
+                            cout << "Nueva edad (0 = igual): "; cin >> nuevaEdad;
+                            cout << "Nuevo sexo (M/F, X = igual): "; cin >> nuevoSexo;
+
+                            if (strlen(nuevoNombre) > 0) strcpy(pac->nombre, nuevoNombre);
+                            if (strlen(nuevoApellido) > 0) strcpy(pac->apellido, nuevoApellido);
+                            if (nuevaEdad > 0) pac->edad = nuevaEdad;
+                            char sx = toupper(nuevoSexo);
+                            if (sx == 'M' || sx == 'F') pac->sexo = sx;
+
+                            cout << "Actualizado correctamente.\n";
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
+                            break;
+                        }
+
+                        case 6: { // Listar pacientes
+                            system("cls");
+                            listarPacientes(hospital);
+                            cout << "\nPresione Enter para continuar...";
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
+                            break;
+                        }
+
+                        case 7: { // Eliminar paciente
+                            system("cls");
+                            char cedula[20];
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cout << "Ingrese cedula del paciente a eliminar: "; cin.getline(cedula, 20);
+                            Paciente* paciente = buscarPacientePorCedula(hospital, cedula);
+                            if (!paciente) { cout << "Paciente no encontrado.\n"; cin.get(); break; }
+
+                            eliminarPaciente(hospital, paciente->id);
+                            cout << "Paciente eliminado correctamente.\n";
+                            cin.get();
+                            break;
+                        }
+                    }
                 } while (opPaciente != 0);
                 break;
-            } // case 1
+            }
 
-            case 2: {
-                cout << "Modulo de doctores en desarrollo...\n";
-                cin.get();
+            case 2: { // Gestion de Doctores
+                int opDoct;
+                do {
+                    system("cls");
+                    cout << "\n=======================================\n";
+                    cout << "||        GESTION DE DOCTORES        ||\n";
+                    cout << "=======================================\n";
+                    cout << "1. Registrar nuevo doctor\n";
+                    cout << "2. Buscar doctor por ID\n";
+                    cout << "3. Buscar doctores por especialidad\n";
+                    cout << "4. Asignar paciente a doctor\n";
+                    cout << "5. Ver pacientes asignados a doctor\n";
+                    cout << "6. Listar todos los doctores\n";
+                    cout << "7. Eliminar doctor\n";
+                    cout << "0. Volver al menu principal\n";
+                    cout << "Seleccione una opcion: ";
+                    cin >> opDoct;
+
+                    switch (opDoct) {
+                        case 1: { // Registrar doctor
+                            system("cls");
+                            char nombre[50], apellido[50], cedula[20], especialidad[50];
+                            int aniosExperiencia;
+                            float costoConsulta;
+
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cout << "Ingrese nombre: "; cin.getline(nombre, 50);
+                            cout << "Ingrese apellido: "; cin.getline(apellido, 50);
+                            cout << "Ingrese cedula: "; cin.getline(cedula, 20);
+                            cout << "Ingrese especialidad: "; cin.getline(especialidad, 50);
+                            cout << "Ingrese anios de experiencia: "; cin >> aniosExperiencia;
+                            cout << "Ingrese costo de consulta: "; cin >> costoConsulta;
+
+                            Doctor* nuevo = crearDoctor(hospital, nombre, apellido, cedula, especialidad, aniosExperiencia, costoConsulta);
+                            if (nuevo) cout << "Doctor registrado correctamente.\n";
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
+                            break;
+                        }
+
+                        case 2: { // Buscar doctor por ID
+                            system("cls");
+                            int idDoc; cout << "Ingrese ID del doctor: "; cin >> idDoc;
+                            Doctor* doc = buscarDoctorPorId(hospital, idDoc);
+                            if (!doc) cout << "Doctor no encontrado.\n";
+                            cin.get();
+                            break;
+                        }
+
+                        case 3: { // Buscar doctores por especialidad
+                            system("cls");
+                            char especialidad[50];
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cout << "Ingrese especialidad: "; cin.getline(especialidad, 50);
+
+                            int cantidad = 0;
+                            Doctor** lista = buscarDoctoresPorEspecialidad(hospital, especialidad, &cantidad);
+                            cout << "Coincidencias: " << cantidad << endl;
+                            if (lista) delete[] lista;
+                            cin.get();
+                            break;
+                        }
+
+                        case 4: { // Asignar paciente a doctor
+                            system("cls");
+                            int idDoc, idPac;
+                            cout << "Ingrese ID del doctor: "; cin >> idDoc;
+                            cout << "Ingrese ID del paciente: "; cin >> idPac;
+
+                            Doctor* doc = buscarDoctorPorId(hospital, idDoc);
+                            Paciente* pac = buscarPacientePorId(hospital, idPac);
+                            if (doc && pac) {
+                                asignarPacienteADoctor(doc, idPac);
+                                cout << "Paciente asignado correctamente.\n";
+                            } else cout << "Doctor o paciente no encontrado.\n";
+                            cin.get();
+                            break;
+                        }
+
+                        case 5: { // Ver pacientes de doctor
+                            system("cls");
+                            int idDoc; cout << "Ingrese ID del doctor: "; cin >> idDoc;
+                            listarPacientesDeDoctor(hospital, idDoc);
+                            cin.get();
+                            break;
+                        }
+
+                        case 6: { // Listar todos los doctores
+                            system("cls");
+                            listarDoctores(hospital);
+                            cout << "\nPresione Enter para continuar...";
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
+                            break;
+                        }
+
+                        case 7: { // Eliminar doctor
+                            system("cls");
+                            int idDoc; cout << "Ingrese ID del doctor a eliminar: "; cin >> idDoc;
+                            eliminarDoctor(hospital, idDoc);
+                            cin.get();
+                            break;
+                        }
+
+                        case 0: break;
+                        default: cout << "Opcion no valida.\n"; cin.get(); break;
+                    }
+                } while (opDoct != 0);
                 break;
             }
 
-            case 3: {
-                cout << "Modulo de citas en desarrollo...\n";
-                cin.get();
+            case 3: { // Gestion de citas
+                int opCita;
+                do {
+                    system("cls");
+                    cout << "\n=======================================\n";
+                    cout << "||        GESTION DE CITAS           ||\n";
+                    cout << "=======================================\n";
+                    cout << "1. Agendar nueva cita\n";
+                    cout << "2. Cancelar cita\n";
+                    cout << "3. Atender cita\n";
+                    cout << "4. Ver citas de un paciente\n";
+                    cout << "5. Ver citas de un doctor\n";
+                    cout << "6. Ver citas de una fecha\n";
+                    cout << "7. Ver citas pendientes\n";
+                    cout << "0. Volver al menu principal\n";
+                    cout << "Seleccione una opcion: ";
+                    cin >> opCita;
+
+                    switch (opCita) {
+                        case 1: { // Agendar cita
+                            system("cls");
+                            int idPac, idDoc;
+                            char fecha[11], hora[6], motivo[100];
+                            cout << "Ingrese ID del paciente: "; cin >> idPac;
+                            cout << "Ingrese ID del doctor: "; cin >> idDoc;
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cout << "Ingrese fecha (YYYY-MM-DD): "; cin.getline(fecha, 11);
+                            cout << "Ingrese hora (HH:MM): "; cin.getline(hora, 6);
+                            cout << "Ingrese motivo de la cita: "; cin.getline(motivo, 100);
+
+                            if (!verificarDisponibilidad(hospital, idDoc, fecha, hora))
+                                cout << "El doctor no esta disponible en esa fecha y hora.\n";
+                            else {
+                                agendarCita(hospital, idPac, idDoc, fecha, hora, motivo);
+                                cout << "Cita agendada correctamente.\n";
+                            }
+                            cin.get();
+                            break;
+                        }
+
+                        case 2: { // Cancelar cita
+                            system("cls");
+                            int idCita; cout << "Ingrese ID de la cita a cancelar: "; cin >> idCita;
+                            cancelarCita(hospital, idCita);
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
+                            break;
+                        }
+
+                        case 3: { // Atender cita
+                            system("cls");
+                            int idCita; char diagnostico[200], tratamiento[200], medicamentos[200];
+                            cout << "Ingrese ID de la cita a atender: "; cin >> idCita;
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cout << "Ingrese diagnostico: "; cin.getline(diagnostico, 200);
+                            cout << "Ingrese tratamiento: "; cin.getline(tratamiento, 200);
+                            cout << "Ingrese medicamentos: "; cin.getline(medicamentos, 200);
+
+                            atenderCita(hospital, idCita, diagnostico, tratamiento, medicamentos);
+                            cout << "Cita atendida correctamente.\n";
+                            cin.get();
+                            break;
+                        }
+
+                        case 4: { // Ver citas de un paciente
+                            system("cls");
+                            int idPac, cantidad = 0;
+                            cout << "Ingrese ID del paciente: "; cin >> idPac;
+                            Cita** citas = obtenerCitasDePaciente(hospital, idPac, &cantidad);
+                            mostrarCitas(citas, cantidad);
+                            delete[] citas;
+                            system("pause");
+                            break;
+                        }
+
+                        case 5: { // Ver citas de un doctor
+                            system("cls");
+                            int idDoc, cantidad = 0;
+                            cout << "Ingrese ID del doctor: "; cin >> idDoc;
+                            Cita** citas = obtenerCitasDeDoctor(hospital, idDoc, &cantidad);
+                            mostrarCitas(citas, cantidad);
+                            delete[] citas;
+                            system("pause");
+                            break;
+                        }
+
+                        case 6: { // Ver citas de una fecha
+                            system("cls");
+                            char fecha[11]; int cantidad = 0;
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cout << "Ingrese fecha (YYYY-MM-DD): "; cin.getline(fecha, 11);
+                            Cita** citas = obtenerCitasPorFecha(hospital, fecha, &cantidad);
+                            mostrarCitas(citas, cantidad);
+                            delete[] citas;
+                            system("pause");
+                            break;
+                        }
+
+                        case 7: { // Citas pendientes
+                            system("cls");
+                            listarCitasPendientes(hospital);
+                            cout << "\nPresione Enter para continuar...";
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
+                            break;
+                        }
+
+                        case 0: break;
+                        default: cout << "Opcion no valida.\n"; cin.get(); break;
+                    }
+
+                } while (opCita != 0);
                 break;
             }
 
-            case 4: {
+            case 4:
                 cout << "Saliendo del sistema...\n";
                 break;
-            }
 
-            default: {
+            default:
                 cout << "Opcion no valida.\n";
                 cin.get();
                 break;
-            }
-        } // switch opMenu
+        }
 
     } while (opMenu != 4);
+
+    // Liberar memoria del hospital si es necesario
 
     return 0;
 }
