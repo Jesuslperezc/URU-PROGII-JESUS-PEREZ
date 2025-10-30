@@ -3,7 +3,7 @@
 #include <ctime>
 #include <iomanip>
 #include <fstream>
-#include <cctype> // para tolower
+#include <cctype> // para tolower, isdigit
 #include <limits>
 
 using namespace std;
@@ -129,20 +129,57 @@ HistorialMedico* redimensionarArrayHistorial(HistorialMedico* array, int& capaci
     capacidadActual = nuevaCapacidad;
     return nuevoArray;
 }
-//VALIDAR CEDULA
+
+// VALIDACIONES adicionales
 bool validarCedula(const char* cedula){
-
-    if (cedula[0]=='\0'||cedula==nullptr){
+    if (cedula == nullptr) return false;
+    if (cedula[0] == '\0') return false;
+    size_t len = strlen(cedula);
+    if (len > 19) { // deja espacio para el terminador
+        cout << "Excede el limite de caracteres para cédula.\n";
         return false;
-
     }
-    if(strlen(cedula)>20){
-        cout<<"Excede el limite de caracteres";
+    // Solo dígitos
+    for (size_t i = 0; i < len; ++i) {
+        if (!isdigit((unsigned char)cedula[i])) {
+            cout << "La cédula debe contener solo números.\n";
+            return false;
+        }
+    }
+    return true;
+}
+
+bool validarNombreSinEspacios(const char* nombre) {
+    if (nombre == nullptr) return false;
+    if (nombre[0] == '\0') return false;
+    // No permitir espacios en blanco
+    for (size_t i = 0; i < strlen(nombre); ++i) {
+        if (isspace((unsigned char)nombre[i])) {
+            cout << "El nombre/apellido no debe contener espacios.\n";
+            return false;
+        }
+    }
+    return true;
+}
+
+bool validarEdad(int edad) {
+    if (edad < 0) {
+        cout << "La edad no puede ser negativa.\n";
+        return false;
+    }
+    if (edad > 120) {
+        cout << "La edad supera el límite razonable (120).\n";
         return false;
     }
     return true;
 }
 
+bool validarSexoChar(char sexo) {
+    char s = toupper((unsigned char)sexo);
+    if (s == 'M' || s == 'F') return true;
+    cout << "Sexo inválido. Use M o F.\n";
+    return false;
+}
 
 // ============================================
 // FUNCIONES DE HOSPITAL
@@ -246,6 +283,24 @@ void destruirHospital(Hospital* hospital) {
 // Requisito: crear paciente, verificar cedula, redimensionar arrays dinámicos
 Paciente* crearPaciente(Hospital* hospital, const char* nombre, 
                         const char* apellido, const char* cedula, int edad, char sexo) {
+    // Validaciones defensivas (por si se llama desde otra parte)
+    if (!validarNombreSinEspacios(nombre) || !validarNombreSinEspacios(apellido)) {
+        cout << "Nombre o apellido inválido.\n";
+        return nullptr;
+    }
+    if (!validarCedula(cedula)) {
+        cout << "Cédula inválida.\n";
+        return nullptr;
+    }
+    if (!validarEdad(edad)) {
+        cout << "Edad inválida.\n";
+        return nullptr;
+    }
+    if (!validarSexoChar(sexo)) {
+        cout << "Sexo inválido.\n";
+        return nullptr;
+    }
+
     // Verificar que la cedula no exista previamente
     for (int i = 0; i < hospital->cantidadPacientes; i++) {
         if (strcmp(hospital->pacientes[i].cedula, cedula) == 0) {
@@ -274,7 +329,7 @@ Paciente* crearPaciente(Hospital* hospital, const char* nombre,
     strcpy(nuevoPaciente->apellido, apellido);
     strcpy(nuevoPaciente->cedula, cedula);
     nuevoPaciente->edad = edad;
-    nuevoPaciente->sexo = sexo;
+    nuevoPaciente->sexo = toupper((unsigned char)sexo);
     nuevoPaciente->activo = true;
 
     // Inicializar arrays dinámicos
@@ -309,27 +364,23 @@ bool compararCaseInsensitive(const char* a, const char* b) {
 // Buscar paciente por cédula (case-insensitive)
 Paciente* buscarPacientePorCedula(Hospital* hospital, const char* cedula) {
     if (hospital == nullptr || cedula == nullptr) {
-        cout << "Error: datos inválidos.\n";
-        cin.get();
+        cout << "Error: datos invalidos.\n";
         return nullptr;
     }
 
     for (int i = 0; i < hospital->cantidadPacientes; i++) {
         if (compararCaseInsensitive(hospital->pacientes[i].cedula, cedula)) {
-            cout << "Paciente encontrado: " 
-                 << hospital->pacientes[i].nombre << " " 
-                 << hospital->pacientes[i].apellido 
+            cout << "Paciente encontrado: "
+                 << hospital->pacientes[i].nombre << " "
+                 << hospital->pacientes[i].apellido
                  << " | Cedula: " << hospital->pacientes[i].cedula << endl;
-            cin.get();
-            return &hospital->pacientes[i]; 
+            return &hospital->pacientes[i];
         }
     }
 
     cout << "Paciente no encontrado.\n";
-    cin.get();
     return nullptr;
 }
-
 
 // Buscar paciente por ID
 Paciente* buscarPacientePorId(Hospital* hospital, int id) {
@@ -338,7 +389,7 @@ Paciente* buscarPacientePorId(Hospital* hospital, int id) {
             return &hospital->pacientes[i];
         }
     }
-    cout << "Paciente no encontrado.\n";
+    // no hacer pausa aquí: dejar que el llamador decida
     return nullptr;
 }
 
@@ -375,18 +426,22 @@ bool actualizarPaciente(Hospital* hospital, int id) {
 
     // Nombre
     cout << "Nombre actual: " << paciente->nombre << "\n";
-    cout << "Ingrese nuevo nombre (Enter para mantener): ";
+    cout << "Ingrese nuevo nombre (Enter para mantener, sin espacios): ";
     char nuevoNombre[50];
     cin.ignore();
     cin.getline(nuevoNombre, 50);
-    if (strlen(nuevoNombre) > 0) strcpy(paciente->nombre, nuevoNombre);
+    if (strlen(nuevoNombre) > 0) {
+        if (validarNombreSinEspacios(nuevoNombre)) strcpy(paciente->nombre, nuevoNombre);
+    }
 
     // Apellido
     cout << "Apellido actual: " << paciente->apellido << "\n";
-    cout << "Ingrese nuevo apellido (Enter para mantener): ";
+    cout << "Ingrese nuevo apellido (Enter para mantener, sin espacios): ";
     char nuevoApellido[50];
     cin.getline(nuevoApellido, 50);
-    if (strlen(nuevoApellido) > 0) strcpy(paciente->apellido, nuevoApellido);
+    if (strlen(nuevoApellido) > 0) {
+        if (validarNombreSinEspacios(nuevoApellido)) strcpy(paciente->apellido, nuevoApellido);
+    }
 
     // Edad
     cout << "Edad actual: " << paciente->edad << "\n";
@@ -395,17 +450,17 @@ bool actualizarPaciente(Hospital* hospital, int id) {
     cin.getline(nuevaEdadStr, 10);
     if (strlen(nuevaEdadStr) > 0) {
         int nuevaEdad = atoi(nuevaEdadStr);
-        if (nuevaEdad >= 0 && nuevaEdad <= 120) paciente->edad = nuevaEdad;
+        if (validarEdad(nuevaEdad)) paciente->edad = nuevaEdad;
     }
 
     // Sexo
     cout << "Sexo actual: " << paciente->sexo << "\n";
-    cout << "Ingrese nuevo sexo (, Enter para mantener): ";
+    cout << "Ingrese nuevo sexo (M/F, Enter para mantener): ";
     char nuevoSexoStr[10];
     cin.getline(nuevoSexoStr, 10);
     if (strlen(nuevoSexoStr) > 0) {
         char nuevoSexo = toupper(nuevoSexoStr[0]);
-        if (nuevoSexo == 'M' || nuevoSexo == 'F') paciente->sexo = nuevoSexo;
+        if (validarSexoChar(nuevoSexo)) paciente->sexo = nuevoSexo;
     }
 
     cout << "Datos actualizados exitosamente.\n";
@@ -522,6 +577,24 @@ Doctor* crearDoctor(Hospital* hospital, const char* nombre,
                     const char* apellido, const char* cedula,
                     const char* especialidad, int aniosExperiencia, 
                     float costoConsulta) {
+    // Validaciones defensivas
+    if (!validarNombreSinEspacios(nombre) || !validarNombreSinEspacios(apellido)) {
+        cout << "Nombre o apellido inválido para doctor.\n";
+        return nullptr;
+    }
+    if (!validarCedula(cedula)) {
+        cout << "Cédula inválida para doctor.\n";
+        return nullptr;
+    }
+    if (aniosExperiencia < 0) {
+        cout << "Años de experiencia inválidos.\n";
+        return nullptr;
+    }
+    if (costoConsulta < 0.0f) {
+        cout << "Costo de consulta inválido.\n";
+        return nullptr;
+    }
+
     for (int i = 0; i < hospital->cantidadDoctores; i++) {
         if (strcmp(hospital->doctores[i].cedula, cedula) == 0) {
             cout << "Error: La cédula ya existe en el sistema.\n";
@@ -568,7 +641,7 @@ Doctor* buscarDoctorPorId(Hospital* hospital, int id) {
     for (int i = 0; i < hospital->cantidadDoctores; i++) {
         if (hospital->doctores[i].id == id) return &hospital->doctores[i];
     }
-    cout << "Doctor no encontrado.\n";
+    // no pausar aquí; el llamador decide
     return nullptr;
 }
 
@@ -589,7 +662,6 @@ Doctor** buscarDoctoresPorEspecialidad(Hospital* hospital, const char* especiali
     }
     return resultados;
 }
-
 //
 bool asignarPacienteADoctor(Doctor* doctor, int idPaciente) {
     if (doctor == nullptr) {
@@ -668,13 +740,13 @@ void listarPacientesDeDoctor(Hospital* hospital, int idDoctor) {
         return;
     }
 
-    cout << "\n=== Pacientes asignados al Doctor: " 
+    cout << "\n=== Pacientes asignados al Doctor: "
          << doctor->nombre << " " << doctor->apellido << " ===\n";
     cout << left << setw(6) << "ID"
          << setw(20) << "Nombre"
          << setw(20) << "Apellido"
          << setw(8) << "Edad"
-         << setw(15) << "Cédula" << "\n";
+         << setw(15) << "Cedula" << "\n";
     cout << string(70, '-') << "\n";
 
     for (int i = 0; i < doctor->cantidadPacientes; i++) {
@@ -688,7 +760,8 @@ void listarPacientesDeDoctor(Hospital* hospital, int idDoctor) {
                  << setw(8) << paciente->edad
                  << setw(15) << paciente->cedula << "\n";
         } else {
-            cout << "ID: " << idPaciente << " (Paciente no encontrado)\n";
+            cout << left << setw(6) << idPaciente
+                 << setw(20) << "(no encontrado)" << "\n";
         }
     }
 
@@ -763,7 +836,7 @@ Cita* buscarCitaPorId(Hospital* hospital, int id) {
          return &hospital->citas[i];
         }
     }
-    cout << "Cita no encontrada.\n";
+    // no pausar aquí
     return nullptr;
 }
 //validar fecha
@@ -793,9 +866,18 @@ Cita* redimensionarArrayCita(Cita* array, int& capacidadActual) {
 Cita* agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
 const char* fecha, const char* hora, const char* motivo){
 
-    Paciente*paciente= buscarPacientePorId(hospital,idPaciente);
-    Doctor*doctor=buscarDoctorPorId(hospital,idDoctor);
+    Paciente* paciente = buscarPacientePorId(hospital, idPaciente);
+    Doctor* doctor = buscarDoctorPorId(hospital, idDoctor);
    
+    if (!paciente) {
+        cout << "Error: paciente no encontrado.\n";
+        return nullptr;
+    }
+    if (!doctor) {
+        cout << "Error: doctor no encontrado.\n";
+        return nullptr;
+    }
+
     if (!validarFormatoFecha(fecha)) {
         cout << "Error: formato de fecha inválido. Use YYYY-MM-DD.\n";
         return nullptr;
@@ -819,14 +901,22 @@ const char* fecha, const char* hora, const char* motivo){
     strcpy(nuevaCita->estado, "Agendada");
     strcpy(nuevaCita->observaciones, "");
     nuevaCita->atendida = false;
-      if (paciente->cantidadCitas >= paciente->capacidadCitas) {
-        paciente->citasAgendadas = redimensionarArrayInt(paciente->citasAgendadas, paciente->capacidadCitas);
-      }
 
-      if (doctor->cantidadCitas>=doctor->capacidadCitas){
-        doctor->citasAgendadas=redimensionarArrayInt(doctor->citasAgendadas,doctor->capacidadCitas);
-      }
-      hospital->cantidadCitas++;
+    // Agregar referencia en paciente
+    if (paciente->cantidadCitas >= paciente->capacidadCitas) {
+        paciente->citasAgendadas = redimensionarArrayInt(paciente->citasAgendadas, paciente->capacidadCitas);
+    }
+    paciente->citasAgendadas[paciente->cantidadCitas] = nuevaCita->id;
+    paciente->cantidadCitas++;
+
+    // Agregar referencia en doctor
+    if (doctor->cantidadCitas >= doctor->capacidadCitas) {
+        doctor->citasAgendadas = redimensionarArrayInt(doctor->citasAgendadas, doctor->capacidadCitas);
+    }
+    doctor->citasAgendadas[doctor->cantidadCitas] = nuevaCita->id;
+    doctor->cantidadCitas++;
+
+    hospital->cantidadCitas++;
 
     cout << "Cita agendada exitosamente con ID: " << nuevaCita->id
          << " entre el Dr. " << doctor->nombre << " y el paciente " << paciente->nombre << ".\n";
@@ -882,8 +972,9 @@ bool cancelarCita(Hospital* hospital, int idCita){
 
 bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,
 const char* tratamiento, const char* medicamentos){
- Cita*cita= buscarCitaPorId(hospital,idCita);
+ Cita* cita = buscarCitaPorId(hospital,idCita);
  if (cita==nullptr){
+    cout << "Cita no encontrada.\n";
     return false;
  }
  if (strcmp(cita->estado, "Agendada") != 0) {
@@ -893,7 +984,7 @@ const char* tratamiento, const char* medicamentos){
  strcpy(cita->estado,"Atendida");
 
  Paciente* paciente= buscarPacientePorId(hospital,cita->idPaciente);
- Doctor*doctor=buscarDoctorPorId(hospital,cita->idDoctor);
+ Doctor* doctor=buscarDoctorPorId(hospital,cita->idDoctor);
  
  if(paciente==nullptr||doctor==nullptr){
     cout<<"Error. Paciente o doctor no encontrados.\n";
@@ -910,7 +1001,6 @@ const char* tratamiento, const char* medicamentos){
     nuevaConsulta.idDoctor = cita->idDoctor;
 
     // Obtener el costo de la consulta desde el doctor correspondiente
-     doctor = buscarDoctorPorId(hospital, cita->idDoctor);
     if (doctor == nullptr) {
         cout << "Error: Doctor asociado a la cita no encontrado.\n";
         return false;
@@ -918,7 +1008,6 @@ const char* tratamiento, const char* medicamentos){
     nuevaConsulta.costo = doctor->costoConsulta;
 
     //  Agregar la nueva consulta al historial del paciente
-     paciente = buscarPacientePorId(hospital, cita->idPaciente);
     if (paciente == nullptr) {
         cout << "Error: Paciente asociado a la cita no encontrado.\n";
         return false;
@@ -1135,16 +1224,20 @@ int main() {
                             char sexo;
 
                             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                            cout << "Ingrese nombre: "; cin.getline(nombre, 50);
-                            cout << "Ingrese apellido: "; cin.getline(apellido, 50);
-                            cout << "Ingrese cedula: "; cin.getline(cedula, 20);
+                            cout << "Ingrese nombre (sin espacios): "; cin.getline(nombre, 50);
+                            if (!validarNombreSinEspacios(nombre)) { cin.get(); break; }
 
-                            if (!validarCedula(cedula)) {
-                                cout << "Cedula invalida.\n"; cin.get(); break;
-                            }
+                            cout << "Ingrese apellido (sin espacios): "; cin.getline(apellido, 50);
+                            if (!validarNombreSinEspacios(apellido)) { cin.get(); break; }
+
+                            cout << "Ingrese cedula (solo numeros): "; cin.getline(cedula, 20);
+                            if (!validarCedula(cedula)) { cin.get(); break; }
 
                             cout << "Ingrese edad: "; cin >> edad;
+                            if (!validarEdad(edad)) { cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); break; }
+
                             cout << "Ingrese sexo (M/F): "; cin >> sexo;
+                            if (!validarSexoChar(sexo)) { cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); break; }
 
                             Paciente* paciente = crearPaciente(hospital, nombre, apellido, cedula, edad, sexo);
                             if (paciente) cout << "Paciente registrado correctamente.\n";
@@ -1158,6 +1251,7 @@ int main() {
                             char cedula[20];
                             cin.ignore(numeric_limits<streamsize>::max(), '\n');
                             cout << "Ingrese cedula: "; cin.getline(cedula, 20);
+                            if (!validarCedula(cedula)) { cin.get(); break; }
                             Paciente* p = buscarPacientePorCedula(hospital, cedula);
                             if (!p) cout << "Paciente no encontrado.\n";
                             cin.get();
@@ -1183,6 +1277,7 @@ int main() {
                             char cedula[20];
                             cin.ignore(numeric_limits<streamsize>::max(), '\n');
                             cout << "Ingrese cedula del paciente: "; cin.getline(cedula, 20);
+                            if (!validarCedula(cedula)) { cin.get(); break; }
                             Paciente* p = buscarPacientePorCedula(hospital, cedula);
                             if (!p) { cout << "Paciente no encontrado.\n"; cin.get(); break; }
 
@@ -1202,15 +1297,23 @@ int main() {
                             char cedula[20];
                             cin.ignore(numeric_limits<streamsize>::max(), '\n');
                             cout << "Ingrese cedula del paciente a actualizar: "; cin.getline(cedula, 20);
+                            if (!validarCedula(cedula)) { cin.get(); break; }
                             Paciente* pac = buscarPacientePorCedula(hospital, cedula);
                             if (!pac) { cout << "Paciente no encontrado.\n"; cin.get(); break; }
 
                             char nuevoNombre[50], nuevoApellido[50]; int nuevaEdad = 0; char nuevoSexo = 'X';
                             cout << "\nNuevos datos (deje vacio o X para mantener):\n";
-                            cout << "Nuevo nombre: "; cin.getline(nuevoNombre, 50);
-                            cout << "Nuevo apellido: "; cin.getline(nuevoApellido, 50);
+                            cout << "Nuevo nombre (sin espacios): "; cin.getline(nuevoNombre, 50);
+                            if (strlen(nuevoNombre) > 0 && !validarNombreSinEspacios(nuevoNombre)) { cin.get(); break; }
+
+                            cout << "Nuevo apellido (sin espacios): "; cin.getline(nuevoApellido, 50);
+                            if (strlen(nuevoApellido) > 0 && !validarNombreSinEspacios(nuevoApellido)) { cin.get(); break; }
+
                             cout << "Nueva edad (0 = igual): "; cin >> nuevaEdad;
+                            if (nuevaEdad != 0 && !validarEdad(nuevaEdad)) { cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); break; }
+
                             cout << "Nuevo sexo (M/F, X = igual): "; cin >> nuevoSexo;
+                            if (nuevoSexo != 'X' && nuevoSexo != 'x' && !validarSexoChar(nuevoSexo)) { cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); break; }
 
                             if (strlen(nuevoNombre) > 0) strcpy(pac->nombre, nuevoNombre);
                             if (strlen(nuevoApellido) > 0) strcpy(pac->apellido, nuevoApellido);
@@ -1236,6 +1339,7 @@ int main() {
                             char cedula[20];
                             cin.ignore(numeric_limits<streamsize>::max(), '\n');
                             cout << "Ingrese cedula del paciente a eliminar: "; cin.getline(cedula, 20);
+                            if (!validarCedula(cedula)) { cin.get(); break; }
                             Paciente* paciente = buscarPacientePorCedula(hospital, cedula);
                             if (!paciente) { cout << "Paciente no encontrado.\n"; cin.get(); break; }
 
@@ -1275,12 +1379,20 @@ int main() {
                             float costoConsulta;
 
                             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                            cout << "Ingrese nombre: "; cin.getline(nombre, 50);
-                            cout << "Ingrese apellido: "; cin.getline(apellido, 50);
-                            cout << "Ingrese cedula: "; cin.getline(cedula, 20);
+                            cout << "Ingrese nombre (sin espacios): "; cin.getline(nombre, 50);
+                            if (!validarNombreSinEspacios(nombre)) { cin.get(); break; }
+
+                            cout << "Ingrese apellido (sin espacios): "; cin.getline(apellido, 50);
+                            if (!validarNombreSinEspacios(apellido)) { cin.get(); break; }
+
+                            cout << "Ingrese cedula (solo numeros): "; cin.getline(cedula, 20);
+                            if (!validarCedula(cedula)) { cin.get(); break; }
+
                             cout << "Ingrese especialidad: "; cin.getline(especialidad, 50);
                             cout << "Ingrese anios de experiencia: "; cin >> aniosExperiencia;
+                            if (aniosExperiencia < 0) { cout << "Años de experiencia inválidos.\n"; cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); break; }
                             cout << "Ingrese costo de consulta: "; cin >> costoConsulta;
+                            if (costoConsulta < 0.0f) { cout << "Costo inválido.\n"; cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); break; }
 
                             Doctor* nuevo = crearDoctor(hospital, nombre, apellido, cedula, especialidad, aniosExperiencia, costoConsulta);
                             if (nuevo) cout << "Doctor registrado correctamente.\n";
@@ -1293,6 +1405,9 @@ int main() {
                             int idDoc; cout << "Ingrese ID del doctor: "; cin >> idDoc;
                             Doctor* doc = buscarDoctorPorId(hospital, idDoc);
                             if (!doc) cout << "Doctor no encontrado.\n";
+                            else {
+                                cout << "Doctor: " << doc->nombre << " " << doc->apellido << " | Especialidad: " << doc->especialidad << "\n";
+                            }
                             cin.get();
                             break;
                         }
@@ -1329,9 +1444,34 @@ int main() {
 
                         case 5: { // Ver pacientes de doctor
                             system("cls");
-                            int idDoc; cout << "Ingrese ID del doctor: "; cin >> idDoc;
-                            listarPacientesDeDoctor(hospital, idDoc);
-                            cin.get();
+                            int idDoc;
+                            while (true) {
+                                cout << "Ingrese ID del doctor: ";
+                                if (!(cin >> idDoc)) {
+                                    cin.clear();
+                                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                    cout << "Entrada invalida. Ingrese un numero entero.\n";
+                                    continue;
+                                }
+                                cin.ignore(numeric_limits<streamsize>::max(), '\n'); // consumir resto de la linea
+                                Doctor* d = buscarDoctorPorId(hospital, idDoc);
+                                if (!d) {
+                                    cout << "Doctor no encontrado. Desea reintentar? (s/n): ";
+                                    char opc;
+                                    if (!(cin >> opc)) {
+                                        cin.clear();
+                                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                        break;
+                                    }
+                                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                    if (opc == 's' || opc == 'S') continue;
+                                    break;
+                                }
+                                listarPacientesDeDoctor(hospital, idDoc);
+                                cout << "\nPresione Enter para continuar...";
+                                cin.get();
+                                break;
+                            }
                             break;
                         }
 
@@ -1472,7 +1612,7 @@ int main() {
             }
 
             case 4:
-                cout << "Saliendo del sistema...\n";
+                cout << "\n";
                 break;
 
             default:
@@ -1485,5 +1625,7 @@ int main() {
 
     // Liberar memoria del hospital si es necesario
 
+ destruirHospital(hospital);
+    cout << "Hospital destruido. Saliendo...\n";
     return 0;
 }
