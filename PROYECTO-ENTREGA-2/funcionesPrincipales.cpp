@@ -80,7 +80,10 @@ bool compararCaseInsensitive(const char* a, const char* b) {
     }
     return *a == *b;
 }
-
+bool validarFormatoHora(const char* hora) {
+    int hh, mm;
+    return (sscanf(hora, "%2d:%2d", &hh, &mm) == 2 && hh >= 0 && hh < 24 && mm >= 0 && mm < 60);
+}
 // ============================================
 // DEFINICIONES DE FUNCIONES PACIENTES
 // ============================================
@@ -257,10 +260,22 @@ bool guardarHospital(const Hospital& hospital) {
         cout << "Error al guardar hospital.bin\n";
         return false;
     }
+
+    ArchivoHeader header{};
+    header.cantidadRegistros = 1;
+    header.proximoID = hospital.siguienteIDPaciente; // o el que corresponda
+    header.registrosActivos = 1;
+    header.version = 1;
+
+
+    archivo.write(reinterpret_cast<const char*>(&header), sizeof(ArchivoHeader));
+
     archivo.write(reinterpret_cast<const char*>(&hospital), sizeof(Hospital));
+
     archivo.close();
     return true;
 }
+
 
 HistorialMedico* leerHistorialCompleto(int pacienteID, int* cantidad) {
     // 1. Leer paciente desde pacientes.bin
@@ -446,4 +461,286 @@ bool validarFormatoFecha(const char* fecha) {
     int anio, mes, dia;
     return (sscanf(fecha, "%4d-%2d-%2d", &anio, &mes, &dia) == 3 &&
             anio > 1900 && mes >= 1 && mes <= 12 && dia >= 1 && dia <= 31);
+}
+
+// Mostrar historial
+void mostrarHistorialMedico(Paciente* paciente) {
+    cout << "=== Historial Medico del Paciente ID: " << paciente->id << " ===\n";
+    for (int i = 0; i < paciente->cantidadConsultas; i++) {
+        HistorialMedico c = leerRegistro<HistorialMedico>("historiales.bin", paciente->citasIDs[i] - 1);
+        cout << "Consulta ID: " << c.id
+             << ", Fecha: " << c.fecha
+             << ", Hora: " << c.hora
+             << ", Diagnostico: " << c.diagnostico
+             << ", Tratamiento: " << c.tratamiento
+             << ", Medicamentos: " << c.medicamentos
+             << ", ID Doctor: " << c.doctorID
+             << ", Costo: " << c.costo << "\n";
+    }
+}
+
+
+bool obtenerUltimaConsulta(Paciente* paciente, HistorialMedico& salida) {
+    if (!paciente || paciente->cantidadConsultas == 0)
+        return false;
+
+    int indiceUltima = paciente->primerConsultaID + paciente->cantidadConsultas - 2;
+    salida = leerRegistro<HistorialMedico>("historiales.bin", indiceUltima);
+    return true;
+}
+
+Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
+                 const char* fecha, const char* hora, const char* motivo) {
+
+    // Leer paciente y doctor desde archivos
+    Paciente paciente = buscarRegistroPorID<Paciente>("pacientes.bin", idPaciente);
+    Doctor doctor = buscarRegistroPorID<Doctor>("doctores.bin", idDoctor);
+
+    // Verificaciones
+    if (paciente.id == 0) {
+        cout << "Error: paciente no encontrado.\n";
+        return {};
+    }
+    if (doctor.id == 0) {
+        cout << "Error: doctor no encontrado.\n";
+        return {};
+    }
+    if (!validarFormatoFecha(fecha)) {
+        cout << "Error: formato de fecha inválido. Use YYYY-MM-DD.\n";
+        return {};
+    }
+    if (!validarFormatoHora(hora)) {
+        cout << "Error: formato de hora inválido. Use HH:MM.\n";
+        return {};
+    }
+
+    // Crear nueva cita
+    Cita nuevaCita;
+    nuevaCita.id = hospital->siguienteIDCita++;
+    nuevaCita.pacienteID = idPaciente;
+    nuevaCita.doctorID = idDoctor;
+    strcpy(nuevaCita.fecha, fecha);
+    strcpy(nuevaCita.hora, hora);
+    strcpy(nuevaCita.motivo, motivo);
+    strcpy(nuevaCita.estado, "Agendada");
+    strcpy(nuevaCita.observaciones, "");
+    nuevaCita.atendida = false;
+
+    // Guardar la cita en archivo binario
+    escribirRegistro<Cita>("citas.bin", nuevaCita, nuevaCita.id - 1);
+
+    // Actualizar hospital
+    hospital->totalCitasAgendadas++;
+    escribirRegistro<Hospital>("hospital.bin", *hospital, 0);  // suponiendo un solo hospital
+
+    // Actualizar las citas del paciente
+    const int cantidadMAX = 20;
+    if (paciente.cantidadCitas < cantidadMAX) {
+        paciente.citasIDs[paciente.cantidadCitas++] = nuevaCita.id;
+        escribirRegistro<Paciente>("pacientes.bin", paciente, paciente.id - 1);
+    } else {
+        cout << "Advertencia: paciente ha alcanzado el límite de citas.\n";
+    }
+
+    // Actualizar las citas del doctor
+    if (doctor.cantidadCitas < cantidadMAX) {
+        doctor.citasIDs[doctor.cantidadCitas++] = nuevaCita.id;
+        escribirRegistro<Doctor>("doctores.bin", doctor, doctor.id - 1);
+    } else {
+        cout << "Advertencia: doctor ha alcanzado el límite de citas.\n";
+    }
+
+    cout << "Cita agendada exitosamente con ID: " << nuevaCita.id
+         << " entre el Dr. " << doctor.nombre
+         << " y el paciente " << paciente.nombre << ".\n";
+
+    return nuevaCita;
+}
+
+void listarPacientesDeDoctor(Hospital* hospital, int idDoctor) {
+    // Leer el doctor directamente del archivo
+    Doctor doctor = buscarRegistroPorID<Doctor>("doctores.bin", idDoctor);
+
+    if (doctor.id == 0) {
+        cout << "Error: doctor no encontrado.\n";
+        return;
+    }
+
+    if (doctor.cantidadPacientes == 0) {
+        cout << "El doctor no tiene pacientes asignados.\n";
+        return;
+    }
+
+    cout << "\n=== Pacientes asignados al Doctor: "
+         << doctor.nombre << " " << doctor.apellido << " ===\n";
+    cout << left << setw(6) << "ID"
+         << setw(20) << "Nombre"
+         << setw(20) << "Apellido"
+         << setw(8) << "Edad"
+         << setw(15) << "Cedula" << "\n";
+    cout << string(70, '-') << "\n";
+
+    for (int i = 0; i < doctor.cantidadPacientes; i++) {
+        int idPaciente = doctor.pacientesIDs[i];
+
+        if (idPaciente != 0) {
+            // Leer paciente
+            Paciente paciente = buscarRegistroPorID<Paciente>("pacientes.bin", idPaciente);
+
+            if (paciente.id != 0) {
+                cout << left << setw(6) << paciente.id
+                     << setw(20) << paciente.nombre
+                     << setw(20) << paciente.apellido
+                     << setw(8) << paciente.edad
+                     << setw(15) << paciente.cedula << "\n";
+            } else {
+                cout << left << setw(6) << idPaciente
+                     << setw(20) << "(no encontrado)" << "\n";
+            }
+        }
+    }
+
+    cout << string(70, '-') << "\n";
+    cout << "Total de pacientes asignados: " << doctor.cantidadPacientes << "\n\n";
+}
+
+bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,
+                 const char* tratamiento, const char* medicamentos) {
+    
+    // Buscar la cita
+    Cita cita = buscarRegistroPorID<Cita>("citas.bin", idCita);
+    if (cita.id == 0) {
+        cout << "Cita no encontrada.\n";
+        return false;
+    }
+    if (strcmp(cita.estado, "Agendada") != 0) {
+        cout << "Error: la cita no está agendada.\n";
+        return false;
+    }
+
+    // Marcar cita como atendida
+    strcpy(cita.estado, "Atendida");
+
+    // Buscar paciente y doctor
+    Paciente paciente = buscarRegistroPorID<Paciente>("pacientes.bin", cita.pacienteID);
+    Doctor doctor = buscarRegistroPorID<Doctor>("doctores.bin", cita.doctorID);
+
+    if (paciente.id == 0 || doctor.id == 0) {
+        cout << "Error: paciente o doctor no encontrados.\n";
+        return false;
+    }
+
+    // Crear nueva consulta (historial médico)
+    HistorialMedico nuevaConsulta;
+    nuevaConsulta.id = hospital->siguienteIDConsulta++;
+    strcpy(nuevaConsulta.fecha, cita.fecha);
+    strcpy(nuevaConsulta.hora, cita.hora);
+    strcpy(nuevaConsulta.diagnostico, diagnostico);
+    strcpy(nuevaConsulta.tratamiento, tratamiento);
+    strcpy(nuevaConsulta.medicamentos, medicamentos);
+    nuevaConsulta.doctorID = doctor.id;
+    nuevaConsulta.costo = doctor.costoConsulta;
+
+    // Guardar consulta en el archivo de historiales
+    escribirRegistro<HistorialMedico>("historiales.bin", nuevaConsulta, nuevaConsulta.id - 1);
+
+    // Asociar la consulta al paciente
+    if (paciente.cantidadConsultas < 100) {  // por ejemplo, máximo 100 consultas
+        if (paciente.cantidadConsultas == 0)
+            paciente.primerConsultaID = nuevaConsulta.id;
+        paciente.cantidadConsultas++;
+        escribirRegistro<Paciente>("pacientes.bin", paciente, paciente.id - 1);
+    } else {
+        cout << "Advertencia: paciente ha alcanzado el máximo de consultas.\n";
+    }
+
+    // Guardar los cambios de la cita y el hospital
+    escribirRegistro<Cita>("citas.bin", cita, cita.id - 1);
+    escribirRegistro<Hospital>("hospital.bin", *hospital, 0);
+
+    cout << " Cita atendida correctamente y registrada en el historial médico.\n";
+    return true;
+}
+
+Cita* leerCitasDePaciente(int pacienteID, int* cantidad) {
+    *cantidad = 0; // Inicializar por seguridad
+    // 1. Leer paciente desde el archivo
+    Paciente paciente = leerRegistro<Paciente>("pacientes.bin", pacienteID - 1);
+    // Validar que el paciente exista
+    if (paciente.id == 0) {
+        cout << "Error: paciente no encontrado.\n";
+        return nullptr;
+    }
+    // 2. Obtener la cantidad de citas y sus IDs
+    int totalCitas = paciente.cantidadCitas;
+    if (totalCitas == 0) {
+        cout << "El paciente no tiene citas registradas.\n";
+        return nullptr;
+    }
+    int* citasIDs = paciente.citasIDs;
+    // 3. Crear un array dinámico para almacenar las citas válidas
+    Cita* citasArray = new Cita[totalCitas];
+    int contador = 0;
+    // 4. Leer cada cita desde el archivo
+    for (int i = 0; i < totalCitas; i++) {
+        int idCita = citasIDs[i];
+        if (idCita == 0) continue; // ID vacío
+
+        Cita cita = leerRegistro<Cita>("citas.bin", idCita - 1);
+
+        // Si la cita existe y no está eliminada
+        if (cita.id != 0 && !cita.eliminado) {
+            citasArray[contador++] = cita;
+        }
+    }
+    // 5. Actualizar la cantidad real de citas válidas
+    *cantidad = contador;
+    // Si no se encontró ninguna válida, liberar memoria
+    if (contador == 0) {
+        delete[] citasArray;
+        return nullptr;
+    }
+    return citasArray;
+}
+Hospital* cargarDatosHospital() {
+    // 1. Verificar existencia de todos los archivos .bin
+    if (!verificarArchivo("hospital.bin")) {
+        inicializarArchivo("hospital.bin");
+    }
+    if (!verificarArchivo("pacientes.bin")) {
+        inicializarArchivo("pacientes.bin");
+    }
+    if (!verificarArchivo("doctores.bin")) {
+        inicializarArchivo("doctores.bin");
+    }
+    if (!verificarArchivo("citas.bin")) {
+        inicializarArchivo("citas.bin");
+    }
+    if (!verificarArchivo("historiales.bin")) {
+        inicializarArchivo("historiales.bin");
+    }
+
+    fstream archivo("hospital.bin", ios::binary | ios::in);
+    if (!archivo.is_open()) {
+        cout << "Error al abrir hospital.bin\n";
+        return nullptr;
+    }
+
+    archivo.seekg(sizeof(ArchivoHeader), ios::beg);
+
+    Hospital* hospital = new Hospital();
+    archivo.read(reinterpret_cast<char*>(hospital), sizeof(Hospital));
+
+    archivo.close();
+
+    if (!archivo.good()) {
+        cout << "Error al leer hospital.bin\n";
+        delete hospital;
+        return nullptr;
+    }
+
+    cout << "Datos del hospital cargados correctamente: " 
+         << hospital->nombre << "\n";
+
+    return hospital;
 }

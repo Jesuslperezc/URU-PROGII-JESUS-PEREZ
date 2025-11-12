@@ -172,4 +172,37 @@ T leerRegistro(const char* nombreArchivo, int indice) {
     }
     return registro;
 }
+template <typename T>
+void listarRegistros(const char* nombreArchivo) {
+    // 1. Leer header para obtener cantidad de registros
+    ArchivoHeader header = leerHeader(nombreArchivo);
+    int totalRegistros = header.cantidadRegistros;
+    int registrosActivos = 0;
 
+    // Cabecera de la tabla (puedes personalizar según el tipo T)
+    cout << left << setw(6) << "ID"
+         << setw(20) << "Nombre"
+         << setw(20) << "Apellido"
+         << setw(8) << "Edad"
+         << setw(15) << "Cedula" << "\n";
+    cout << string(70, '-') << "\n";
+
+    // 2. Leer cada registro
+    for (int i = 0; i < totalRegistros; i++) {
+        T registro = leerRegistro<T>(nombreArchivo, i);
+
+        // 3. Solo mostrar si no está eliminado
+        if (!registro.eliminado && registro.id != 0) {
+            registrosActivos++;
+
+            cout << left << setw(6) << registro.id
+                 << setw(20) << registro.nombre
+                 << setw(20) << registro.apellido
+                 << setw(8) << registro.edad
+                 << setw(15) << registro.cedula << "\n";
+        }
+    }
+
+    cout << string(70, '-') << "\n";
+    cout << "Total de registros activos: " << registrosActivos << "\n\n";
+}
