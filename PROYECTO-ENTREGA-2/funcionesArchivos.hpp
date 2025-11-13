@@ -19,4 +19,6 @@ void verificarArchivos();
 void restaurarRespaldo();
 void hacerRespaldo();
 void mostrarEstadisticasArchivos();
+bool compactarArchivoDoctores();
+bool compactarArchivoPacientes();
 #endif // FUNCIONESARCHIVOS_HPP

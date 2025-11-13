@@ -165,3 +165,79 @@ void mostrarEstadisticasArchivos() {
     mostrar("citas.bin");
     mostrar("historiales.bin");
 }//===========================================================
+bool compactarArchivoPacientes() {
+    ifstream original("pacientes.bin", ios::binary);
+    ofstream temporal("pacientes_temp.bin", ios::binary);
+
+    if (!original.is_open() || !temporal.is_open()) {
+        cerr << "ERROR: No se pudo abrir archivos para compactar.\n";
+        return false;
+    }
+
+    ArchivoHeader header;
+    original.read((char*)&header, sizeof(ArchivoHeader));
+
+    ArchivoHeader nuevoHeader = {0, 1, 0, header.version};
+    temporal.write((char*)&nuevoHeader, sizeof(ArchivoHeader));
+
+    Paciente p;
+    for (int i = 0; i < header.cantidadRegistros; i++) {
+        original.read((char*)&p, sizeof(Paciente));
+        if (!p.eliminado) {
+            p.id = nuevoHeader.proximoID++;
+            temporal.write((char*)&p, sizeof(Paciente));
+            nuevoHeader.cantidadRegistros++;
+            nuevoHeader.registrosActivos++;
+        }
+    }
+
+    temporal.seekp(0);
+    temporal.write((char*)&nuevoHeader, sizeof(ArchivoHeader));
+
+    original.close();
+    temporal.close();
+
+    remove("pacientes.bin");
+    rename("pacientes_temp.bin", "pacientes.bin");
+
+    cout << "Archivo compactado exitosamente.\n";
+    return true;
+}
+bool compactarArchivoDoctores() {
+    ifstream original("doctores.bin", ios::binary);
+    ofstream temporal("doctores_temp.bin", ios::binary);
+
+    if (!original.is_open() || !temporal.is_open()) {
+        cerr << "ERROR: No se pudo abrir archivos para compactar.\n";
+        return false;
+    }
+
+    ArchivoHeader header;
+    original.read((char*)&header, sizeof(ArchivoHeader));
+
+    ArchivoHeader nuevoHeader = {0, 1, 0, header.version};
+    temporal.write((char*)&nuevoHeader, sizeof(ArchivoHeader));
+
+    Doctor d;
+    for (int i = 0; i < header.cantidadRegistros; i++) {
+        original.read((char*)&d, sizeof(Paciente));
+        if (!d.eliminado) {
+            d.id = nuevoHeader.proximoID++;
+            temporal.write((char*)&d, sizeof(Paciente));
+            nuevoHeader.cantidadRegistros++;
+            nuevoHeader.registrosActivos++;
+        }
+    }
+
+    temporal.seekp(0);
+    temporal.write((char*)&nuevoHeader, sizeof(ArchivoHeader));
+
+    original.close();
+    temporal.close();
+
+    remove("doctores.bin");
+    rename("doctores_temp.bin", "doctores.bin");
+
+    cout << "Archivo compactado exitosamente.\n";
+    return true;
+}
