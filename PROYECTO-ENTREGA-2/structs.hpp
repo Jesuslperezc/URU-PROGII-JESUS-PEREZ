@@ -3,7 +3,6 @@
 #define STRUCTS_HPP
 
 #include <fstream>
-using namespace std;
 // ============================================
 // ESTRUCTURAS
 // ============================================
@@ -50,6 +49,9 @@ struct Paciente {
     char alergias[500];
     char observaciones[500];
     bool activo;
+
+
+
     
     // NUEVO: Índices para relaciones
     int cantidadConsultas;          // Total de consultas en historial

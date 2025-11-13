@@ -1,41 +1,48 @@
 #ifndef UTILIDADES_HPP
 #define UTILIDADES_HPP
-#include <iostream>
-#include <type_traits>
-#include <fstream>
-#include "structs.hpp"  
-using namespace std;
 
+#include <iostream>
+#include <iomanip>      
+#include <type_traits>  
+#include <fstream>      
+#include <cstring>      
+#include "structs.hpp"
+
+// ===================================================================
 // Función genérica que calcula la posición de un registro
+// ===================================================================
 template <typename T>
-streamoff calcularPosicion(int indice) {
-    return sizeof(ArchivoHeader) + static_cast<streamoff>(indice) * sizeof(T);
+std::streamoff calcularPosicion(int indice) {
+    return sizeof(ArchivoHeader) + static_cast<std::streamoff>(indice) * sizeof(T);
 }
 
-// Función genérica para buscar un registro por ID en un archivo binario
+// ===================================================================
+// Buscar registro por ID
+// ===================================================================
 template <typename T>
 T buscarRegistroPorID(const char* nombreArchivo, int id) {
-    fstream archivo(nombreArchivo, ios::binary | ios::in);
+    std::fstream archivo(nombreArchivo, std::ios::binary | std::ios::in);
     if (!archivo.is_open()) {
-        cout << "Error al abrir el archivo: " << nombreArchivo << endl;
-        return T{}; // Objeto vacío en caso de error
+        std::cout << "Error al abrir el archivo: " << nombreArchivo << std::endl;
+        return T{}; // Objeto vacío
     }
 
-    ArchivoHeader header;
+    ArchivoHeader header{};
     archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
+
     if (!archivo) {
-        cout << "Error al leer el header de " << nombreArchivo << endl;
+        std::cout << "Error al leer el header de " << nombreArchivo << std::endl;
         archivo.close();
         return T{};
     }
 
-    T registro;
+    T registro{};
     for (int i = 0; i < header.cantidadRegistros; ++i) {
-        archivo.seekg(sizeof(ArchivoHeader) + i * sizeof(T), ios::beg);
+        archivo.seekg(sizeof(ArchivoHeader) + i * sizeof(T), std::ios::beg);
         archivo.read(reinterpret_cast<char*>(&registro), sizeof(T));
 
         if (!archivo) {
-            cout << "Error al leer el registro " << i << endl;
+            std::cout << "Error al leer el registro " << i << std::endl;
             break;
         }
 
@@ -46,63 +53,55 @@ T buscarRegistroPorID(const char* nombreArchivo, int id) {
     }
 
     archivo.close();
-    cout << "Registro con ID " << id << " no encontrado en " << nombreArchivo << endl;
+    std::cout << "Registro con ID " << id << " no encontrado en " << nombreArchivo << std::endl;
     return T{};
 }
 
-// ===== === == ===== = = == = ====== ==== ======= == == ==== ===== ==
-//    TEMPLATE: Buscar registro por nombre en un archivo binario
-// === = = = = ========== ========== == == === ====== === == == == ===
+// ===================================================================
+// Buscar registro por nombre
+// ===================================================================
 template <typename T>
 T buscarRegistroPorNombre(const char* nombreArchivo, const char* nombreBuscado) {
-    fstream archivo(nombreArchivo, ios::binary | ios::in);
+    std::fstream archivo(nombreArchivo, std::ios::binary | std::ios::in);
     if (!archivo.is_open()) {
-        cout << "Error al abrir el archivo: " << nombreArchivo << endl;
-        return T{};  // Devuelve objeto vacío
+        std::cout << "Error al abrir el archivo: " << nombreArchivo << std::endl;
+        return T{};
     }
 
     ArchivoHeader header{};
     archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
+
     if (!archivo) {
-        cout << "Error al leer el header de " << nombreArchivo << endl;
+        std::cout << "Error al leer el header de " << nombreArchivo << std::endl;
         archivo.close();
         return T{};
     }
 
     T registro{};
     for (int i = 0; i < header.cantidadRegistros; ++i) {
-        archivo.seekg(sizeof(ArchivoHeader) + i * sizeof(T), ios::beg);
+        archivo.seekg(sizeof(ArchivoHeader) + i * sizeof(T), std::ios::beg);
         archivo.read(reinterpret_cast<char*>(&registro), sizeof(T));
 
-        if (!archivo) {
-            cout << "Error al leer el registro " << i << " de " << nombreArchivo << endl;
-            break;
-        }
+        if (!archivo) break;
 
-        // -------------------------------------------------------------
-        // CASOS SEGÚN EL TIPO DE ESTRUCTURA
-        // -------------------------------------------------------------
-        if constexpr (is_same_v<T, Doctor>) {
+        if constexpr (std::is_same_v<T, Doctor>) {
             if (!registro.eliminado && registro.disponible &&
-                strcmp(registro.nombre, nombreBuscado) == 0) {
+                std::strcmp(registro.nombre, nombreBuscado) == 0) {
                 archivo.close();
                 return registro;
             }
-        }
-        else if constexpr (is_same_v<T, Paciente>) {
-            if (!registro.eliminado && strcmp(registro.nombre, nombreBuscado) == 0) {
+        } else if constexpr (std::is_same_v<T, Paciente>) {
+            if (!registro.eliminado && std::strcmp(registro.nombre, nombreBuscado) == 0) {
                 archivo.close();
                 return registro;
             }
-        }
-        else if constexpr (is_same_v<T, Cita>) {
-            if (!registro.eliminado && strcmp(registro.motivo, nombreBuscado) == 0) {
+        } else if constexpr (std::is_same_v<T, Cita>) {
+            if (!registro.eliminado && std::strcmp(registro.motivo, nombreBuscado) == 0) {
                 archivo.close();
                 return registro;
             }
-        }
-        else if constexpr (is_same_v<T, HistorialMedico>) {
-            if (!registro.eliminado && strcmp(registro.diagnostico, nombreBuscado) == 0) {
+        } else if constexpr (std::is_same_v<T, HistorialMedico>) {
+            if (!registro.eliminado && std::strcmp(registro.diagnostico, nombreBuscado) == 0) {
                 archivo.close();
                 return registro;
             }
@@ -110,48 +109,42 @@ T buscarRegistroPorNombre(const char* nombreArchivo, const char* nombreBuscado) 
     }
 
     archivo.close();
-    cout << "Registro con nombre " << nombreBuscado << " no encontrado en " << nombreArchivo << endl;
+    std::cout << "Registro con nombre " << nombreBuscado << " no encontrado en " << nombreArchivo << std::endl;
     return T{};
 }
 
-
-// Función genérica para escribir un registro en una posición específica
+// ===================================================================
+// Escribir registro
+// ===================================================================
 template <typename T>
 bool escribirRegistro(const char* nombreArchivo, const T& registro, int indice) {
-    // Verificar si el archivo existe
-    fstream archivo(nombreArchivo, ios::binary | ios::in | ios::out);
+    std::fstream archivo(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
     if (!archivo.is_open()) {
-        // Si no existe, lo creamos con un header inicial
-        archivo.open(nombreArchivo, ios::binary | ios::out);
+        // Crear archivo con header si no existe
+        archivo.open(nombreArchivo, std::ios::binary | std::ios::out);
         if (!archivo.is_open()) {
-            cout << "Error: no se pudo crear el archivo " << nombreArchivo << endl;
+            std::cout << "Error: no se pudo crear el archivo " << nombreArchivo << std::endl;
             return false;
         }
-        ArchivoHeader header{};
-        header.cantidadRegistros = 0;
-        header.proximoID = 1;
-        header.registrosActivos = 0;
-        header.version = 1;
+
+        ArchivoHeader header{0, 1, 0, 1};
         archivo.write(reinterpret_cast<const char*>(&header), sizeof(ArchivoHeader));
         archivo.close();
 
-        // Reabrimos ahora sí en modo lectura/escritura
-        archivo.open(nombreArchivo, ios::binary | ios::in | ios::out);
+        archivo.open(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
         if (!archivo.is_open()) return false;
     }
 
-    // Posicionar el puntero de escritura en el registro indicado
-    archivo.seekp(calcularPosicion<T>(indice), ios::beg);
+    archivo.seekp(calcularPosicion<T>(indice), std::ios::beg);
     if (!archivo.good()) {
-        cout << "Error al mover el puntero en " << nombreArchivo << endl;
+        std::cout << "Error al mover el puntero en " << nombreArchivo << std::endl;
         archivo.close();
         return false;
     }
 
-    // Escribir el registro
     archivo.write(reinterpret_cast<const char*>(&registro), sizeof(T));
     if (!archivo.good()) {
-        cout << "Error al escribir el registro en " << nombreArchivo << endl;
+        std::cout << "Error al escribir el registro en " << nombreArchivo << std::endl;
         archivo.close();
         return false;
     }
@@ -160,10 +153,12 @@ bool escribirRegistro(const char* nombreArchivo, const T& registro, int indice) 
     return true;
 }
 
-// Leer un registro genérico por índice
+// ===================================================================
+// Leer registro
+// ===================================================================
 template <typename T>
 T leerRegistro(const char* nombreArchivo, int indice) {
-    fstream archivo(nombreArchivo, ios::binary | ios::in);
+    std::fstream archivo(nombreArchivo, std::ios::binary | std::ios::in);
     T registro{};
     if (archivo.is_open()) {
         archivo.seekg(calcularPosicion<T>(indice));
@@ -172,37 +167,80 @@ T leerRegistro(const char* nombreArchivo, int indice) {
     }
     return registro;
 }
+
+// ===================================================================
+// Leer header (no-template)
+// ===================================================================
+inline ArchivoHeader leerHeader(const char* nombreArchivo) {
+    ArchivoHeader header{};
+    std::ifstream archivo(nombreArchivo, std::ios::binary);
+    if (!archivo.is_open()) return header;
+    archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
+    archivo.close();
+    return header;
+}
+
+// ===================================================================
+// Listar registros
+// ===================================================================
 template <typename T>
 void listarRegistros(const char* nombreArchivo) {
-    // 1. Leer header para obtener cantidad de registros
     ArchivoHeader header = leerHeader(nombreArchivo);
-    int totalRegistros = header.cantidadRegistros;
-    int registrosActivos = 0;
+    int total = header.cantidadRegistros, activos = 0;
 
-    // Cabecera de la tabla (puedes personalizar según el tipo T)
-    cout << left << setw(6) << "ID"
-         << setw(20) << "Nombre"
-         << setw(20) << "Apellido"
-         << setw(8) << "Edad"
-         << setw(15) << "Cedula" << "\n";
-    cout << string(70, '-') << "\n";
+    // Encabezados dinámicos según el tipo
+    if constexpr (std::is_same_v<T, Paciente>) {
+        std::cout << std::left << std::setw(6) << "ID"
+                  << std::setw(20) << "Nombre"
+                  << std::setw(20) << "Apellido"
+                  << std::setw(8)  << "Edad"
+                  << std::setw(15) << "Cedula" << "\n";
+    } else if constexpr (std::is_same_v<T, Doctor>) {
+        std::cout << std::left << std::setw(6) << "ID"
+                  << std::setw(20) << "Nombre"
+                  << std::setw(20) << "Apellido"
+                  << std::setw(15) << "Especialidad" << "\n";
+    } else if constexpr (std::is_same_v<T, Cita>) {
+        std::cout << std::left << std::setw(6) << "ID"
+                  << std::setw(12) << "Fecha"
+                  << std::setw(10) << "Hora"
+                  << std::setw(8)  << "DocID"
+                  << std::setw(8)  << "PacID"
+                  << std::setw(25) << "Motivo" << "\n";
+    }
 
-    // 2. Leer cada registro
-    for (int i = 0; i < totalRegistros; i++) {
-        T registro = leerRegistro<T>(nombreArchivo, i);
+    std::cout << std::string(80, '-') << "\n";
 
-        // 3. Solo mostrar si no está eliminado
-        if (!registro.eliminado && registro.id != 0) {
-            registrosActivos++;
+    // Mostrar registros activos
+    for (int i = 0; i < total; ++i) {
+        T r = leerRegistro<T>(nombreArchivo, i);
+        if (!r.eliminado && r.id != 0) {
+            activos++;
 
-            cout << left << setw(6) << registro.id
-                 << setw(20) << registro.nombre
-                 << setw(20) << registro.apellido
-                 << setw(8) << registro.edad
-                 << setw(15) << registro.cedula << "\n";
+            if constexpr (std::is_same_v<T, Paciente>) {
+                std::cout << std::left << std::setw(6) << r.id
+                          << std::setw(20) << r.nombre
+                          << std::setw(20) << r.apellido
+                          << std::setw(8)  << r.edad
+                          << std::setw(15) << r.cedula << "\n";
+            } else if constexpr (std::is_same_v<T, Doctor>) {
+                std::cout << std::left << std::setw(6) << r.id
+                          << std::setw(20) << r.nombre
+                          << std::setw(20) << r.apellido
+                          << std::setw(15) << r.especialidad << "\n";
+            } else if constexpr (std::is_same_v<T, Cita>) {
+                std::cout << std::left << std::setw(6)  << r.id
+                          << std::setw(12) << r.fecha
+                          << std::setw(10) << r.hora
+                          << std::setw(8)  << r.idDoctor
+                          << std::setw(8)  << r.idPaciente
+                          << std::setw(25) << r.motivo << "\n";
+            }
         }
     }
 
-    cout << string(70, '-') << "\n";
-    cout << "Total de registros activos: " << registrosActivos << "\n\n";
+    std::cout << std::string(80, '-') << "\n";
+    std::cout << "Total de registros activos: " << activos << "\n\n";
 }
+
+#endif // UTILIDADES_HPP
