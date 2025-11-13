@@ -782,86 +782,90 @@ bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,
     return true;
 }
 
-Cita* leerCitasDePaciente(int pacienteID, int* cantidad) {
-    *cantidad = 0; // Inicializar por seguridad
-    // 1. Leer paciente desde el archivo
-    Paciente paciente = leerRegistro<Paciente>("pacientes.bin", pacienteID - 1);
-    // Validar que el paciente exista
-    if (paciente.id == 0) {
-        cout << "Error: paciente no encontrado.\n";
-        return nullptr;
-    }
-    // 2. Obtener la cantidad de citas y sus IDs
-    int totalCitas = paciente.cantidadCitas;
-    if (totalCitas == 0) {
-        cout << "El paciente no tiene citas registradas.\n";
-        return nullptr;
-    }
-    int* citasIDs = paciente.citasIDs;
-    // 3. Crear un array dinámico para almacenar las citas válidas
-    Cita* citasArray = new Cita[totalCitas];
-    int contador = 0;
-    // 4. Leer cada cita desde el archivo
-    for (int i = 0; i < totalCitas; i++) {
-        int idCita = citasIDs[i];
-        if (idCita == 0) continue; // ID vacío
+case 4: { // Ver citas de un paciente
+    system("cls");
+    int idPac, cantidad = 0;
+    cout << "Ingrese ID del paciente: "; cin >> idPac;
 
-        Cita cita = leerRegistro<Cita>("citas.bin", idCita - 1);
+    // Obtener las citas del paciente
+    Cita* citas = leerCitasDePaciente(idPac, &cantidad);
 
-        // Si la cita existe y no está eliminada
-        if (cita.id != 0 && !cita.eliminado) {
-            citasArray[contador++] = cita;
+    if (citas && cantidad > 0) {
+        cout << left 
+             << setw(6)  << "ID"
+             << setw(12) << "Fecha"
+             << setw(10) << "Hora"
+             << setw(8)  << "DocID"
+             << setw(8)  << "PacID"
+             << setw(25) << "Motivo" << "\n";
+        cout << string(70, '-') << "\n";
+
+        for (int i = 0; i < cantidad; i++) {
+            cout << left 
+                 << setw(6)  << citas[i].id
+                 << setw(12) << citas[i].fecha
+                 << setw(10) << citas[i].hora
+                 << setw(8)  << citas[i].doctorID
+                 << setw(8)  << citas[i].pacienteID
+                 << setw(25) << citas[i].motivo << "\n";
         }
+
+        delete[] citas; // Liberamos memoria
+    } else {
+        cout << "No se encontraron citas para este paciente.\n";
     }
-    // 5. Actualizar la cantidad real de citas válidas
-    *cantidad = contador;
-    // Si no se encontró ninguna válida, liberar memoria
-    if (contador == 0) {
-        delete[] citasArray;
-        return nullptr;
-    }
-    return citasArray;
+
+    cout << string(70, '-') << "\n";
+    cout << "Total de citas encontradas: " << cantidad << "\n";
+
+    cout << "Presione Enter para continuar...";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cin.get();
+    break;
 }
-Cita* leerCitasDoctor(int doctorID, int* cantidad) {
-    *cantidad = 0; // Inicializar por seguridad
-    // 1. Leer paciente desde el archivo
-    Doctor d = leerRegistro<Doctor>("doctores.bin", doctorID - 1);
-    // Validar que el paciente exista
-    if (d.id == 0) {
-        cout << "Error: Doctor no encontrado.\n";
-        return nullptr;
-    }
-    // 2. Obtener la cantidad de citas y sus IDs
-    int totalCitas = d.cantidadCitas;
-    if (totalCitas == 0) {
-        cout << "El Doctor no tiene citas registradas.\n";
-        return nullptr;
-    }
-    int* citasIDs = d.citasIDs;
-    // 3. Crear un array dinámico para almacenar las citas válidas
-    Cita* citasArray = new Cita[totalCitas];
-    int contador = 0;
-    // 4. Leer cada cita desde el archivo
-    for (int i = 0; i < totalCitas; i++) {
-        int idCita = citasIDs[i];
-        if (idCita == 0) continue; // ID vacío
 
-        Cita cita = leerRegistro<Cita>("citas.bin", idCita - 1);
+case 5: { // Ver citas de un doctor
+    system("cls");
+    int idDoc, cantidad = 0;
+    cout << "Ingrese ID del doctor: "; cin >> idDoc;
 
-        // Si la cita existe y no está eliminada
-        if (cita.id != 0 && !cita.eliminado) {
-            citasArray[contador++] = cita;
+    // Obtener las citas del doctor
+    Cita* citas = leerCitasDoctor(idDoc, &cantidad);
+
+    if (citas && cantidad > 0) {
+        cout << left 
+             << setw(6)  << "ID"
+             << setw(12) << "Fecha"
+             << setw(10) << "Hora"
+             << setw(8)  << "DocID"
+             << setw(8)  << "PacID"
+             << setw(25) << "Motivo" << "\n";
+        cout << string(70, '-') << "\n";
+
+        for (int i = 0; i < cantidad; i++) {
+            cout << left 
+                 << setw(6)  << citas[i].id
+                 << setw(12) << citas[i].fecha
+                 << setw(10) << citas[i].hora
+                 << setw(8)  << citas[i].doctorID
+                 << setw(8)  << citas[i].pacienteID
+                 << setw(25) << citas[i].motivo << "\n";
         }
+
+        delete[] citas; // Liberamos memoria
+    } else {
+        cout << "No se encontraron citas para este doctor.\n";
     }
-    // 5. Actualizar la cantidad real de citas válidas
-    *cantidad = contador;
-    // Si no se encontró ninguna válida, liberar memoria
-    if (contador == 0) {
-        delete[] citasArray;
-        return nullptr;
-    }
-    return citasArray;
+
+    cout << string(70, '-') << "\n";
+    cout << "Total de citas encontradas: " << cantidad << "\n";
+
+    cout << "Presione Enter para continuar...";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cin.get();
+    break;
 }
+
 Hospital* cargarDatosHospital() {
     // 1. Verificar existencia de todos los archivos .bin
     if (!verificarArchivo("hospital.bin")) {
