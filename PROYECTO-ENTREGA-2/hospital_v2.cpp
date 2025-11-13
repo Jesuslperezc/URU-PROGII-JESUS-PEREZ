@@ -11,6 +11,9 @@
 #include "FuncionesPrincipales.hpp"
 using namespace std;
 
+// forward declaration for function implemented elsewhere
+
+
 int main() {
 
     asegurarArchivo("hospital.bin");
@@ -460,20 +463,11 @@ int main() {
                             break;
                         }
 
-                       case 4: { // Ver citas de un paciente
+                       // --- dentro del switch de citas ---
+                        case 4: { // Ver citas de un paciente
                             system("cls");
-                            int idPac = 0, cantidad = 0;
-
-                            cout << "Ingrese ID del paciente: "; 
-                            if (!(cin >> idPac) || idPac <= 0) {
-                                cin.clear();
-                                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                                cout << "ID inválido.\n";
-                                system("pause");
-                                break;
-                            }
-
-                            // Llamamos a la función que obtiene las citas del paciente
+                            int idPac, cantidad = 0;
+                            cout << "Ingrese ID del paciente: "; cin >> idPac;
                             Cita* citas = leerCitasDePaciente(idPac, &cantidad);
 
                             if (citas && cantidad > 0) {
@@ -494,7 +488,7 @@ int main() {
                                         << setw(25) << citas[i].motivo << "\n";
                                 }
 
-                                delete[] citas; // Liberamos memoria dinámica
+                                delete[] citas; // liberar memoria
                             } else {
                                 cout << "No se encontraron citas para este paciente.\n";
                             }
@@ -506,12 +500,12 @@ int main() {
                             break;
                         }
 
-
-                       case 5: { // Ver citas de un doctor
+                        case 5: { // Ver citas de un doctor
                             system("cls");
                             int idDoc, cantidad = 0;
                             cout << "Ingrese ID del doctor: "; cin >> idDoc;
                             Cita* citas = leerCitasDoctor(idDoc, &cantidad);
+
                             if (citas && cantidad > 0) {
                                 cout << left << setw(6) << "ID"
                                     << setw(12) << "Fecha"
@@ -544,70 +538,100 @@ int main() {
                         }
 
                         case 6: { // Buscar citas por fecha
-                                system("cls");
-                                char fecha[12]; // formato: "dd/mm/yyyy"
-                                cout << "Ingrese fecha (dd/mm/yyyy): ";
-                                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                                cin.getline(fecha, 12);
+                            system("cls");
+                            char fecha[12]; // formato: "dd/mm/yyyy"
+                            cout << "Ingrese fecha (dd/mm/yyyy): ";
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cin.getline(fecha, 12);
 
-                                int cantidad = 0;
-                                Cita* citas = obtenerCitasPorFecha(fecha, &cantidad);
+                            int cantidad = 0;
+                            Cita* citas = obtenerCitasPorFecha(fecha, &cantidad);
 
-                                if (citas == nullptr) {
-                                    cout << "No se encontraron citas para la fecha " << fecha << ".\n";
-                                } else {
-                                    cout << "\nCitas encontradas: " << cantidad << "\n";
-                                    for (int i = 0; i < cantidad; i++) {
-                                        Cita c = citas[i];
-                                        cout << "ID: " << c.id
-                                            << " | DoctorID: " << c.doctorID
-                                            << " | PacienteID: " << c.pacienteID
-                                            << " | Hora: " << c.hora
-                                            << " | Motivo: " << c.motivo << "\n";
-                                    }
-                                    delete[] citas;
+                            if (citas == nullptr) {
+                                cout << "No se encontraron citas para la fecha " << fecha << ".\n";
+                            } else {
+                                cout << "\nCitas encontradas: " << cantidad << "\n";
+                                for (int i = 0; i < cantidad; i++) {
+                                    Cita c = citas[i];
+                                    cout << "ID: " << c.id
+                                        << " | DoctorID: " << c.doctorID
+                                        << " | PacienteID: " << c.pacienteID
+                                        << " | Hora: " << c.hora
+                                        << " | Motivo: " << c.motivo << "\n";
                                 }
-
-                                system("pause");
-                                break;
+                                delete[] citas;
                             }
+
+                            system("pause");
+                            break;
+                        }
 
                         case 7: { // Citas pendientes
                             system("cls");
                             listarCitasPendientes();
                             cout << "\nPresione Enter para continuar...";
-                            cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cin.get();
                             break;
                         }
 
                         case 0: break;
-                        default: cout << "Opcion no valida.\n"; cin.get(); break;
+                        default:
+                            cout << "Opción no válida.\n";
+                            cin.get();
+                            break;
+                        }
+                            } while (opCita != 0);
+                            break;
+    
+                            // --- Submenú de Mantenimiento ---
+                        case 4: {
+                            int subop;
+                            do {
+                                system("cls");
+                                cout << "MANTENIMIENTO DE ARCHIVOS:\n";
+                                cout << "1. Verificar integridad de archivos\n";
+                                cout << "2. Compactar archivos (eliminar registros borrados)\n";
+                                cout << "3. Hacer respaldo de datos\n";
+                                cout << "4. Restaurar desde respaldo\n";
+                                cout << "5. Estadísticas de uso de archivos\n";
+                                cout << "6. Volver al menú principal\n";
+                                cout << "Opción: ";
+                                cin >> subop;
+    
+                                switch(subop) {
+                                    case 1: verificarArchivos(); break;
+                                    case 2: compactarArchivos(); break;
+                                    case 3: hacerRespaldo(); break;
+                                    case 4: restaurarRespaldo(); break;
+                                    case 5: mostrarEstadisticasArchivos(); break;
+                                    case 6: cout << "Volviendo al menú principal...\n"; break;
+                                    default: cout << "Opción inválida.\n";
+                                }
+    
+                                if (subop != 6) {
+                                    cout << "\nPresione Enter para continuar...";
+                                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                    cin.get();
+                                }
+    
+                            } while (subop != 6);
+                            break;
+                        }
+    
+                    } // end switch(opMenu)
+                } while (opMenu != 4);
+    
+                // --- Guardar hospital antes de salir ---
+                if (hospital) {
+                    if (guardarHospital(*hospital)) {
+                        cout << "Datos del hospital guardados correctamente en hospital.bin.\n";
+                    } else {
+                        cout << "Error al guardar los datos del hospital.\n";
                     }
-
-                } while (opCita != 0);
-                break;
+                    delete hospital;
+                }
+            
+                return 0;
             }
-
-            case 4:
-                cout << "\n";
-                break;
-
-            default:
-                cout << "Opcion no valida.\n";
-                cin.get();
-                break;
-        }
-
-    } while (opMenu != 4);
-    if (hospital) {
-    if (guardarHospital(*hospital)) {
-        cout << "Datos del hospital guardados correctamente en hospital.bin.\n";
-    } else {
-        cout << "Error al guardar los datos del hospital.\n";
-    }
-}
-delete hospital;
-
-return 0;
-}
-//g++ -Wall -Wextra -g3 ` ..\hospital_v2.cpp ` ..\funcionesPrincipales.cpp `  ..\funcionesArchivos.cpp `   -o hospital_v2.exe
+            

@@ -105,3 +105,63 @@ bool asegurarArchivo(const char* nombreArchivo) {
 
     return true;
 }
+void verificarArchivos() {
+    cout << "\n=== Verificación de Archivos ===\n";
+    verificarArchivo("hospital.bin");
+    verificarArchivo("pacientes.bin");
+    verificarArchivo("doctores.bin");
+    verificarArchivo("citas.bin");
+    verificarArchivo("historiales.bin");
+    
+}
+#include <filesystem>
+#include <vector>
+namespace fs = std::filesystem;
+
+void hacerRespaldo() {
+    cout << "\n=== Creando respaldo ===\n";
+    fs::create_directory("backup");
+
+    vector<string> archivos = {
+        "hospital.bin", "pacientes.bin", "doctores.bin", "citas.bin", "historiales.bin"
+    };
+
+    for (auto& nombre : archivos) {
+        fs::copy_file(nombre, "backup/" + nombre, fs::copy_options::overwrite_existing);
+        cout << "Respaldo creado: " << nombre << "\n";
+    }
+}
+void restaurarRespaldo() {
+    cout << "\n=== Restaurando respaldo ===\n";
+    vector<string> archivos = {
+        "hospital.bin", "pacientes.bin", "doctores.bin", "citas.bin", "historiales.bin"
+    };
+
+    for (auto& nombre : archivos) {
+        string origen = "backup/" + nombre;
+        if (fs::exists(origen)) {
+            fs::copy_file(origen, nombre, fs::copy_options::overwrite_existing);
+            cout << "Archivo restaurado: " << nombre << "\n";
+        } else {
+            cout << "No existe respaldo para: " << nombre << "\n";
+        }
+    }
+}
+void mostrarEstadisticasArchivos() {
+    cout << "\n=== Estadísticas de Archivos ===\n";
+
+    auto mostrar = [](const char* nombreArchivo) {
+        ArchivoHeader header = leerHeader(nombreArchivo);
+        cout << nombreArchivo << ":\n";
+        cout << "  Registros totales: " << header.cantidadRegistros << "\n";
+        cout << "  Registros activos: " << header.registrosActivos << "\n";
+        cout << "  Próximo ID: " << header.proximoID << "\n";
+        cout << "  Versión: " << header.version << "\n\n";
+    };
+
+    mostrar("hospital.bin");
+    mostrar("pacientes.bin");
+    mostrar("doctores.bin");
+    mostrar("citas.bin");
+    mostrar("historiales.bin");
+}//===========================================================

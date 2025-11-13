@@ -15,5 +15,8 @@ bool verificarArchivo(const char* nombreArchivo);
 ArchivoHeader leerHeader(const char* nombreArchivo);
 bool actualizarHeader(const char* nombreArchivo, ArchivoHeader header);
 bool asegurarArchivo(const char* nombreArchivo);
-
+void verificarArchivos();
+void restaurarRespaldo();
+void hacerRespaldo();
+void mostrarEstadisticasArchivos();
 #endif // FUNCIONESARCHIVOS_HPP
