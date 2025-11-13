@@ -27,7 +27,7 @@ Doctor crearDoctor(Hospital* hospital, const char* nombre,
                    float costoConsulta);
 bool asignarPacienteADoctor(int idDoctor, int idPaciente);
 bool removerPacienteDeDoctor(Doctor* doctor, int idPaciente);
-void listarDoctores(Hospital* hospital);
+void listarDoctores();
 bool validarFormatoFecha(const char* fecha);
 void mostrarHistorialMedico(Paciente* paciente);
 bool obtenerUltimaConsulta(Paciente* paciente, HistorialMedico& salida);

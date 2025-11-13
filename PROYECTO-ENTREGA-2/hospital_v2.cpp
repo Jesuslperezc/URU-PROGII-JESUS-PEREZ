@@ -306,7 +306,7 @@ int main() {
 
                         case 6: { // Listar todos los doctores
                             system("cls");
-                            listarDoctores(hospital);
+                            listarDoctores();
                             cout << "\nPresione Enter para continuar...";
                             cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
                             break;

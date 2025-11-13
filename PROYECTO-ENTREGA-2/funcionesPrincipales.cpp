@@ -577,8 +577,8 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
     }
 
     // Leer headers
-    ArchivoHeader headerPacientes = leerHeader("pacientes.bin");
-    ArchivoHeader headerDoctores = leerHeader("doctores.bin");
+    leerHeader("pacientes.bin");
+    leerHeader("doctores.bin");
     ArchivoHeader headerCitas = leerHeader("citas.bin");
 
     // Leer paciente y doctor desde archivo
