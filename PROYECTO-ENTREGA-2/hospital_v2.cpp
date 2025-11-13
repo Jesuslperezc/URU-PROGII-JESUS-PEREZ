@@ -617,26 +617,50 @@ int main() {
                                 cin >> subop;
             
                                 switch(subop) {
-                                    case 1: verificarArchivos(); break;
-                                    case 2: hacerRespaldo(); break;
-                                    case 3: restaurarRespaldo(); break;
-                                    case 4: mostrarEstadisticasArchivos(); break;
-                                    case 5: 
-                                    
-                                        compactarArchivoDoctores();
-                                        compactarArchivoPacientes();
+                                    case 1:
+                                        verificarArchivos();
                                         break;
-                                    case 6: /* volver */ break;
-                                    default: cout << "Opción inválida.\n"; break;
+                                    case 2:
+                                        hacerRespaldo();
+                                        break;
+                                    case 3:
+                                        restaurarRespaldo();
+                                        break;
+                                    case 4:
+                                        mostrarEstadisticasArchivos();
+                                        break;
+                                    case 5: {
+                                        system("cls");
+                                        cout << "=== COMPACTACIÓN DE ARCHIVOS ===\n";
+
+                                        bool ok1 = compactarArchivoPacientes();
+                                        bool ok2 = compactarArchivoDoctores();
+                                        if (ok1 && ok2) {
+                                            cout << "\nTodos los archivos fueron compactados correctamente.\n";
+                                        } else {
+                                            cout << "\nOcurrió un error al compactar uno o más archivos.\n";
+                                        }
+
+                                        cout << "\nPresione Enter para continuar...";
+                                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                        cin.get();
+                                        break;
+                                    }
+                                    case 6:
+                                        /* volver */
+                                        break;
+                                    default:
+                                        cout << "Opción inválida.\n";
+                                        break;
                                 }
             
-                                if (subop != 5) {
+                                if (subop != 6) {
                                     cout << "\nPresione Enter para continuar...";
                                     cin.ignore(numeric_limits<streamsize>::max(), '\n');
                                     cin.get();
                                 }
             
-                            } while (subop != 5);
+                            } while (subop != 6);
             
                             break;
                         }
