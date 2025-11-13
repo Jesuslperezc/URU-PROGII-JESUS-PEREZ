@@ -672,14 +672,19 @@ bool atenderCita(Hospital* hospital, int idCita,
         return false;
     }
 
-    // Crear nueva consulta (historial médico)
+    // Crear nueva consulta
     HistorialMedico nuevaConsulta{};
     nuevaConsulta.id = hospital->siguienteIDConsulta++;
     strncpy(nuevaConsulta.fecha, cita.fecha, sizeof(nuevaConsulta.fecha)-1);
+    nuevaConsulta.fecha[sizeof(nuevaConsulta.fecha)-1] = '\0';
     strncpy(nuevaConsulta.hora, cita.hora, sizeof(nuevaConsulta.hora)-1);
+    nuevaConsulta.hora[sizeof(nuevaConsulta.hora)-1] = '\0';
     strncpy(nuevaConsulta.diagnostico, diagnostico, sizeof(nuevaConsulta.diagnostico)-1);
+    nuevaConsulta.diagnostico[sizeof(nuevaConsulta.diagnostico)-1] = '\0';
     strncpy(nuevaConsulta.tratamiento, tratamiento, sizeof(nuevaConsulta.tratamiento)-1);
+    nuevaConsulta.tratamiento[sizeof(nuevaConsulta.tratamiento)-1] = '\0';
     strncpy(nuevaConsulta.medicamentos, medicamentos, sizeof(nuevaConsulta.medicamentos)-1);
+    nuevaConsulta.medicamentos[sizeof(nuevaConsulta.medicamentos)-1] = '\0';
     nuevaConsulta.doctorID = doctor.id;
     nuevaConsulta.costo    = doctor.costoConsulta;
 
@@ -693,18 +698,21 @@ bool atenderCita(Hospital* hospital, int idCita,
     headerHist.proximoID++;
     actualizarHeader("historiales.bin", headerHist);
 
-    // Asociar la consulta al paciente
+    // Asociar consulta al paciente
     if (paciente.cantidadConsultas < 100) {
         if (paciente.cantidadConsultas == 0)
             paciente.primerConsultaID = nuevaConsulta.id;
         paciente.cantidadConsultas++;
-        escribirRegistro<Paciente>("pacientes.bin", paciente, paciente.id - 1);
+
+        int idxPac = encontrarIndicePorID<Paciente>("pacientes.bin", paciente.id);
+        escribirRegistro<Paciente>("pacientes.bin", paciente, idxPac);
     } else {
         cout << "Advertencia: paciente ha alcanzado el máximo de consultas.\n";
     }
 
     // Guardar cambios de la cita
-    escribirRegistro<Cita>("citas.bin", cita, cita.id - 1);
+    int idxCita = encontrarIndicePorID<Cita>("citas.bin", cita.id);
+    escribirRegistro<Cita>("citas.bin", cita, idxCita);
 
     // Actualizar hospital
     hospital->totalConsultasRealizadas++;

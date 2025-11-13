@@ -11,7 +11,6 @@
 #include "FuncionesPrincipales.hpp"
 using namespace std;
 
-// forward declaration for function implemented elsewhere
 
 
 int main() {
