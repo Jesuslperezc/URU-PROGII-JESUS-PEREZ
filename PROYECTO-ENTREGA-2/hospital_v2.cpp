@@ -431,78 +431,87 @@ int main() {
                             break;
                         }
 
-                        case 4: { // Ver citas de un paciente
-                                system("cls");
-                                int idPac, cantidad = 0;
-                                cout << "Ingrese ID del paciente: "; cin >> idPac;
+                       case 4: { // Ver citas de un paciente
+                            system("cls");
+                            int idPac = 0, cantidad = 0;
 
-                                // Llamamos a tu función para obtener las citas del paciente
-                                Cita* citas = leerCitasDePaciente(idPac, &cantidad);
-
-                                if (citas && cantidad > 0) {
-                                    cout << left << setw(6) << "ID"
-                                        << setw(12) << "Fecha"
-                                        << setw(10) << "Hora"
-                                        << setw(8)  << "DocID"
-                                        << setw(8)  << "PacID"
-                                        << setw(25) << "Motivo" << "\n";
-                                    cout << string(70, '-') << "\n";
-
-                                    for (int i = 0; i < cantidad; i++) {
-                                        cout << left << setw(6)  << citas[i].id
-                                            << setw(12) << citas[i].fecha
-                                            << setw(10) << citas[i].hora
-                                            << setw(8)  << citas[i].doctorID
-                                            << setw(8)  << citas[i].pacienteID
-                                            << setw(25) << citas[i].motivo << "\n";
-                                    }
-
-                                    delete[] citas; // Liberamos memoria
-                                } else {
-                                    cout << "No se encontraron citas para este paciente.\n";
-                                }
-
-                                cout << string(70, '-') << "\n";
-                                cout << "Total de citas encontradas: " << cantidad << "\n";
-
+                            cout << "Ingrese ID del paciente: "; 
+                            if (!(cin >> idPac) || idPac <= 0) {
+                                cin.clear();
+                                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                cout << "ID inválido.\n";
                                 system("pause");
                                 break;
                             }
 
+                            // Llamamos a la función que obtiene las citas del paciente
+                            Cita* citas = leerCitasDePaciente(idPac, &cantidad);
 
-                        case 5: { // Ver citas de un doctor
+                            if (citas && cantidad > 0) {
+                                cout << left << setw(6) << "ID"
+                                    << setw(12) << "Fecha"
+                                    << setw(10) << "Hora"
+                                    << setw(8)  << "DocID"
+                                    << setw(8)  << "PacID"
+                                    << setw(25) << "Motivo" << "\n";
+                                cout << string(70, '-') << "\n";
+
+                                for (int i = 0; i < cantidad; i++) {
+                                    cout << left << setw(6)  << citas[i].id
+                                        << setw(12) << citas[i].fecha
+                                        << setw(10) << citas[i].hora
+                                        << setw(8)  << citas[i].doctorID
+                                        << setw(8)  << citas[i].pacienteID
+                                        << setw(25) << citas[i].motivo << "\n";
+                                }
+
+                                delete[] citas; // Liberamos memoria dinámica
+                            } else {
+                                cout << "No se encontraron citas para este paciente.\n";
+                            }
+
+                            cout << string(70, '-') << "\n";
+                            cout << "Total de citas encontradas: " << cantidad << "\n";
+
+                            system("pause");
+                            break;
+                        }
+
+
+                       case 5: { // Ver citas de un doctor
                             system("cls");
                             int idDoc, cantidad = 0;
                             cout << "Ingrese ID del doctor: "; cin >> idDoc;
                             Cita* citas = leerCitasDoctor(idDoc, &cantidad);
-                           if (citas && cantidad > 0) {
-                                    cout << left << setw(6) << "ID"
-                                        << setw(12) << "Fecha"
-                                        << setw(10) << "Hora"
-                                        << setw(8)  << "DocID"
-                                        << setw(8)  << "PacID"
-                                        << setw(25) << "Motivo" << "\n";
-                                    cout << string(70, '-') << "\n";
+                            if (citas && cantidad > 0) {
+                                cout << left << setw(6) << "ID"
+                                    << setw(12) << "Fecha"
+                                    << setw(10) << "Hora"
+                                    << setw(8)  << "DocID"
+                                    << setw(8)  << "PacID"
+                                    << setw(25) << "Motivo" << "\n";
+                                cout << string(70, '-') << "\n";
 
-                                    for (int i = 0; i < cantidad; i++) {
-                                        cout << left << setw(6)  << citas[i].id
-                                            << setw(12) << citas[i].fecha
-                                            << setw(10) << citas[i].hora
-                                            << setw(8)  << citas[i].doctorID
-                                            << setw(8)  << citas[i].pacienteID
-                                            << setw(25) << citas[i].motivo << "\n";
-                                    }
-
-                                    delete[] citas; // Liberamos memoria
-                                } else {
-                                    cout << "No se encontraron citas para este paciente.\n";
+                                for (int i = 0; i < cantidad; i++) {
+                                    cout << left << setw(6)  << citas[i].id
+                                        << setw(12) << citas[i].fecha
+                                        << setw(10) << citas[i].hora
+                                        << setw(8)  << citas[i].doctorID
+                                        << setw(8)  << citas[i].pacienteID
+                                        << setw(25) << citas[i].motivo << "\n";
                                 }
 
-                                cout << string(70, '-') << "\n";
-                                cout << "Total de citas encontradas: " << cantidad << "\n";
+                                delete[] citas;
+                            } else {
+                                cout << "No se encontraron citas para este doctor.\n";
+                            }
 
-                                system("pause");
-                                break;
+                            cout << string(70, '-') << "\n";
+                            cout << "Total de citas encontradas: " << cantidad << "\n";
+
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cin.get();
+                            break;
                         }
 
                         case 6: { // Buscar citas por fecha
