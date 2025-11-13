@@ -12,6 +12,11 @@
 using namespace std;
 
 int main() {
+    asegurarArchivo("hospital.bin");
+    asegurarArchivo("pacientes.bin");
+    asegurarArchivo("doctores.bin");
+    asegurarArchivo("citas.bin");
+    asegurarArchivo("historiales.bin");
     Hospital* hospital = cargarDatosHospital();
 
 
