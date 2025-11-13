@@ -98,6 +98,7 @@ Paciente crearPaciente(Hospital* hospital, const char* nombre,
     strcpy(p.nombre, nombre);
     strcpy(p.apellido, apellido);
     strcpy(p.cedula, cedula);
+
     p.edad = edad;
     p.sexo = toupper((unsigned char)sexo);
     p.eliminado = false;

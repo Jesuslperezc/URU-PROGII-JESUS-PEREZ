@@ -622,6 +622,7 @@ int main() {
                                     case 3: restaurarRespaldo(); break;
                                     case 4: mostrarEstadisticasArchivos(); break;
                                     case 5: 
+                                    
                                         compactarArchivoDoctores();
                                         compactarArchivoPacientes();
                                         break;
