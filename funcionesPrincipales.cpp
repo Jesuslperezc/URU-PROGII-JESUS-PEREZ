@@ -123,7 +123,7 @@ Paciente crearPaciente(Hospital* hospital, const char* nombre,
         archivo.close();
         archivo.open("pacientes.bin", ios::binary | ios::in | ios::out);
         if (!archivo.is_open()) {
-            cout << "No se pudo crear/abrir el archivo de pacientes.\n";
+            std::cout << "No se pudo crear/abrir el archivo de pacientes.\n";
             return {};
         }
         return p;
@@ -150,7 +150,7 @@ Paciente crearPaciente(Hospital* hospital, const char* nombre,
     hospital->totalPacientesRegistrados++;
     guardarHospital(*hospital);
 
-    cout << "Paciente creado exitosamente con ID: " << p.id << "\n";
+    std::cout << "Paciente creado exitosamente con ID: " << p.id << "\n";
     return p; // Devuelve el paciente creado
 }
 
@@ -171,7 +171,7 @@ bool eliminarPaciente(int id) {
             archivo.seekp(sizeof(ArchivoHeader) + i * sizeof(Paciente));
             archivo.write(reinterpret_cast<char*>(&p), sizeof(Paciente));
             archivo.close();
-            cout << "Paciente eliminado.\n";
+            std::cout << "Paciente eliminado.\n";
             return true;
         }
     }
@@ -194,7 +194,7 @@ bool eliminarDoctor(int id) {
             archivo.seekp(sizeof(ArchivoHeader) + i * sizeof(Doctor));
             archivo.write(reinterpret_cast<char*>(&d), sizeof(Doctor));
             archivo.close();
-            cout << "Doctor eliminado.\n";
+            std::cout << "Doctor eliminado.\n";
             return true;
         }
     }
@@ -225,7 +225,7 @@ bool actualizarPaciente(int id) {
         archivo.seekg(sizeof(ArchivoHeader) + i * sizeof(Paciente));
         archivo.read(reinterpret_cast<char*>(&p), sizeof(Paciente));
         if (p.id == id && !p.eliminado) {
-            cout << "Actualizando paciente ID: " << id << "\n";
+            std::cout << "Actualizando paciente ID: " << id << "\n";
             // pedir nuevos datos...
             strcpy(p.nombre, "NuevoNombre"); // ejemplo
             p.fechaModificacion = time(nullptr);
@@ -244,7 +244,7 @@ bool agregarConsultaAlHistorial(int pacienteID, HistorialMedico nuevaConsulta) {
     // 1. Leer paciente
     Paciente paciente = leerRegistro<Paciente>("pacientes.bin", pacienteID - 1);
     if (paciente.id == 0 || paciente.eliminado) {
-        cout << "Error: Paciente no encontrado o eliminado.\n";
+        std::cout << "Error: Paciente no encontrado o eliminado.\n";
         return false;
     }
 
@@ -278,7 +278,7 @@ bool agregarConsultaAlHistorial(int pacienteID, HistorialMedico nuevaConsulta) {
 
     // 5. Guardar la nueva consulta
     if (!escribirRegistro<HistorialMedico>("historiales.bin", nuevaConsulta, nuevaConsulta.id - 1)) {
-        cout << "Error al escribir la nueva consulta.\n";
+        std::cout << "Error al escribir la nueva consulta.\n";
         return false;
     }
 
@@ -291,7 +291,7 @@ bool agregarConsultaAlHistorial(int pacienteID, HistorialMedico nuevaConsulta) {
     headerHistorial.registrosActivos++;
     actualizarHeader("historiales.bin", headerHistorial);
 
-    cout << "Consulta agregada exitosamente al historial del paciente.\n";
+    std::cout << "Consulta agregada exitosamente al historial del paciente.\n";
     return true;
 }
 
@@ -300,7 +300,7 @@ bool agregarConsultaAlHistorial(int pacienteID, HistorialMedico nuevaConsulta) {
 bool guardarHospital(const Hospital& hospital) {
     fstream archivo("hospital.bin", ios::binary | ios::out | ios::trunc);
     if (!archivo.is_open()) {
-        cout << "Error al guardar hospital.bin\n";
+        std::cout << "Error al guardar hospital.bin\n";
         return false;
     }
 
@@ -386,7 +386,7 @@ Doctor crearDoctor(Hospital* hospital, const char* nombre,
         archivo.close();
         archivo.open("doctores.bin", ios::binary | ios::in | ios::out);
         if (!archivo.is_open()) {
-            cout << "No se pudo crear/abrir el archivo de doctores.\n";
+            std::cout << "No se pudo crear/abrir el archivo de doctores.\n";
             return {};
         }
     }
@@ -412,7 +412,7 @@ Doctor crearDoctor(Hospital* hospital, const char* nombre,
     hospital->totalDoctoresRegistrados++;
     guardarHospital(*hospital);
 
-    cout << "Doctor creado exitosamente con ID: " << nuevoDoctor.id << "\n";
+    std::cout << "Doctor creado exitosamente con ID: " << nuevoDoctor.id << "\n";
     return nuevoDoctor;
 }
 
@@ -422,21 +422,21 @@ bool asignarPacienteADoctor(int idDoctor, int idPaciente) {
     //  Buscar doctor en archivo
     Doctor doctor = buscarRegistroPorID<Doctor>("doctores.bin", idDoctor);
     if (doctor.id == 0) {
-        cout << "Error: doctor no encontrado.\n";
+        std::cout << "Error: doctor no encontrado.\n";
         return false;
     }
 
     //  Verificar máximo de pacientes
     const int MAX_PACIENTES = 100; // Ajusta según tu struct Doctor
     if (doctor.cantidadPacientes >= MAX_PACIENTES) {
-        cout << "Error: doctor ya tiene el máximo de pacientes.\n";
+        std::cout << "Error: doctor ya tiene el máximo de pacientes.\n";
         return false;
     }
 
     //  Evitar duplicados
     for (int i = 0; i < doctor.cantidadPacientes; i++) {
         if (doctor.pacientesIDs[i] == idPaciente) {
-            cout << "Error: paciente ya asignado a este doctor.\n";
+            std::cout << "Error: paciente ya asignado a este doctor.\n";
             return false;
         }
     }
@@ -458,11 +458,11 @@ bool asignarPacienteADoctor(int idDoctor, int idPaciente) {
     }
 
     if (!guardado) {
-        cout << "Error: no se pudo guardar la asignación en el archivo.\n";
+        std::cout << "Error: no se pudo guardar la asignación en el archivo.\n";
         return false;
     }
 
-    cout << "Paciente asignado correctamente al doctor " 
+    std::cout << "Paciente asignado correctamente al doctor " 
          << doctor.nombre << " " << doctor.apellido << ".\n";
     return true;
 }
@@ -471,7 +471,7 @@ bool asignarPacienteADoctor(int idDoctor, int idPaciente) {
 // 
 bool removerPacienteDeDoctor(Doctor* doctor, int idPaciente) {
     if (doctor == nullptr) {
-        cout << "Error: doctor no existe.\n";
+        std::cout << "Error: doctor no existe.\n";
         return false;
     }
 
@@ -484,7 +484,7 @@ bool removerPacienteDeDoctor(Doctor* doctor, int idPaciente) {
             }
             doctor->cantidadPacientes--;
             encontrado = true;
-            cout << "Paciente eliminado correctamente del doctor "
+            std::cout << "Paciente eliminado correctamente del doctor "
                  << doctor->nombre << " " << doctor->apellido << ".\n";
             break;
         }
@@ -495,7 +495,7 @@ bool removerPacienteDeDoctor(Doctor* doctor, int idPaciente) {
     }
 
     if (!encontrado) {
-        cout << "Error: paciente no encontrado en la lista del doctor.\n";
+        std::cout << "Error: paciente no encontrado en la lista del doctor.\n";
     }
 
     return encontrado;
@@ -504,7 +504,7 @@ bool removerPacienteDeDoctor(Doctor* doctor, int idPaciente) {
 void listarDoctores() {
     fstream archivo("doctores.bin", ios::binary | ios::in);
     if (!archivo.is_open()) {
-        cout << "Error: no se pudo abrir el archivo de doctores.\n";
+       std:: cout << "Error: no se pudo abrir el archivo de doctores.\n";
         return;
     }
 
@@ -512,19 +512,19 @@ void listarDoctores() {
     archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
 
     if (header.cantidadRegistros == 0) {
-        cout << "No hay doctores registrados.\n";
+       std:: cout << "No hay doctores registrados.\n";
         archivo.close();
         return;
     }
 
-    cout << "\n=== Lista de Doctores ===\n";
+  std::  cout << "\n=== Lista de Doctores ===\n";
 
     for (int i = 0; i < header.cantidadRegistros; i++) {
         Doctor d{};
         archivo.seekg(sizeof(ArchivoHeader) + i * sizeof(Doctor));
         archivo.read(reinterpret_cast<char*>(&d), sizeof(Doctor));
 
-        cout << d.id << " - " << d.nombre << " " << d.apellido 
+       std:: cout << d.id << " - " << d.nombre << " " << d.apellido 
              << " - " << d.especialidad << "\n";
     }
 
@@ -539,10 +539,10 @@ bool validarFormatoFecha(const char* fecha) {
 
 // Mostrar historial
 void mostrarHistorialMedico(Paciente* paciente) {
-    cout << "=== Historial Medico del Paciente ID: " << paciente->id << " ===\n";
+   std:: cout << "=== Historial Medico del Paciente ID: " << paciente->id << " ===\n";
     for (int i = 0; i < paciente->cantidadConsultas; i++) {
         HistorialMedico c = leerRegistro<HistorialMedico>("historiales.bin", paciente->citasIDs[i] - 1);
-        cout << "Consulta ID: " << c.id
+      std::  cout << "Consulta ID: " << c.id
              << ", Fecha: " << c.fecha
              << ", Hora: " << c.hora
              << ", Diagnostico: " << c.diagnostico
@@ -603,11 +603,11 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
 
     // Validar IDs
     if (idPaciente < 1 || idPaciente > headerPacientes.cantidadRegistros) {
-        cout << "Paciente no encontrado.\n";
+        std::cout << "Paciente no encontrado.\n";
         return {};
     }
     if (idDoctor < 1 || idDoctor > headerDoctores.cantidadRegistros) {
-        cout << "Doctor no encontrado.\n";
+        std::cout << "Doctor no encontrado.\n";
         return {};
     }
 
@@ -620,8 +620,8 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
     archivoDoctores.read(reinterpret_cast<char*>(&doctor), sizeof(Doctor));
 
     // Validar formatos
-    if (!validarFormatoFecha(fecha)) { cout << "Formato de fecha inválido.\n"; return {}; }
-    if (!validarFormatoHora(hora)) { cout << "Formato de hora inválido.\n"; return {}; }
+    if (!validarFormatoFecha(fecha)) { std::cout << "Formato de fecha inválido.\n"; return {}; }
+    if (!validarFormatoHora(hora)) { std::cout << "Formato de hora inválido.\n"; return {}; }
 
     // Crear nueva cita
     Cita nuevaCita{};
@@ -665,12 +665,12 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
     archivoDoctores.close();
     archivoCitas.close();
 
-    cout << "Cita agendada exitosamente con ID: " << nuevaCita.id
+   std:: cout << "Cita agendada exitosamente con ID: " << nuevaCita.id
          << " entre Dr. " << doctor.nombre
          << " y paciente " << paciente.nombre << ".\n";
 
     std::cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    cout << "Presione Enter para continuar...";
+   std:: cout << "Presione Enter para continuar...";
     std::cin.get();
 
     return nuevaCita;
@@ -682,23 +682,23 @@ void listarPacientesDeDoctor(int idDoctor) {
     Doctor doctor = buscarRegistroPorID<Doctor>("doctores.bin", idDoctor);
 
     if (doctor.id == 0) {
-        cout << "Error: doctor no encontrado.\n";
+        std::cout << "Error: doctor no encontrado.\n";
         return;
     }
 
     if (doctor.cantidadPacientes == 0) {
-        cout << "El doctor no tiene pacientes asignados.\n";
+        std::cout << "El doctor no tiene pacientes asignados.\n";
         return;
     }
 
-    cout << "\n=== Pacientes asignados al Doctor: "
+    std::cout << "\n=== Pacientes asignados al Doctor: "
          << doctor.nombre << " " << doctor.apellido << " ===\n";
-    cout << left << setw(6) << "ID"
+    std::cout << left << setw(6) << "ID"
          << setw(20) << "Nombre"
          << setw(20) << "Apellido"
          << setw(8) << "Edad"
          << setw(15) << "Cedula" << "\n";
-    cout << string(70, '-') << "\n";
+   std:: cout << string(70, '-') << "\n";
 
     for (int i = 0; i < doctor.cantidadPacientes; i++) {
         int idPaciente = doctor.pacientesIDs[i];
@@ -708,20 +708,20 @@ void listarPacientesDeDoctor(int idDoctor) {
             Paciente paciente = buscarRegistroPorID<Paciente>("pacientes.bin", idPaciente);
 
             if (paciente.id != 0) {
-                cout << left << setw(6) << paciente.id
+                std::cout << left << setw(6) << paciente.id
                      << setw(20) << paciente.nombre
                      << setw(20) << paciente.apellido
                      << setw(8) << paciente.edad
                      << setw(15) << paciente.cedula << "\n";
             } else {
-                cout << left << setw(6) << idPaciente
+               std:: cout << left << setw(6) << idPaciente
                      << setw(20) << "(no encontrado)" << "\n";
             }
         }
     }
 
-    cout << string(70, '-') << "\n";
-    cout << "Total de pacientes asignados: " << doctor.cantidadPacientes << "\n\n";
+   std:: cout << string(70, '-') << "\n";
+    std::cout << "Total de pacientes asignados: " << doctor.cantidadPacientes << "\n\n";
 }
 
 bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,
@@ -730,11 +730,11 @@ bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,
     // Buscar la cita
     Cita cita = buscarRegistroPorID<Cita>("citas.bin", idCita);
     if (cita.id == 0) {
-        cout << "Cita no encontrada.\n";
+        std::cout << "Cita no encontrada.\n";
         return false;
     }
     if (strcmp(cita.estado, "Agendada") != 0) {
-        cout << "Error: la cita no está agendada.\n";
+       std:: cout << "Error: la cita no está agendada.\n";
         return false;
     }
 
@@ -746,7 +746,7 @@ bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,
     Doctor doctor = buscarRegistroPorID<Doctor>("doctores.bin", cita.doctorID);
 
     if (paciente.id == 0 || doctor.id == 0) {
-        cout << "Error: paciente o doctor no encontrados.\n";
+        std::cout << "Error: paciente o doctor no encontrados.\n";
         return false;
     }
 
@@ -771,142 +771,15 @@ bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,
         paciente.cantidadConsultas++;
         escribirRegistro<Paciente>("pacientes.bin", paciente, paciente.id - 1);
     } else {
-        cout << "Advertencia: paciente ha alcanzado el máximo de consultas.\n";
+        std::cout << "Advertencia: paciente ha alcanzado el máximo de consultas.\n";
     }
 
     // Guardar los cambios de la cita y el hospital
     escribirRegistro<Cita>("citas.bin", cita, cita.id - 1);
     escribirRegistro<Hospital>("hospital.bin", *hospital, 0);
 
-    cout << " Cita atendida correctamente y registrada en el historial médico.\n";
+   std:: cout << " Cita atendida correctamente y registrada en el historial médico.\n";
     return true;
-}
-
-case 4: { // Ver citas de un paciente
-    system("cls");
-    int idPac, cantidad = 0;
-    cout << "Ingrese ID del paciente: "; std::cin >> idPac;
-
-    // Obtener las citas del paciente
-    Cita* citas = leerCitasDePaciente(idPac, &cantidad);
-
-    if (citas && cantidad > 0) {
-        cout << left 
-             << setw(6)  << "ID"
-             << setw(12) << "Fecha"
-             << setw(10) << "Hora"
-             << setw(8)  << "DocID"
-             << setw(8)  << "PacID"
-             << setw(25) << "Motivo" << "\n";
-        cout << string(70, '-') << "\n";
-
-        for (int i = 0; i < cantidad; i++) {
-            cout << left 
-                 << setw(6)  << citas[i].id
-                 << setw(12) << citas[i].fecha
-                 << setw(10) << citas[i].hora
-                 << setw(8)  << citas[i].doctorID
-                 << setw(8)  << citas[i].pacienteID
-                 << setw(25) << citas[i].motivo << "\n";
-        }
-
-        delete[] citas; // Liberamos memoria
-    } else {
-        cout << "No se encontraron citas para este paciente.\n";
-    }
-
-    cout << string(70, '-') << "\n";
-    cout << "Total de citas encontradas: " << cantidad << "\n";
-
-    cout << "Presione Enter para continuar...";
-    std::cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    std::cin.get();
-    break;
-}
-
-case 5: { // Ver citas de un doctor
-    system("cls");
-    int idDoc, cantidad = 0;
-    cout << "Ingrese ID del doctor: "; std::cin >> idDoc;
-
-    // Obtener las citas del doctor
-    Cita* citas = leerCitasDoctor(idDoc, &cantidad);
-
-    if (citas && cantidad > 0) {
-        cout << left 
-             << setw(6)  << "ID"
-             << setw(12) << "Fecha"
-             << setw(10) << "Hora"
-             << setw(8)  << "DocID"
-             << setw(8)  << "PacID"
-             << setw(25) << "Motivo" << "\n";
-        cout << string(70, '-') << "\n";
-
-        for (int i = 0; i < cantidad; i++) {
-            cout << left 
-                 << setw(6)  << citas[i].id
-                 << setw(12) << citas[i].fecha
-                 << setw(10) << citas[i].hora
-                 << setw(8)  << citas[i].doctorID
-                 << setw(8)  << citas[i].pacienteID
-                 << setw(25) << citas[i].motivo << "\n";
-        }
-
-        delete[] citas; // Liberamos memoria
-    } else {
-        cout << "No se encontraron citas para este doctor.\n";
-    }
-
-    cout << string(70, '-') << "\n";
-    cout << "Total de citas encontradas: " << cantidad << "\n";
-
-    cout << "Presione Enter para continuar...";
-    std::cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    std::cin.get();
-    break;
-}
-
-Hospital* cargarDatosHospital() {
-    // 1. Verificar existencia de todos los archivos .bin
-    if (!verificarArchivo("hospital.bin")) {
-        inicializarArchivo("hospital.bin");
-    }
-    if (!verificarArchivo("pacientes.bin")) {
-        inicializarArchivo("pacientes.bin");
-    }
-    if (!verificarArchivo("doctores.bin")) {
-        inicializarArchivo("doctores.bin");
-    }
-    if (!verificarArchivo("citas.bin")) {
-        inicializarArchivo("citas.bin");
-    }
-    if (!verificarArchivo("historiales.bin")) {
-        inicializarArchivo("historiales.bin");
-    }
-
-    fstream archivo("hospital.bin", ios::binary | ios::in);
-    if (!archivo.is_open()) {
-        cout << "Error al abrir hospital.bin\n";
-        return nullptr;
-    }
-
-    archivo.seekg(sizeof(ArchivoHeader), ios::beg);
-
-    Hospital* hospital = new Hospital();
-    archivo.read(reinterpret_cast<char*>(hospital), sizeof(Hospital));
-
-    archivo.close();
-
-    if (!archivo.good()) {
-        cout << "Error al leer hospital.bin\n";
-        delete hospital;
-        return nullptr;
-    }
-
-    cout << "Datos del hospital cargados correctamente: " 
-         << hospital->nombre << "\n";
-
-    return hospital;
 }
 bool cancelarCita(Hospital* hospital, int idCita) {
     // 1. Leer la cita desde el archivo
