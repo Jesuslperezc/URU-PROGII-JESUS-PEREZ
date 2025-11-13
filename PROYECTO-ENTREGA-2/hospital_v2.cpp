@@ -622,16 +622,8 @@ int main() {
                                     case 3: restaurarRespaldo(); break;
                                     case 4: mostrarEstadisticasArchivos(); break;
                                     case 5: 
-                                        if (compactarArchivoDoctores()) {
-                                            cout << "Archivo de doctores compactado correctamente.\n";
-                                        } else {
-                                            cout << "Error al compactar el archivo de doctores.\n";
-                                        }
-                                        if (compactarArchivoPacientes()) {
-                                            cout << "Archivo de pacientes compactado correctamente.\n";
-                                        } else {
-                                            cout << "Error al compactar el archivo de pacientes.\n";
-                                        }
+                                        compactarArchivoDoctores();
+                                        compactarArchivoPacientes();
                                         break;
                                     case 6: /* volver */ break;
                                     default: cout << "Opción inválida.\n"; break;
