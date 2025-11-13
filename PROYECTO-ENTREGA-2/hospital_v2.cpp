@@ -393,235 +393,242 @@ int main() {
                 break;
             }
 
-            case 3: { // Gestion de citas
-                int opCita;
-                do {
-                    system("cls");
-                    cout << "\n=======================================\n";
-                    cout << "||        GESTION DE CITAS           ||\n";
-                    cout << "=======================================\n";
-                    cout << "1. Agendar nueva cita\n";
-                    cout << "2. Cancelar cita\n";
-                    cout << "3. Atender cita\n";
-                    cout << "4. Ver citas de un paciente\n";
-                    cout << "5. Ver citas de un doctor\n";
-                    cout << "6. Ver citas de una fecha\n";
-                    cout << "7. Ver citas pendientes\n";
-                    cout << "0. Volver al menu principal\n";
-                    cout << "Seleccione una opcion: ";
-                    cin >> opCita;
-
-                    switch (opCita) {
-                    case 1: { // Agendar cita
-                        system("cls");
-                        int idPac, idDoc;
-                        char fecha[11], hora[6], motivo[100];
-
-                        cout << "Ingrese ID del paciente: "; cin >> idPac;
-                        cout << "Ingrese ID del doctor: "; cin >> idDoc;
-                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                        cout << "Ingrese fecha (YYYY-MM-DD): "; cin.getline(fecha, 11);
-                        cout << "Ingrese hora (HH:MM): "; cin.getline(hora, 6);
-                        cout << "Ingrese motivo de la cita: "; cin.getline(motivo, 100);
-
-                        if (!verificarDisponibilidad(hospital, idDoc, fecha, hora)) {
-                            cout << "El doctor no está disponible en esa fecha y hora.\n";
-                        } else {
-                            Cita cita = agendarCita(hospital, idPac, idDoc, fecha, hora, motivo);
-                            if (cita.id != 0) {
-                                cout << "Cita registrada correctamente.\n";
-                            } else {
-                                cout << "Error al registrar la cita.\n";
-                            }
-                        }
-
-                        cout << "\nPresione Enter para continuar...";
-                        cin.get();
-                        break;
-                    }
-
-                        case 2: { // Cancelar cita
-                            system("cls");
-                            int idCita; cout << "Ingrese ID de la cita a cancelar: "; cin >> idCita;
-                            cancelarCita(hospital, idCita);
-                            cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
-                            break;
-                        }
-
-                        case 3: { // Atender cita
-                            system("cls");
-                            int idCita; char diagnostico[200], tratamiento[200], medicamentos[200];
-                            cout << "Ingrese ID de la cita a atender: "; cin >> idCita;
-                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                            cout << "Ingrese diagnostico: "; cin.getline(diagnostico, 200);
-                            cout << "Ingrese tratamiento: "; cin.getline(tratamiento, 200);
-                            cout << "Ingrese medicamentos: "; cin.getline(medicamentos, 200);
-
-                            atenderCita(hospital, idCita, diagnostico, tratamiento, medicamentos);
-                            cout << "Cita atendida correctamente.\n";
-                            cin.get();
-                            break;
-                        }
-
-                       // --- dentro del switch de citas ---
-                        case 4: { // Ver citas de un paciente
-                            system("cls");
-                            int idPac, cantidad = 0;
-                            cout << "Ingrese ID del paciente: "; cin >> idPac;
-                            Cita* citas = leerCitasDePaciente(idPac, &cantidad);
-
-                            if (citas && cantidad > 0) {
-                                cout << left << setw(6) << "ID"
-                                    << setw(12) << "Fecha"
-                                    << setw(10) << "Hora"
-                                    << setw(8)  << "DocID"
-                                    << setw(8)  << "PacID"
-                                    << setw(25) << "Motivo" << "\n";
-                                cout << string(70, '-') << "\n";
-
-                                for (int i = 0; i < cantidad; i++) {
-                                    cout << left << setw(6)  << citas[i].id
-                                        << setw(12) << citas[i].fecha
-                                        << setw(10) << citas[i].hora
-                                        << setw(8)  << citas[i].doctorID
-                                        << setw(8)  << citas[i].pacienteID
-                                        << setw(25) << citas[i].motivo << "\n";
-                                }
-
-                                delete[] citas; // liberar memoria
-                            } else {
-                                cout << "No se encontraron citas para este paciente.\n";
-                            }
-
-                            cout << string(70, '-') << "\n";
-                            cout << "Total de citas encontradas: " << cantidad << "\n";
-
-                            system("pause");
-                            break;
-                        }
-
-                        case 5: { // Ver citas de un doctor
-                            system("cls");
-                            int idDoc, cantidad = 0;
-                            cout << "Ingrese ID del doctor: "; cin >> idDoc;
-                            Cita* citas = leerCitasDoctor(idDoc, &cantidad);
-
-                            if (citas && cantidad > 0) {
-                                cout << left << setw(6) << "ID"
-                                    << setw(12) << "Fecha"
-                                    << setw(10) << "Hora"
-                                    << setw(8)  << "DocID"
-                                    << setw(8)  << "PacID"
-                                    << setw(25) << "Motivo" << "\n";
-                                cout << string(70, '-') << "\n";
-
-                                for (int i = 0; i < cantidad; i++) {
-                                    cout << left << setw(6)  << citas[i].id
-                                        << setw(12) << citas[i].fecha
-                                        << setw(10) << citas[i].hora
-                                        << setw(8)  << citas[i].doctorID
-                                        << setw(8)  << citas[i].pacienteID
-                                        << setw(25) << citas[i].motivo << "\n";
-                                }
-
-                                delete[] citas;
-                            } else {
-                                cout << "No se encontraron citas para este doctor.\n";
-                            }
-
-                            cout << string(70, '-') << "\n";
-                            cout << "Total de citas encontradas: " << cantidad << "\n";
-
-                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                            cin.get();
-                            break;
-                        }
-
-                        case 6: { // Buscar citas por fecha
-                            system("cls");
-                            char fecha[12]; // formato: "dd/mm/yyyy"
-                            cout << "Ingrese fecha (dd/mm/yyyy): ";
-                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                            cin.getline(fecha, 12);
-
-                            int cantidad = 0;
-                            Cita* citas = obtenerCitasPorFecha(fecha, &cantidad);
-
-                            if (citas == nullptr) {
-                                cout << "No se encontraron citas para la fecha " << fecha << ".\n";
-                            } else {
-                                cout << "\nCitas encontradas: " << cantidad << "\n";
-                                for (int i = 0; i < cantidad; i++) {
-                                    Cita c = citas[i];
-                                    cout << "ID: " << c.id
-                                        << " | DoctorID: " << c.doctorID
-                                        << " | PacienteID: " << c.pacienteID
-                                        << " | Hora: " << c.hora
-                                        << " | Motivo: " << c.motivo << "\n";
-                                }
-                                delete[] citas;
-                            }
-
-                            system("pause");
-                            break;
-                        }
-
-                        case 7: { // Citas pendientes
-                            system("cls");
-                            listarCitasPendientes();
-                            cout << "\nPresione Enter para continuar...";
-                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                            cin.get();
-                            break;
-                        }
-
-                        case 0: break;
-                        default:
-                            cout << "Opción no válida.\n";
-                            cin.get();
-                            break;
-                        }
+                        case 3: { // Gestion de citas
+                            int opCita;
+                            do {
+                                system("cls");
+                                cout << "\n=======================================\n";
+                                cout << "||        GESTION DE CITAS           ||\n";
+                                cout << "=======================================\n";
+                                cout << "1. Agendar nueva cita\n";
+                                cout << "2. Cancelar cita\n";
+                                cout << "3. Atender cita\n";
+                                cout << "4. Ver citas de un paciente\n";
+                                cout << "5. Ver citas de un doctor\n";
+                                cout << "6. Ver citas de una fecha\n";
+                                cout << "7. Ver citas pendientes\n";
+                                cout << "0. Volver al menu principal\n";
+                                cout << "Seleccione una opcion: ";
+                                cin >> opCita;
+            
+                                switch (opCita) {
+                                    case 1: { // Agendar cita
+                                        system("cls");
+                                        int idPac, idDoc;
+                                        char fecha[11], hora[6], motivo[100];
+            
+                                        cout << "Ingrese ID del paciente: "; cin >> idPac;
+                                        cout << "Ingrese ID del doctor: "; cin >> idDoc;
+                                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                        cout << "Ingrese fecha (YYYY-MM-DD): "; cin.getline(fecha, 11);
+                                        cout << "Ingrese hora (HH:MM): "; cin.getline(hora, 6);
+                                        cout << "Ingrese motivo de la cita: "; cin.getline(motivo, 100);
+            
+                                        if (!verificarDisponibilidad(hospital, idDoc, fecha, hora)) {
+                                            cout << "El doctor no está disponible en esa fecha y hora.\n";
+                                        } else {
+                                            Cita cita = agendarCita(hospital, idPac, idDoc, fecha, hora, motivo);
+                                            if (cita.id != 0) {
+                                                cout << "Cita registrada correctamente.\n";
+                                            } else {
+                                                cout << "Error al registrar la cita.\n";
+                                            }
+                                        }
+            
+                                        cout << "\nPresione Enter para continuar...";
+                                        cin.get();
+                                        break;
+                                    }
+            
+                                    case 2: { // Cancelar cita
+                                        system("cls");
+                                        int idCita; cout << "Ingrese ID de la cita a cancelar: "; cin >> idCita;
+                                        cancelarCita(hospital, idCita);
+                                        cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
+                                        break;
+                                    }
+            
+                                    case 3: { // Atender cita
+                                        system("cls");
+                                        int idCita; char diagnostico[200], tratamiento[200], medicamentos[200];
+                                        cout << "Ingrese ID de la cita a atender: "; cin >> idCita;
+                                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                        cout << "Ingrese diagnostico: "; cin.getline(diagnostico, 200);
+                                        cout << "Ingrese tratamiento: "; cin.getline(tratamiento, 200);
+                                        cout << "Ingrese medicamentos: "; cin.getline(medicamentos, 200);
+            
+                                        atenderCita(hospital, idCita, diagnostico, tratamiento, medicamentos);
+                                        cout << "Cita atendida correctamente.\n";
+                                        cin.get();
+                                        break;
+                                    }
+            
+                                    case 4: { // Ver citas de un paciente
+                                        system("cls");
+                                        int idPac, cantidad = 0;
+                                        cout << "Ingrese ID del paciente: "; cin >> idPac;
+                                        Cita* citas = leerCitasDePaciente(idPac, &cantidad);
+            
+                                        if (citas && cantidad > 0) {
+                                            cout << left << setw(6) << "ID"
+                                                << setw(12) << "Fecha"
+                                                << setw(10) << "Hora"
+                                                << setw(8)  << "DocID"
+                                                << setw(8)  << "PacID"
+                                                << setw(25) << "Motivo" << "\n";
+                                            cout << string(70, '-') << "\n";
+            
+                                            for (int i = 0; i < cantidad; i++) {
+                                                cout << left << setw(6)  << citas[i].id
+                                                    << setw(12) << citas[i].fecha
+                                                    << setw(10) << citas[i].hora
+                                                    << setw(8)  << citas[i].doctorID
+                                                    << setw(8)  << citas[i].pacienteID
+                                                    << setw(25) << citas[i].motivo << "\n";
+                                            }
+            
+                                            delete[] citas; // liberar memoria
+                                        } else {
+                                            cout << "No se encontraron citas para este paciente.\n";
+                                        }
+            
+                                        cout << string(70, '-') << "\n";
+                                        cout << "Total de citas encontradas: " << cantidad << "\n";
+            
+                                        system("pause");
+                                        break;
+                                    }
+            
+                                    case 5: { // Ver citas de un doctor
+                                        system("cls");
+                                        int idDoc, cantidad = 0;
+                                        cout << "Ingrese ID del doctor: "; cin >> idDoc;
+                                        Cita* citas = leerCitasDoctor(idDoc, &cantidad);
+            
+                                        if (citas && cantidad > 0) {
+                                            cout << left << setw(6) << "ID"
+                                                << setw(12) << "Fecha"
+                                                << setw(10) << "Hora"
+                                                << setw(8)  << "DocID"
+                                                << setw(8)  << "PacID"
+                                                << setw(25) << "Motivo" << "\n";
+                                            cout << string(70, '-') << "\n";
+            
+                                            for (int i = 0; i < cantidad; i++) {
+                                                cout << left << setw(6)  << citas[i].id
+                                                    << setw(12) << citas[i].fecha
+                                                    << setw(10) << citas[i].hora
+                                                    << setw(8)  << citas[i].doctorID
+                                                    << setw(8)  << citas[i].pacienteID
+                                                    << setw(25) << citas[i].motivo << "\n";
+                                            }
+            
+                                            delete[] citas;
+                                        } else {
+                                            cout << "No se encontraron citas para este doctor.\n";
+                                        }
+            
+                                        cout << string(70, '-') << "\n";
+                                        cout << "Total de citas encontradas: " << cantidad << "\n";
+            
+                                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                        cin.get();
+                                        break;
+                                    }
+            
+                                    case 6: { // Buscar citas por fecha
+                                        system("cls");
+                                        char fecha[12]; // formato: "dd/mm/yyyy"
+                                        cout << "Ingrese fecha (dd/mm/yyyy): ";
+                                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                        cin.getline(fecha, 12);
+            
+                                        int cantidad = 0;
+                                        Cita* citas = obtenerCitasPorFecha(fecha, &cantidad);
+            
+                                        if (citas == nullptr) {
+                                            cout << "No se encontraron citas para la fecha " << fecha << ".\n";
+                                        } else {
+                                            cout << "\nCitas encontradas: " << cantidad << "\n";
+                                            for (int i = 0; i < cantidad; i++) {
+                                                Cita c = citas[i];
+                                                cout << "ID: " << c.id
+                                                    << " | DoctorID: " << c.doctorID
+                                                    << " | PacienteID: " << c.pacienteID
+                                                    << " | Hora: " << c.hora
+                                                    << " | Motivo: " << c.motivo << "\n";
+                                            }
+                                            delete[] citas;
+                                        }
+            
+                                        system("pause");
+                                        break;
+                                    }
+            
+                                    case 7: { // Citas pendientes
+                                        system("cls");
+                                        listarCitasPendientes();
+                                        cout << "\nPresione Enter para continuar...";
+                                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                        cin.get();
+                                        break;
+                                    }
+            
+                                    case 0:
+                                        break;
+            
+                                    default:
+                                        cout << "Opción no válida.\n";
+                                        cin.get();
+                                        break;
+                                } // end switch(opCita)
+            
                             } while (opCita != 0);
+            
                             break;
-    
-                            // --- Submenú de Mantenimiento ---
+                        }
+            
+                        // --- Submenú de Mantenimiento ---
                         case 4: {
                             int subop;
                             do {
                                 system("cls");
                                 cout << "MANTENIMIENTO DE ARCHIVOS:\n";
                                 cout << "1. Verificar integridad de archivos\n";
-                                cout << "2. Compactar archivos (eliminar registros borrados)\n";
-                                cout << "3. Hacer respaldo de datos\n";
-                                cout << "4. Restaurar desde respaldo\n";
-                                cout << "5. Estadísticas de uso de archivos\n";
-                                cout << "6. Volver al menú principal\n";
+                                cout << "2. Hacer respaldo de datos\n";
+                                cout << "3. Restaurar desde respaldo\n";
+                                cout << "4. Estadísticas de uso de archivos\n";
+                                cout << "5. Volver al menú principal\n";
                                 cout << "Opción: ";
                                 cin >> subop;
-    
+            
                                 switch(subop) {
                                     case 1: verificarArchivos(); break;
-                                    case 2: compactarArchivos(); break;
-                                    case 3: hacerRespaldo(); break;
-                                    case 4: restaurarRespaldo(); break;
-                                    case 5: mostrarEstadisticasArchivos(); break;
-                                    case 6: cout << "Volviendo al menú principal...\n"; break;
-                                    default: cout << "Opción inválida.\n";
+                                    case 2: hacerRespaldo(); break;
+                                    case 3: restaurarRespaldo(); break;
+                                    case 4: mostrarEstadisticasArchivos(); break;
+                                    case 5: /* volver */ break;
+                                    default: cout << "Opción inválida.\n"; break;
                                 }
-    
-                                if (subop != 6) {
+            
+                                if (subop != 5) {
                                     cout << "\nPresione Enter para continuar...";
                                     cin.ignore(numeric_limits<streamsize>::max(), '\n');
                                     cin.get();
                                 }
-    
-                            } while (subop != 6);
+            
+                            } while (subop != 5);
+            
                             break;
                         }
-    
+            
+                        default:
+                            cout << "Opcion no valida.\n";
+                            cin.get();
+                            break;
                     } // end switch(opMenu)
                 } while (opMenu != 4);
-    
+            
                 // --- Guardar hospital antes de salir ---
                 if (hospital) {
                     if (guardarHospital(*hospital)) {

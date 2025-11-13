@@ -260,57 +260,6 @@ int encontrarIndicePorID(const char* nombreArchivo, int idBuscado) {
     archivo.close();
     return -1; // no encontrado
 }
-template <typename T>
-void compactarArchivo(const char* nombreArchivo) {
-    asegurarArchivo(nombreArchivo);
-    ArchivoHeader header = leerHeader(nombreArchivo);
-
-    fstream archivo(nombreArchivo, ios::binary | ios::in);
-    if (!archivo.is_open()) return;
-
-    archivo.seekg(sizeof(ArchivoHeader), ios::beg);
-
-    vector<T> registros;
-    T reg{};
-    for (int i = 0; i < header.cantidadRegistros; i++) {
-        archivo.read(reinterpret_cast<char*>(&reg), sizeof(T));
-        if (!archivo.good()) break;
-        if (!reg.eliminado) registros.push_back(reg);
-    }
-    archivo.close();
-
-    // Reescribir archivo limpio
-    fstream nuevo(nombreArchivo, ios::binary | ios::out | ios::trunc);
-    ArchivoHeader nuevoHeader{};
-    nuevoHeader.cantidadRegistros = registros.size();
-    nuevoHeader.registrosActivos = registros.size();
-    nuevoHeader.proximoID = header.proximoID; // mantener continuidad
-    nuevoHeader.version = header.version;
-    nuevo.write(reinterpret_cast<const char*>(&nuevoHeader), sizeof(ArchivoHeader));
-
-    for (auto& r : registros) {
-        nuevo.write(reinterpret_cast<const char*>(&r), sizeof(T));
-    }
-    nuevo.close();
-
-    cout << "Archivo compactado: " << nombreArchivo << "\n";
-}
-   void compactarArchivos() {
-    cout << "\n=== Compactando Archivos ===\n";
-
-    compactarArchivo<Paciente>("pacientes.bin");
-    cout << "Archivo pacientes.bin compactado.\n";
-
-    compactarArchivo<Doctor>("doctores.bin");
-    cout << "Archivo doctores.bin compactado.\n";
-
-    compactarArchivo<Cita>("citas.bin");
-    cout << "Archivo citas.bin compactado.\n";
-
-    compactarArchivo<HistorialMedico>("historiales.bin");
-    cout << "Archivo historiales.bin compactado.\n";
-}
-
 
 
 #endif // UTILIDADES_HPP
