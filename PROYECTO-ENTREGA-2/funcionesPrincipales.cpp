@@ -86,7 +86,6 @@ bool validarFormatoHora(const char* hora) {
     int hh, mm;
     return (sscanf(hora, "%2d:%2d", &hh, &mm) == 2 && hh >= 0 && hh < 24 && mm >= 0 && mm < 60);
 }
-
 Paciente crearPaciente(Hospital* hospital, const char* nombre,
                        const char* apellido, const char* cedula, int edad, char sexo) {
     // Validaciones
@@ -95,66 +94,57 @@ Paciente crearPaciente(Hospital* hospital, const char* nombre,
     if (!validarEdad(edad)) return {};
     if (!validarSexoChar(sexo)) return {};
 
+    // Inicializar datos del paciente
     Paciente p{};
     strcpy(p.nombre, nombre);
     strcpy(p.apellido, apellido);
     strcpy(p.cedula, cedula);
     p.edad = edad;
-    p.sexo = toupper(sexo);
+    p.sexo = toupper((unsigned char)sexo);
     p.activo = true;
     p.eliminado = false;
     p.fechaCreacion = time(nullptr);
+    p.fechaModificacion = p.fechaCreacion;
     p.cantidadConsultas = 0;
     p.primerConsultaID = -1;
     p.cantidadCitas = 0;
+    for (int i = 0; i < 20; i++) p.citasIDs[i] = -1;
 
-    // Abrir archivo pacientes.bin
-    fstream archivo("pacientes.bin", ios::binary | ios::in | ios::out);
-    ArchivoHeader header{};
-
-    if (!archivo.is_open()) {
-        // Crear archivo si no existe
-        archivo.open("pacientes.bin", ios::binary | ios::out);
-        header.cantidadRegistros = 0;
-        header.proximoID = 1;
-        header.registrosActivos = 0;
-        header.version = 1;
-        archivo.write(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
-        archivo.close();
-        archivo.open("pacientes.bin", ios::binary | ios::in | ios::out);
-        if (!archivo.is_open()) {
-            cout << "No se pudo crear/abrir el archivo de pacientes.\n";
-            return {};
-        }
-        return p;
-    }
+     asegurarArchivo("pacientes.bin");
 
     // Leer header actual
-    archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
+    ArchivoHeader header = leerHeader("pacientes.bin");
 
     // Asignar ID secuencial
-    p.id = header.proximoID++;
+    p.id = header.proximoID;
 
     // Escribir paciente al final
-    archivo.seekp(sizeof(ArchivoHeader) + header.cantidadRegistros * sizeof(Paciente));
-    archivo.write(reinterpret_cast<char*>(&p), sizeof(Paciente));
+    fstream archivo("pacientes.bin", ios::binary | ios::in | ios::out);
+    archivo.seekp(calcularPosicion<Paciente>(header.cantidadRegistros), ios::beg);
+    archivo.write(reinterpret_cast<const char*>(&p), sizeof(Paciente));
+    archivo.close();
 
     // Actualizar header
     header.cantidadRegistros++;
     header.registrosActivos++;
-    archivo.seekp(0);
-    archivo.write(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
-    archivo.close();
+    header.proximoID++;
+    actualizarHeader("pacientes.bin", header);
 
-    // Actualizar hospital
-    hospital->totalPacientesRegistrados++;
-    guardarHospital(*hospital);
+    // Actualizar hospital en hospital.bin
+    fstream fh("hospital.bin", ios::binary | ios::in | ios::out);
+    if (fh.is_open()) {
+        Hospital htmp{};
+        fh.seekg(sizeof(ArchivoHeader), ios::beg);
+        fh.read(reinterpret_cast<char*>(&htmp), sizeof(Hospital));
+        htmp.totalPacientesRegistrados++;
+        fh.seekp(sizeof(ArchivoHeader), ios::beg);
+        fh.write(reinterpret_cast<const char*>(&htmp), sizeof(Hospital));
+        fh.close();
+    }
 
     cout << "Paciente creado exitosamente con ID: " << p.id << "\n";
-    return p; // Devuelve el paciente creado
+    return p;
 }
-
-
 bool eliminarPaciente(int id) {
     fstream archivo("pacientes.bin", ios::binary | ios::in | ios::out);
     if (!archivo.is_open()) return false;
@@ -369,48 +359,44 @@ Doctor crearDoctor(Hospital* hospital, const char* nombre,
     nuevoDoctor.disponible = true;
     nuevoDoctor.eliminado = false;
     nuevoDoctor.fechaCreacion = time(nullptr);
+    nuevoDoctor.fechaModificacion = nuevoDoctor.fechaCreacion;
     nuevoDoctor.cantidadPacientes = 0;
     nuevoDoctor.cantidadCitas = 0;
+    for (int i = 0; i < 50; i++) nuevoDoctor.pacientesIDs[i] = -1;
+    for (int i = 0; i < 30; i++) nuevoDoctor.citasIDs[i] = -1;
 
-    // Abrir archivo doctores.bin
-    fstream archivo("doctores.bin", ios::binary | ios::in | ios::out);
-    ArchivoHeader header{};
-    if (!archivo.is_open()) {
-        // Crear archivo si no existe
-        archivo.open("doctores.bin", ios::binary | ios::out);
-        header.cantidadRegistros = 0;
-        header.proximoID = 1;
-        header.registrosActivos = 0;
-        header.version = 1;
-        archivo.write(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
-        archivo.close();
-        archivo.open("doctores.bin", ios::binary | ios::in | ios::out);
-        if (!archivo.is_open()) {
-            cout << "No se pudo crear/abrir el archivo de doctores.\n";
-            return {};
-        }
-    }
+    // Asegurar archivo
+    asegurarArchivo("doctores.bin");
 
-    // Leer header
-    archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
+    // Leer header actual
+    ArchivoHeader header = leerHeader("doctores.bin");
 
     // Asignar ID secuencial
-    nuevoDoctor.id = header.proximoID++;
+    nuevoDoctor.id = header.proximoID;
 
     // Escribir doctor al final del archivo
-    archivo.seekp(sizeof(ArchivoHeader) + header.cantidadRegistros * sizeof(Doctor));
-    archivo.write(reinterpret_cast<char*>(&nuevoDoctor), sizeof(Doctor));
+    fstream archivo("doctores.bin", ios::binary | ios::in | ios::out);
+    archivo.seekp(calcularPosicion<Doctor>(header.cantidadRegistros), ios::beg);
+    archivo.write(reinterpret_cast<const char*>(&nuevoDoctor), sizeof(Doctor));
+    archivo.close();
 
     // Actualizar header
     header.cantidadRegistros++;
     header.registrosActivos++;
-    archivo.seekp(0);
-    archivo.write(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
-    archivo.close();
+    header.proximoID++;
+    actualizarHeader("doctores.bin", header);
 
-    // Actualizar hospital
-    hospital->totalDoctoresRegistrados++;
-    guardarHospital(*hospital);
+    // Actualizar hospital en hospital.bin
+    fstream fh("hospital.bin", ios::binary | ios::in | ios::out);
+    if (fh.is_open()) {
+        Hospital htmp{};
+        fh.seekg(sizeof(ArchivoHeader), ios::beg);
+        fh.read(reinterpret_cast<char*>(&htmp), sizeof(Hospital));
+        htmp.totalDoctoresRegistrados++;
+        fh.seekp(sizeof(ArchivoHeader), ios::beg);
+        fh.write(reinterpret_cast<const char*>(&htmp), sizeof(Hospital));
+        fh.close();
+    }
 
     cout << "Doctor creado exitosamente con ID: " << nuevoDoctor.id << "\n";
     return nuevoDoctor;
@@ -566,66 +552,34 @@ bool obtenerUltimaConsulta(Paciente* paciente, HistorialMedico& salida) {
 Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
                  const char* fecha, const char* hora, const char* motivo) {
 
-    // Abrir archivos en modo lectura/escritura, crear si no existen
-    fstream archivoPacientes("pacientes.bin", ios::binary | ios::in | ios::out);
-    fstream archivoDoctores("doctores.bin", ios::binary | ios::in | ios::out);
-    fstream archivoCitas("citas.bin", ios::binary | ios::in | ios::out);
+    // Asegurar archivos
+    asegurarArchivo("pacientes.bin");
+    asegurarArchivo("doctores.bin");
+    asegurarArchivo("citas.bin");
 
-    ArchivoHeader headerPacientes{}, headerDoctores{}, headerCitas{};
+    // Leer headers
+    ArchivoHeader headerCitas = leerHeader("citas.bin");
 
-    // Crear archivos si no existen
-    if (!archivoPacientes.is_open()) {
-        archivoPacientes.open("pacientes.bin", ios::binary | ios::out);
-        headerPacientes = {0, 1, 0, 1};
-        archivoPacientes.write(reinterpret_cast<char*>(&headerPacientes), sizeof(ArchivoHeader));
-        archivoPacientes.close();
-        archivoPacientes.open("pacientes.bin", ios::binary | ios::in | ios::out);
-    }
-    if (!archivoDoctores.is_open()) {
-        archivoDoctores.open("doctores.bin", ios::binary | ios::out);
-        headerDoctores = {0, 1, 0, 1};
-        archivoDoctores.write(reinterpret_cast<char*>(&headerDoctores), sizeof(ArchivoHeader));
-        archivoDoctores.close();
-        archivoDoctores.open("doctores.bin", ios::binary | ios::in | ios::out);
-    }
-    if (!archivoCitas.is_open()) {
-        archivoCitas.open("citas.bin", ios::binary | ios::out);
-        headerCitas = {0, 1, 0, 1};
-        archivoCitas.write(reinterpret_cast<char*>(&headerCitas), sizeof(ArchivoHeader));
-        archivoCitas.close();
-        archivoCitas.open("citas.bin", ios::binary | ios::in | ios::out);
-    }
+    // Buscar paciente y doctor por ID
+    Paciente paciente = buscarRegistroPorID<Paciente>("pacientes.bin", idPaciente);
+    Doctor doctor     = buscarRegistroPorID<Doctor>("doctores.bin", idDoctor);
 
-    // Leer headers actuales
-    archivoPacientes.read(reinterpret_cast<char*>(&headerPacientes), sizeof(ArchivoHeader));
-    archivoDoctores.read(reinterpret_cast<char*>(&headerDoctores), sizeof(ArchivoHeader));
-    archivoCitas.read(reinterpret_cast<char*>(&headerCitas), sizeof(ArchivoHeader));
-
-    // Validar IDs
-    if (idPaciente < 1 || idPaciente > headerPacientes.cantidadRegistros) {
+    if (paciente.id == 0 || paciente.eliminado) {
         cout << "Paciente no encontrado.\n";
         return {};
     }
-    if (idDoctor < 1 || idDoctor > headerDoctores.cantidadRegistros) {
+    if (doctor.id == 0 || doctor.eliminado) {
         cout << "Doctor no encontrado.\n";
         return {};
     }
 
-    // Leer registros usando seek
-    Paciente paciente{};
-    Doctor doctor{};
-    archivoPacientes.seekg(sizeof(ArchivoHeader) + (idPaciente - 1) * sizeof(Paciente));
-    archivoPacientes.read(reinterpret_cast<char*>(&paciente), sizeof(Paciente));
-    archivoDoctores.seekg(sizeof(ArchivoHeader) + (idDoctor - 1) * sizeof(Doctor));
-    archivoDoctores.read(reinterpret_cast<char*>(&doctor), sizeof(Doctor));
-
     // Validar formatos
     if (!validarFormatoFecha(fecha)) { cout << "Formato de fecha inválido.\n"; return {}; }
-    if (!validarFormatoHora(hora)) { cout << "Formato de hora inválido.\n"; return {}; }
+    if (!validarFormatoHora(hora))   { cout << "Formato de hora inválido.\n"; return {}; }
 
     // Crear nueva cita
     Cita nuevaCita{};
-    nuevaCita.id = headerCitas.proximoID++;
+    nuevaCita.id = headerCitas.proximoID;
     nuevaCita.pacienteID = idPaciente;
     nuevaCita.doctorID = idDoctor;
     strncpy(nuevaCita.fecha, fecha, sizeof(nuevaCita.fecha)-1);
@@ -633,50 +587,58 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
     strncpy(nuevaCita.motivo, motivo, sizeof(nuevaCita.motivo)-1);
     strncpy(nuevaCita.estado, "Agendada", sizeof(nuevaCita.estado)-1);
     nuevaCita.atendida = false;
+    nuevaCita.consultaID = -1;
+    nuevaCita.eliminado = false;
+    nuevaCita.fechaCreacion = time(nullptr);
+    nuevaCita.fechaModificacion = nuevaCita.fechaCreacion;
 
-    // Guardar la cita
-    archivoCitas.seekp(sizeof(ArchivoHeader) + headerCitas.cantidadRegistros * sizeof(Cita));
-    archivoCitas.write(reinterpret_cast<char*>(&nuevaCita), sizeof(Cita));
+    // Guardar la cita en citas.bin
+    fstream archivoCitas("citas.bin", ios::binary | ios::in | ios::out);
+    archivoCitas.seekp(calcularPosicion<Cita>(headerCitas.cantidadRegistros), ios::beg);
+    archivoCitas.write(reinterpret_cast<const char*>(&nuevaCita), sizeof(Cita));
+    archivoCitas.close();
+
+    // Actualizar header de citas
     headerCitas.cantidadRegistros++;
-    archivoCitas.seekp(0);
-    archivoCitas.write(reinterpret_cast<char*>(&headerCitas), sizeof(ArchivoHeader));
+    headerCitas.registrosActivos++;
+    headerCitas.proximoID++;
+    actualizarHeader("citas.bin", headerCitas);
 
     // Actualizar paciente
     if (paciente.cantidadCitas < 20) {
         paciente.citasIDs[paciente.cantidadCitas++] = nuevaCita.id;
-        archivoPacientes.seekp(sizeof(ArchivoHeader) + (idPaciente - 1) * sizeof(Paciente));
-        archivoPacientes.write(reinterpret_cast<char*>(&paciente), sizeof(Paciente));
+        paciente.fechaModificacion = time(nullptr);
+        int idxPaciente = encontrarIndicePorID<Paciente>("pacientes.bin", idPaciente);
+        escribirRegistro<Paciente>("pacientes.bin", paciente, idxPaciente);
     }
 
     // Actualizar doctor
-    if (doctor.cantidadCitas < 20) {
+    if (doctor.cantidadCitas < 30) {
         doctor.citasIDs[doctor.cantidadCitas++] = nuevaCita.id;
-        archivoDoctores.seekp(sizeof(ArchivoHeader) + (idDoctor - 1) * sizeof(Doctor));
-        archivoDoctores.write(reinterpret_cast<char*>(&doctor), sizeof(Doctor));
+        doctor.fechaModificacion = time(nullptr);
+        int idxDoctor = encontrarIndicePorID<Doctor>("doctores.bin", idDoctor);
+        escribirRegistro<Doctor>("doctores.bin", doctor, idxDoctor);
     }
 
-    // Actualizar hospital
-    hospital->totalCitasAgendadas++;
-    hospital->siguienteIDCita = nuevaCita.id + 1;
-    guardarHospital(*hospital);
-
-    // Cerrar archivos
-    archivoPacientes.close();
-    archivoDoctores.close();
-    archivoCitas.close();
+    // Actualizar hospital en hospital.bin
+    fstream fh("hospital.bin", ios::binary | ios::in | ios::out);
+    if (fh.is_open()) {
+        Hospital htmp{};
+        fh.seekg(sizeof(ArchivoHeader), ios::beg);
+        fh.read(reinterpret_cast<char*>(&htmp), sizeof(Hospital));
+        htmp.totalCitasAgendadas++;
+        htmp.siguienteIDCita = headerCitas.proximoID;
+        fh.seekp(sizeof(ArchivoHeader), ios::beg);
+        fh.write(reinterpret_cast<const char*>(&htmp), sizeof(Hospital));
+        fh.close();
+    }
 
     cout << "Cita agendada exitosamente con ID: " << nuevaCita.id
          << " entre Dr. " << doctor.nombre
          << " y paciente " << paciente.nombre << ".\n";
 
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    cout << "Presione Enter para continuar...";
-    cin.get();
-
     return nuevaCita;
 }
-
-
 void listarPacientesDeDoctor(int idDoctor) {
     // Leer el doctor directamente del archivo
     Doctor doctor = buscarRegistroPorID<Doctor>("doctores.bin", idDoctor);
@@ -1122,7 +1084,7 @@ void buscarDoctoresPorEspecialidad(const char* nombreBuscado) {
 
     for (int i = 0; i < header.cantidadRegistros; ++i) {
         Doctor d = leerRegistro<Doctor>("doctores.bin", i);
-        if (!d.eliminado && compararCaseInsensitive(d.nombre, nombreBuscado)) {
+        if (!d.eliminado && compararCaseInsensitive(d.especialidad, nombreBuscado)) {
             cout << "Paciente encontrado: " 
                  << d.nombre << " " << d.apellido 
                  << " | Especialidad: " << d.especialidad << endl;

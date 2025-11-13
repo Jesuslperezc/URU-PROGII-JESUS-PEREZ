@@ -78,3 +78,30 @@ bool actualizarHeader(const char* nombreArchivo, ArchivoHeader header) {
     archivo.close();
     return true;
 }
+bool asegurarArchivo(const char* nombreArchivo) {
+    // Intentar abrir el archivo en modo lectura
+    fstream archivo(nombreArchivo, ios::binary | ios::in);
+    if (archivo.is_open()) {
+        archivo.close();
+        return true; // El archivo ya existe
+    }
+
+    // Si no existe, lo creamos con un header inicial
+    fstream nuevo(nombreArchivo, ios::binary | ios::out);
+    if (!nuevo.is_open()) {
+        cout << "Error al crear el archivo: " << nombreArchivo << endl;
+        return false;
+    }
+
+    // Header inicial
+    ArchivoHeader header{};
+    header.cantidadRegistros = 0;
+    header.proximoID = 1;
+    header.registrosActivos = 0;
+    header.version = 1;
+
+    nuevo.write(reinterpret_cast<const char*>(&header), sizeof(ArchivoHeader));
+    nuevo.close();
+
+    return true;
+}

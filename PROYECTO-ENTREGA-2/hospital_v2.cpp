@@ -49,63 +49,46 @@ int main() {
 
                     switch (opPaciente) {
                       case 1: { // Registrar nuevo paciente
-                        system("cls");
+                            system("cls");
 
-                        char nombre[50], apellido[50], cedula[20];
-                        int edad;
-                        char sexo;
+                            char nombre[50], apellido[50], cedula[20];
+                            int edad;
+                            char sexo;
 
-                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                        cout << "Ingrese nombre (sin espacios): "; 
-                        cin.getline(nombre, 50);
-                        if (!validarNombreSinEspacios(nombre)) { 
-                            cin.get(); 
-                            break; 
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cout << "Ingrese nombre (sin espacios): ";
+                            cin.getline(nombre, 50);
+                            if (!validarNombreSinEspacios(nombre)) { cin.get(); break; }
+
+                            cout << "Ingrese apellido (sin espacios): ";
+                            cin.getline(apellido, 50);
+                            if (!validarNombreSinEspacios(apellido)) { cin.get(); break; }
+
+                            cout << "Ingrese cedula (solo numeros): ";
+                            cin.getline(cedula, 20);
+                            if (!validarCedula(cedula)) { cin.get(); break; }
+
+                            cout << "Ingrese edad: ";
+                            cin >> edad;
+                            if (!validarEdad(edad)) { cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); break; }
+
+                            cout << "Ingrese sexo (M/F): ";
+                            cin >> sexo;
+                            if (!validarSexoChar(sexo)) { cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); break; }
+
+                            // Crear paciente y registrar
+                            Paciente p = crearPaciente(hospital, nombre, apellido, cedula, edad, sexo);
+
+                            if (p.id != 0) {
+                                cout << "Paciente registrado correctamente. ID: " << p.id << "\n";
+                            } else {
+                                cout << "Error al registrar el paciente.\n";
+                            }
+
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                            cin.get(); // Pausa
                         }
-
-                        cout << "Ingrese apellido (sin espacios): "; 
-                        cin.getline(apellido, 50);
-                        if (!validarNombreSinEspacios(apellido)) { 
-                            cin.get(); 
-                            break; 
-                        }
-
-                        cout << "Ingrese cedula (solo numeros): "; 
-                        cin.getline(cedula, 20);
-                        if (!validarCedula(cedula)) { 
-                            cin.get(); 
-                            break; 
-                        }
-
-                        cout << "Ingrese edad: "; 
-                        cin >> edad;
-                        if (!validarEdad(edad)) { 
-                            cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
-                            cin.get(); 
-                            break; 
-                        }
-
-                        cout << "Ingrese sexo (M/F): "; 
-                        cin >> sexo;
-                        if (!validarSexoChar(sexo)) { 
-                            cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
-                            cin.get(); 
-                            break; 
-                        }
-
-                        // Crear paciente y registrar
-                        Paciente p = crearPaciente(hospital, nombre, apellido, cedula, edad, sexo);
-
-                        if (p.id != 0) { 
-                            cout << "Paciente registrado correctamente. ID: " << p.id << "\n"; 
-                        } else {
-                            cout << "Error al registrar el paciente.\n";
-                        }
-
-                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                        cin.get(); // Pausa
-                    }
-                    break;
+                        break;
 
                         case 2: { // Buscar por cedula
                             system("cls");
@@ -227,41 +210,70 @@ int main() {
                     cin >> opDoct;
 
                     switch (opDoct) {
-                   case 1: { // Registrar nuevo doctor
-                            system("cls");
-                            char nombre[50], apellido[50], cedula[20], especialidad[50];
-                            int aniosExperiencia;
-                            float costoConsulta;
+                    case 1: { // Registrar nuevo doctor
+                        system("cls");
+                        char nombre[50], apellido[50], cedula[20], especialidad[50];
+                        int aniosExperiencia;
+                        float costoConsulta;
 
-                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
-                            cout << "Ingrese nombre (sin espacios): "; cin.getline(nombre, 50);
-                            if (!validarNombreSinEspacios(nombre)) { cout << "Nombre inválido.\n"; cin.get(); break; }
-
-                            cout << "Ingrese apellido (sin espacios): "; cin.getline(apellido, 50);
-                            if (!validarNombreSinEspacios(apellido)) { cout << "Apellido inválido.\n"; cin.get(); break; }
-
-                            cout << "Ingrese cedula (solo numeros): "; cin.getline(cedula, 20);
-                            if (!validarCedula(cedula)) { cout << "Cédula inválida.\n"; cin.get(); break; }
-
-                            cout << "Ingrese especialidad: "; cin.getline(especialidad, 50);
-                            cout << "Ingrese años de experiencia: "; cin >> aniosExperiencia;
-                            if (aniosExperiencia < 0) { cout << "Años inválidos.\n"; cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); break; }
-
-                            cout << "Ingrese costo de consulta: "; cin >> costoConsulta;
-                            if (costoConsulta < 0.0f) { cout << "Costo inválido.\n"; cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); break; }
-
-                            Doctor d = crearDoctor(hospital, nombre, apellido, cedula, especialidad, aniosExperiencia, costoConsulta);
-                            if (d.id != 0) {
-                                cout << "Doctor registrado correctamente. ID: " << d.id << "\n";
-                            } else {
-                                cout << "No se pudo registrar el doctor.\n";
-                            }
-
-                            cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
-                            cin.get(); // Pausa
-                            break;
+                        cout << "Ingrese nombre (sin espacios): "; 
+                        cin.getline(nombre, 50);
+                        if (!validarNombreSinEspacios(nombre)) { 
+                            cout << "Nombre inválido.\n"; 
+                            cin.get(); 
+                            break; 
                         }
+
+                        cout << "Ingrese apellido (sin espacios): "; 
+                        cin.getline(apellido, 50);
+                        if (!validarNombreSinEspacios(apellido)) { 
+                            cout << "Apellido inválido.\n"; 
+                            cin.get(); 
+                            break; 
+                        }
+
+                        cout << "Ingrese cedula profesional (solo numeros): "; 
+                        cin.getline(cedula, 20);
+                        if (!validarCedula(cedula)) { 
+                            cout << "Cédula inválida.\n"; 
+                            cin.get(); 
+                            break; 
+                        }
+
+                        cout << "Ingrese especialidad: "; 
+                        cin.getline(especialidad, 50);
+
+                        cout << "Ingrese años de experiencia: "; 
+                        cin >> aniosExperiencia;
+                        if (aniosExperiencia < 0) { 
+                            cout << "Años inválidos.\n"; 
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+                            cin.get(); 
+                            break; 
+                        }
+
+                        cout << "Ingrese costo de consulta: "; 
+                        cin >> costoConsulta;
+                        if (costoConsulta < 0.0f) { 
+                            cout << "Costo inválido.\n"; 
+                            cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+                            cin.get(); 
+                            break; 
+                        }
+
+                        Doctor d = crearDoctor(hospital, nombre, apellido, cedula, especialidad, aniosExperiencia, costoConsulta);
+                        if (d.id != 0) {
+                            cout << "Doctor registrado correctamente. ID: " << d.id << "\n";
+                        } else {
+                            cout << "No se pudo registrar el doctor.\n";
+                        }
+
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+                        cin.get(); // Pausa
+                        break;
+                    }
 
 
                         case 2: { // Buscar doctor por ID
@@ -387,26 +399,33 @@ int main() {
                     cin >> opCita;
 
                     switch (opCita) {
-                        case 1: { // Agendar cita
-                            system("cls");
-                            int idPac, idDoc;
-                            char fecha[11], hora[6], motivo[100];
+                    case 1: { // Agendar cita
+                        system("cls");
+                        int idPac, idDoc;
+                        char fecha[11], hora[6], motivo[100];
 
-                            cout << "Ingrese ID del paciente: "; cin >> idPac;
-                            cout << "Ingrese ID del doctor: "; cin >> idDoc;
-                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                            cout << "Ingrese fecha (YYYY-MM-DD): "; cin.getline(fecha, 11);
-                            cout << "Ingrese hora (HH:MM): "; cin.getline(hora, 6);
-                            cout << "Ingrese motivo de la cita: "; cin.getline(motivo, 100);
+                        cout << "Ingrese ID del paciente: "; cin >> idPac;
+                        cout << "Ingrese ID del doctor: "; cin >> idDoc;
+                        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                        cout << "Ingrese fecha (YYYY-MM-DD): "; cin.getline(fecha, 11);
+                        cout << "Ingrese hora (HH:MM): "; cin.getline(hora, 6);
+                        cout << "Ingrese motivo de la cita: "; cin.getline(motivo, 100);
 
-                            if (!verificarDisponibilidad(hospital, idDoc, fecha, hora)) {
-                                cout << "El doctor no está disponible en esa fecha y hora.\n";
+                        if (!verificarDisponibilidad(hospital, idDoc, fecha, hora)) {
+                            cout << "El doctor no está disponible en esa fecha y hora.\n";
+                        } else {
+                            Cita cita = agendarCita(hospital, idPac, idDoc, fecha, hora, motivo);
+                            if (cita.id != 0) {
+                                cout << "Cita registrada correctamente.\n";
                             } else {
-                                agendarCita(hospital, idPac, idDoc, fecha, hora, motivo);
+                                cout << "Error al registrar la cita.\n";
                             }
-                            break;
                         }
 
+                        cout << "\nPresione Enter para continuar...";
+                        cin.get();
+                        break;
+                    }
 
                         case 2: { // Cancelar cita
                             system("cls");

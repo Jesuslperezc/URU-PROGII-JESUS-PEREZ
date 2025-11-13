@@ -235,5 +235,29 @@ void listarRegistros(const char* nombreArchivo) {
     std::cout << std::string(80, '-') << "\n";
     std::cout << "Total de registros activos: " << activos << "\n\n";
 }
+template <typename T>
+int encontrarIndicePorID(const char* nombreArchivo, int idBuscado) {
+    fstream archivo(nombreArchivo, ios::binary | ios::in);
+    if (!archivo.is_open()) return -1;
+
+    ArchivoHeader header{};
+    archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
+    if (!archivo.good()) { archivo.close(); return -1; }
+
+    T reg{};
+    for (int i = 0; i < header.cantidadRegistros; ++i) {
+        archivo.seekg(calcularPosicion<T>(i), ios::beg);
+        archivo.read(reinterpret_cast<char*>(&reg), sizeof(T));
+        if (!archivo.good()) break;
+
+        if (!reg.eliminado && reg.id == idBuscado) {
+            archivo.close();
+            return i; // índice real en el archivo
+        }
+    }
+
+    archivo.close();
+    return -1; // no encontrado
+}
 
 #endif // UTILIDADES_HPP
