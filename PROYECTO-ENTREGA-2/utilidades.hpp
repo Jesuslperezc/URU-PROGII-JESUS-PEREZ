@@ -171,14 +171,7 @@ T leerRegistro(const char* nombreArchivo, int indice) {
 // ===================================================================
 // Leer header (no-template)
 // ===================================================================
-inline ArchivoHeader leerHeader(const char* nombreArchivo) {
-    ArchivoHeader header{};
-    std::ifstream archivo(nombreArchivo, std::ios::binary);
-    if (!archivo.is_open()) return header;
-    archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
-    archivo.close();
-    return header;
-}
+ ArchivoHeader leerHeader(const char* nombreArchivo);
 
 // ===================================================================
 // Listar registros

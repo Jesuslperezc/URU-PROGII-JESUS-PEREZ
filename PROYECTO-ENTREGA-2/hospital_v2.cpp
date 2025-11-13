@@ -12,6 +12,7 @@
 using namespace std;
 
 int main() {
+    RegistrarHospital();
     Hospital* hospital = cargarDatosHospital();
 
 
@@ -73,6 +74,7 @@ int main() {
                             Paciente *p=crearPaciente(hospital, nombre, apellido, cedula, edad, sexo);
                             if (p->id != -1) cout << "Paciente registrado correctamente. ID: " << p->id << "\n";
                         }
+                        break;
 
                         case 2: { // Buscar por cedula
                             system("cls");
@@ -80,7 +82,7 @@ int main() {
                             cin.ignore(numeric_limits<streamsize>::max(), '\n');
                             cout << "Ingrese cedula: "; cin.getline(cedula, 20);
                             if (!validarCedula(cedula)) { cin.get(); break; }
-                            Paciente p = buscarPacientePorCedula("pacientes.bin", cedula); 
+                            buscarPacientePorCedula("pacientes.bin", cedula); 
                             cin.get();
                             break;
                         }
@@ -100,20 +102,21 @@ int main() {
                             int id;
                             cin.ignore(numeric_limits<streamsize>::max(), '\n');
                             cout << "Ingrese id del paciente: "; 
-                            cin>>id;
-                            Paciente p = buscarRegistroPorID<Paciente>("pacientes.bin", id);
-                           
+                            cin >> id;
 
-                            int cant = 0;
-                            HistorialMedico* hist = leerHistorialCompleto(p.id, &cant);
-                            if (cant == 0) cout << "No hay historial.\n";
-                            else {
-                                for (int i = 0; i < cant; i++)
-                             mostrarHistorialMedico(&p);
+                            Paciente p = buscarRegistroPorID<Paciente>("pacientes.bin", id);
+
+                            if (p.cantidadConsultas == 0) {
+                                cout << "No hay historial médico.\n";
+                            } else {
+                                mostrarHistorialMedico(&p);  //
                             }
+
                             cin.get();
+                            cin.get(); // para pausar
                             break;
                         }
+
 
                         case 5: { // Actualizar paciente
                             system("cls");
@@ -215,7 +218,7 @@ int main() {
                             cout << "Ingrese costo de consulta: "; cin >> costoConsulta;
                             if (costoConsulta < 0.0f) { cout << "Costo inválido.\n"; cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); break; }
 
-                          Doctor d= crearDoctor(hospital, nombre, apellido, cedula, especialidad, aniosExperiencia, costoConsulta);
+                          crearDoctor(hospital, nombre, apellido, cedula, especialidad, aniosExperiencia, costoConsulta);
                           cout << "Doctor registrado correctamente.\n";
                             cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
                             break;
@@ -224,7 +227,7 @@ int main() {
                         case 2: { // Buscar doctor por ID
                             system("cls");
                             int idDoc; cout << "Ingrese ID del doctor: "; cin >> idDoc;
-                            Doctor doc = buscarRegistroPorID<Doctor>("doctores,bin", idDoc);
+                            Doctor doc = buscarRegistroPorID<Doctor>("doctores.bin", idDoc);
 
                              cout << "Doctor: " << doc.nombre << " " << doc.apellido << " | Especialidad: " << doc.especialidad << "\n";
                         
@@ -254,7 +257,7 @@ int main() {
 
                             if (doctor.id != 0 && paciente.id != 0) {
                                 // Llamamos a tu función para asignar el paciente
-                                if (asignarPacienteADoctor(&doctor, idPac)) {
+                                if (asignarPacienteADoctor(idDoc, idPac)) {
                                     cout << "Paciente asignado correctamente.\n";
                                 } else {
                                     cout << "No se pudo asignar el paciente.\n";
@@ -518,6 +521,14 @@ int main() {
         }
 
     } while (opMenu != 4);
+    if (hospital) {
+    if (guardarHospital(*hospital)) {
+        cout << "Datos del hospital guardados correctamente en hospital.bin.\n";
+    } else {
+        cout << "Error al guardar los datos del hospital.\n";
+    }
+}
+delete hospital;
 
 return 0;
 }

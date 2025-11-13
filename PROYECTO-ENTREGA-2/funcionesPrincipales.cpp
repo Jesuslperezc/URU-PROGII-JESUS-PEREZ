@@ -610,8 +610,7 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
     return nuevaCita;
 }
 
-void listarPacientesDeDoctor(Hospital hospital, int idDoctor) {
-    (void)hospital;
+void listarPacientesDeDoctor(Hospital* hospital, int idDoctor) {
     // Leer el doctor directamente del archivo
     Doctor doctor = buscarRegistroPorID<Doctor>("doctores.bin", idDoctor);
 
@@ -1186,4 +1185,40 @@ Cita* obtenerCitasPorFecha(const char* fechaBuscada, int* cantidad) {
     *cantidad = contador;
     return resultado;
 }
+Hospital* RegistrarHospital() {
+    Hospital* hospital = new Hospital;
 
+    // Pedir datos
+    cout << "=== Registro del Hospital ===\n";
+    cout << "Nombre: ";
+    cin.getline(hospital->nombre, 100);
+    cout << "Direccion: ";
+    cin.getline(hospital->direccion, 150);
+    cout << "Telefono: ";
+    cin.getline(hospital->telefono, 15);
+
+    // Inicializar contadores e IDs
+    hospital->siguienteIDPaciente = 1;
+    hospital->siguienteIDDoctor = 1;
+    hospital->siguienteIDCita = 1;
+    hospital->siguienteIDConsulta = 1;
+
+    hospital->totalPacientesRegistrados = 0;
+    hospital->totalDoctoresRegistrados = 0;
+    hospital->totalCitasAgendadas = 0;
+    hospital->totalConsultasRealizadas = 0;
+
+    // Guardar inmediatamente en disco
+    fstream archivo("hospital.bin", ios::binary | ios::out | ios::trunc);
+    if (!archivo.is_open()) {
+        cout << "Error: no se pudo crear hospital.bin\n";
+        delete hospital;
+        return nullptr;
+    }
+
+    archivo.write(reinterpret_cast<const char*>(hospital), sizeof(Hospital));
+    archivo.close();
+
+    cout << "\nHospital registrado y guardado correctamente.\n\n";
+    return hospital;
+}

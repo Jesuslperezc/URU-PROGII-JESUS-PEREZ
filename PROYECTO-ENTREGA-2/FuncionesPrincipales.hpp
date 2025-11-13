@@ -25,7 +25,7 @@ Doctor crearDoctor(Hospital* hospital, const char* nombre,
                    const char* apellido, const char* cedula,
                    const char* especialidad, int aniosExperiencia,
                    float costoConsulta);
-bool asignarPacienteADoctor(Doctor* doctor, int idPaciente);
+bool asignarPacienteADoctor(int idDoctor, int idPaciente);
 bool removerPacienteDeDoctor(Doctor* doctor, int idPaciente);
 void listarDoctores(Hospital* hospital);
 bool validarFormatoFecha(const char* fecha);
@@ -49,4 +49,5 @@ bool eliminarDoctor(int id);
 bool verificarDisponibilidad(Hospital* hospital, int idDoctor, const char* fecha, const char* hora);
 Cita* leerCitasDoctor(int doctorID, int* cantidad);
 Cita* obtenerCitasPorFecha(const char* fechaBuscada, int* cantidad);
+Hospital* RegistrarHospital();
 #endif // DECLARACIONES_HPP 
