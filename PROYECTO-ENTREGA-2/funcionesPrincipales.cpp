@@ -350,31 +350,31 @@ HistorialMedico* leerHistorialCompleto(int pacienteID, int* cantidad) {
 Doctor crearDoctor(Hospital* hospital, const char* nombre,
                    const char* apellido, const char* cedula,
                    const char* especialidad, int aniosExperiencia,
-                   float costoConsulta) {
-    // Validaciones
-    if (!validarNombreSinEspacios(nombre) || !validarNombreSinEspacios(apellido)) return Doctor{};
-    if (!validarCedula(cedula)) return Doctor{};
-    if (aniosExperiencia < 0 || costoConsulta < 0) return Doctor{};
+                   float costoConsulta)
+{
+    // Validaciones básicas
+    if (!validarNombreSinEspacios(nombre) || !validarNombreSinEspacios(apellido)) return {};
+    if (!validarCedula(cedula)) return {};
+    if (aniosExperiencia < 0 || costoConsulta < 0) return {};
 
-    Doctor d{};
-    d.id = hospital->totalDoctoresRegistrados + 1;
-    strcpy(d.nombre, nombre);
-    strcpy(d.apellido, apellido);
-    strcpy(d.cedulaProfesional, cedula);
-    strcpy(d.especialidad, especialidad);
-    d.aniosExperiencia = aniosExperiencia;
-    d.costoConsulta = costoConsulta;
-    d.disponible = true;
-    d.eliminado = false;
-    d.fechaCreacion = time(nullptr);
-    d.cantidadPacientes = 0;
-    d.cantidadCitas = 0;
+    Doctor nuevoDoctor{};
+    strcpy(nuevoDoctor.nombre, nombre);
+    strcpy(nuevoDoctor.apellido, apellido);
+    strcpy(nuevoDoctor.cedulaProfesional, cedula);
+    strcpy(nuevoDoctor.especialidad, especialidad);
+    nuevoDoctor.aniosExperiencia = aniosExperiencia;
+    nuevoDoctor.costoConsulta = costoConsulta;
+    nuevoDoctor.disponible = true;
+    nuevoDoctor.eliminado = false;
+    nuevoDoctor.fechaCreacion = time(nullptr);
+    nuevoDoctor.cantidadPacientes = 0;
+    nuevoDoctor.cantidadCitas = 0;
 
     // Abrir archivo doctores.bin
     fstream archivo("doctores.bin", ios::binary | ios::in | ios::out);
     ArchivoHeader header{};
-    
     if (!archivo.is_open()) {
+        // Crear archivo si no existe
         archivo.open("doctores.bin", ios::binary | ios::out);
         header.cantidadRegistros = 0;
         header.proximoID = 1;
@@ -385,35 +385,35 @@ Doctor crearDoctor(Hospital* hospital, const char* nombre,
         archivo.open("doctores.bin", ios::binary | ios::in | ios::out);
         if (!archivo.is_open()) {
             cout << "No se pudo crear/abrir el archivo de doctores.\n";
-            return Doctor{};
+            return {};
         }
     }
 
-    // Leer header actual
+    // Leer header
     archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
 
     // Asignar ID secuencial
-    d.id = header.proximoID++;
+    nuevoDoctor.id = header.proximoID++;
 
-    // Escribir doctor al final
+    // Escribir doctor al final del archivo
     archivo.seekp(sizeof(ArchivoHeader) + header.cantidadRegistros * sizeof(Doctor));
-    archivo.write(reinterpret_cast<char*>(&d), sizeof(Doctor));
+    archivo.write(reinterpret_cast<char*>(&nuevoDoctor), sizeof(Doctor));
 
     // Actualizar header
     header.cantidadRegistros++;
     header.registrosActivos++;
     archivo.seekp(0);
     archivo.write(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
-
     archivo.close();
 
     // Actualizar hospital
     hospital->totalDoctoresRegistrados++;
     guardarHospital(*hospital);
 
-    cout << "Doctor creado exitosamente con ID: " << d.id << "\n";
-    return d;
+    cout << "Doctor creado exitosamente con ID: " << nuevoDoctor.id << "\n";
+    return nuevoDoctor;
 }
+
 
 
 bool asignarPacienteADoctor(int idDoctor, int idPaciente) {
