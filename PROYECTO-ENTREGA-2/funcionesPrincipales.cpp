@@ -486,10 +486,11 @@ void listarDoctores() {
         Doctor d{};
         archivo.seekg(sizeof(ArchivoHeader) + i * sizeof(Doctor));
         archivo.read(reinterpret_cast<char*>(&d), sizeof(Doctor));
-
+        if(!d.eliminado){
         cout << d.id << " - " << d.nombre << " " << d.apellido 
              << " - " << d.especialidad << "\n";
     }
+   }
 
     archivo.close();
 }
