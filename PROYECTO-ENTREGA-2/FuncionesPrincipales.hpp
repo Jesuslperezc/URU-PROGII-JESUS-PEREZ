@@ -14,8 +14,9 @@ bool validarSexoChar(char sexo);
 void RegistrarHospital(Hospital* hospital);
 bool compararCaseInsensitive(const char* a, const char* b);
 bool validarFormatoHora(const char* hora);
-Paciente* crearPaciente(Hospital* hospital, const char* nombre,
-                        const char* apellido, const char* cedula, int edad, char sexo);
+Paciente crearPaciente(Hospital* hospital, const char* nombre,
+                       const char* apellido, const char* cedula, int edad, char sexo);
+
 bool eliminarPaciente(int id);
 bool actualizarPaciente(int id);
 bool agregarConsultaAlHistorial(int pacienteID, HistorialMedico nuevaConsulta);

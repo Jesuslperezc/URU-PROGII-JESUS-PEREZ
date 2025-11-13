@@ -85,13 +85,13 @@ bool validarFormatoHora(const char* hora) {
     return (sscanf(hora, "%2d:%2d", &hh, &mm) == 2 && hh >= 0 && hh < 24 && mm >= 0 && mm < 60);
 }
 
-Paciente* crearPaciente(Hospital* hospital, const char* nombre,
-                        const char* apellido, const char* cedula, int edad, char sexo) {
+Paciente crearPaciente(Hospital* hospital, const char* nombre,
+                       const char* apellido, const char* cedula, int edad, char sexo) {
     // Validaciones
-    if (!validarNombreSinEspacios(nombre) || !validarNombreSinEspacios(apellido)) return nullptr;
-    if (!validarCedula(cedula)) return nullptr;
-    if (!validarEdad(edad)) return nullptr;
-    if (!validarSexoChar(sexo)) return nullptr;
+    if (!validarNombreSinEspacios(nombre) || !validarNombreSinEspacios(apellido)) return {};
+    if (!validarCedula(cedula)) return {};
+    if (!validarEdad(edad)) return {};
+    if (!validarSexoChar(sexo)) return {};
 
     Paciente p{};
     strcpy(p.nombre, nombre);
@@ -109,7 +109,7 @@ Paciente* crearPaciente(Hospital* hospital, const char* nombre,
     // Abrir archivo pacientes.bin
     fstream archivo("pacientes.bin", ios::binary | ios::in | ios::out);
     ArchivoHeader header{};
-    
+
     if (!archivo.is_open()) {
         // Crear archivo si no existe
         archivo.open("pacientes.bin", ios::binary | ios::out);
@@ -122,8 +122,9 @@ Paciente* crearPaciente(Hospital* hospital, const char* nombre,
         archivo.open("pacientes.bin", ios::binary | ios::in | ios::out);
         if (!archivo.is_open()) {
             cout << "No se pudo crear/abrir el archivo de pacientes.\n";
-            return nullptr;
+            return {};
         }
+        return p;
     }
 
     // Leer header actual
@@ -141,7 +142,6 @@ Paciente* crearPaciente(Hospital* hospital, const char* nombre,
     header.registrosActivos++;
     archivo.seekp(0);
     archivo.write(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
-
     archivo.close();
 
     // Actualizar hospital
@@ -149,10 +149,8 @@ Paciente* crearPaciente(Hospital* hospital, const char* nombre,
     guardarHospital(*hospital);
 
     cout << "Paciente creado exitosamente con ID: " << p.id << "\n";
-    return nullptr; // ya no devolvemos puntero dinámico
+    return p; // Devuelve el paciente creado
 }
-
-
 
 
 bool eliminarPaciente(int id) {
