@@ -46,5 +46,7 @@ Paciente buscarPacientePorCedula(const char* nombreArchivo, const char* cedulaBu
 void buscarPacientesPorNombre(const char* nombreBuscado);
 void buscarDoctoresPorEspecialidad(const char* nombreBuscado);
 bool eliminarDoctor(int id);
-
+bool verificarDisponibilidad(Hospital* hospital, int idDoctor, const char* fecha, const char* hora);
+Cita* leerCitasDoctor(int doctorID, int* cantidad);
+Cita* obtenerCitasPorFecha(const char* fechaBuscada, int* cantidad);
 #endif // DECLARACIONES_HPP 

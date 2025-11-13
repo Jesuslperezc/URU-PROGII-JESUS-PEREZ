@@ -12,8 +12,8 @@
 using namespace std;
 
 int main() {
-    Hospital* hospital = new Hospital;
-    RegistrarHospital(hospital);
+    Hospital* hospital = cargarDatosHospital();
+
 
     int opMenu;
     do {
@@ -313,7 +313,7 @@ int main() {
                         case 7: { // Eliminar doctor
                             system("cls");
                             int idDoc; cout << "Ingrese ID del doctor a eliminar: "; cin >> idDoc;
-                            
+                            eliminarDoctor(idDoc);
                             cin.get();
                             break;
                         }
@@ -389,42 +389,111 @@ int main() {
                         }
 
                         case 4: { // Ver citas de un paciente
-                            system("cls");
-                            int idPac, cantidad = 0;
-                            cout << "Ingrese ID del paciente: "; cin >> idPac;
-                            Cita** citas = obtenerCitasDePaciente(hospital, idPac, &cantidad);
-                            mostrarCitas(citas, cantidad);
-                            delete[] citas;
-                            system("pause");
-                            break;
-                        }
+                                system("cls");
+                                int idPac, cantidad = 0;
+                                cout << "Ingrese ID del paciente: "; cin >> idPac;
+
+                                // Llamamos a tu función para obtener las citas del paciente
+                                Cita* citas = leerCitasDePaciente(idPac, &cantidad);
+
+                                if (citas && cantidad > 0) {
+                                    cout << left << setw(6) << "ID"
+                                        << setw(12) << "Fecha"
+                                        << setw(10) << "Hora"
+                                        << setw(8)  << "DocID"
+                                        << setw(8)  << "PacID"
+                                        << setw(25) << "Motivo" << "\n";
+                                    cout << string(70, '-') << "\n";
+
+                                    for (int i = 0; i < cantidad; i++) {
+                                        cout << left << setw(6)  << citas[i].id
+                                            << setw(12) << citas[i].fecha
+                                            << setw(10) << citas[i].hora
+                                            << setw(8)  << citas[i].doctorID
+                                            << setw(8)  << citas[i].pacienteID
+                                            << setw(25) << citas[i].motivo << "\n";
+                                    }
+
+                                    delete[] citas; // Liberamos memoria
+                                } else {
+                                    cout << "No se encontraron citas para este paciente.\n";
+                                }
+
+                                cout << string(70, '-') << "\n";
+                                cout << "Total de citas encontradas: " << cantidad << "\n";
+
+                                system("pause");
+                                break;
+                            }
+
 
                         case 5: { // Ver citas de un doctor
                             system("cls");
                             int idDoc, cantidad = 0;
                             cout << "Ingrese ID del doctor: "; cin >> idDoc;
-                            Cita** citas = obtenerCitasDeDoctor(hospital, idDoc, &cantidad);
-                            mostrarCitas(citas, cantidad);
-                            delete[] citas;
-                            system("pause");
-                            break;
+                            Cita* citas = leerCitasDoctor(idDoc, &cantidad);
+                           if (citas && cantidad > 0) {
+                                    cout << left << setw(6) << "ID"
+                                        << setw(12) << "Fecha"
+                                        << setw(10) << "Hora"
+                                        << setw(8)  << "DocID"
+                                        << setw(8)  << "PacID"
+                                        << setw(25) << "Motivo" << "\n";
+                                    cout << string(70, '-') << "\n";
+
+                                    for (int i = 0; i < cantidad; i++) {
+                                        cout << left << setw(6)  << citas[i].id
+                                            << setw(12) << citas[i].fecha
+                                            << setw(10) << citas[i].hora
+                                            << setw(8)  << citas[i].doctorID
+                                            << setw(8)  << citas[i].pacienteID
+                                            << setw(25) << citas[i].motivo << "\n";
+                                    }
+
+                                    delete[] citas; // Liberamos memoria
+                                } else {
+                                    cout << "No se encontraron citas para este paciente.\n";
+                                }
+
+                                cout << string(70, '-') << "\n";
+                                cout << "Total de citas encontradas: " << cantidad << "\n";
+
+                                system("pause");
+                                break;
                         }
 
-                        case 6: { // Ver citas de una fecha
-                            system("cls");
-                            char fecha[11]; int cantidad = 0;
-                            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                            cout << "Ingrese fecha (YYYY-MM-DD): "; cin.getline(fecha, 11);
-                            Cita** citas = obtenerCitasPorFecha(hospital, fecha, &cantidad);
-                            mostrarCitas(citas, cantidad);
-                            delete[] citas;
-                            system("pause");
-                            break;
-                        }
+                        case 6: { // Buscar citas por fecha
+                                system("cls");
+                                char fecha[12]; // formato: "dd/mm/yyyy"
+                                cout << "Ingrese fecha (dd/mm/yyyy): ";
+                                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                                cin.getline(fecha, 12);
+
+                                int cantidad = 0;
+                                Cita* citas = obtenerCitasPorFecha(fecha, &cantidad);
+
+                                if (citas == nullptr) {
+                                    cout << "No se encontraron citas para la fecha " << fecha << ".\n";
+                                } else {
+                                    cout << "\nCitas encontradas: " << cantidad << "\n";
+                                    for (int i = 0; i < cantidad; i++) {
+                                        Cita c = citas[i];
+                                        cout << "ID: " << c.id
+                                            << " | DoctorID: " << c.doctorID
+                                            << " | PacienteID: " << c.pacienteID
+                                            << " | Hora: " << c.hora
+                                            << " | Motivo: " << c.motivo << "\n";
+                                    }
+                                    delete[] citas;
+                                }
+
+                                system("pause");
+                                break;
+                            }
 
                         case 7: { // Citas pendientes
                             system("cls");
-                            listarCitasPendientes(hospital);
+                            listarCitasPendientes();
                             cout << "\nPresione Enter para continuar...";
                             cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
                             break;
@@ -450,5 +519,5 @@ int main() {
 
     } while (opMenu != 4);
 
-    // Liberar memoria del hospital si es necesario
-
+return 0;
+}

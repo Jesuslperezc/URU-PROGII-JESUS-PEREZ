@@ -189,6 +189,17 @@ bool eliminarDoctor(int id) {
     archivo.close();
     return false;
 }
+bool verificarDisponibilidad(Hospital* hospital, int idDoctor, const char* fecha, const char* hora) {
+    for (int i = 0; i < hospital->totalCitasAgendadas; i++) {
+        Cita cita= leerRegistro<Cita>("citas.bin", i);
+        if (cita.doctorID == idDoctor && strcmp(cita.estado, "Agendada") == 0) {
+            if (strcmp(cita.fecha, fecha) == 0 && strcmp(cita.hora, hora) == 0) {
+                return false;  
+            }
+        }
+    }
+    return true; 
+}
 
 bool actualizarPaciente(int id) {
     fstream archivo("pacientes.bin", ios::binary | ios::in | ios::out);
@@ -745,6 +756,46 @@ Cita* leerCitasDePaciente(int pacienteID, int* cantidad) {
     }
     return citasArray;
 }
+Cita* leerCitasDoctor(int doctorID, int* cantidad) {
+    *cantidad = 0; // Inicializar por seguridad
+    // 1. Leer paciente desde el archivo
+    Doctor d = leerRegistro<Doctor>("doctores.bin", doctorID - 1);
+    // Validar que el paciente exista
+    if (d.id == 0) {
+        cout << "Error: Doctor no encontrado.\n";
+        return nullptr;
+    }
+    // 2. Obtener la cantidad de citas y sus IDs
+    int totalCitas = d.cantidadCitas;
+    if (totalCitas == 0) {
+        cout << "El Doctor no tiene citas registradas.\n";
+        return nullptr;
+    }
+    int* citasIDs = d.citasIDs;
+    // 3. Crear un array dinámico para almacenar las citas válidas
+    Cita* citasArray = new Cita[totalCitas];
+    int contador = 0;
+    // 4. Leer cada cita desde el archivo
+    for (int i = 0; i < totalCitas; i++) {
+        int idCita = citasIDs[i];
+        if (idCita == 0) continue; // ID vacío
+
+        Cita cita = leerRegistro<Cita>("citas.bin", idCita - 1);
+
+        // Si la cita existe y no está eliminada
+        if (cita.id != 0 && !cita.eliminado) {
+            citasArray[contador++] = cita;
+        }
+    }
+    // 5. Actualizar la cantidad real de citas válidas
+    *cantidad = contador;
+    // Si no se encontró ninguna válida, liberar memoria
+    if (contador == 0) {
+        delete[] citasArray;
+        return nullptr;
+    }
+    return citasArray;
+}
 Hospital* cargarDatosHospital() {
     // 1. Verificar existencia de todos los archivos .bin
     if (!verificarArchivo("hospital.bin")) {
@@ -828,10 +879,10 @@ bool cancelarCita(Hospital* hospital, int idCita) {
     // 6. Quitar la referencia en el doctor
     Doctor doctor = buscarRegistroPorID<Doctor>("doctores.bin", cita.doctorID);
     if (doctor.id != 0) {
-        for (int j = 0; j < doctor.cantidadCitas; j++) {
-            if (doctor.citasIDs[j] == idCita) {
-                for (int k = j; k < doctor.cantidadCitas - 1; k++) {
-                    doctor.citasIDs[k] = doctor.citasIDs[k + 1];
+        for (int i = 0; i < doctor.cantidadCitas;i ++) {
+            if (doctor.citasIDs[i] == idCita) {
+                for (int j = i; j < doctor.cantidadCitas - 1; j++) {
+                    doctor.citasIDs[j] = doctor.citasIDs[j + 1];
                 }
                 doctor.cantidadCitas--;
                 break;
@@ -1014,5 +1065,125 @@ void buscarDoctoresPorEspecialidad(const char* nombreBuscado) {
     }
 
     cout << "Coincidencias encontradas: " << coincidencias << endl;
+}
+bool verificarYRepararIntegridadReferencial() {
+    bool integridadOk = true;
+
+    // --- 1. Revisar citas ---
+    ArchivoHeader headerCitas = leerHeader("citas.bin");
+    for (int i = 0; i < headerCitas.cantidadRegistros; i++) {
+        Cita c = leerRegistro<Cita>("citas.bin", i);
+        if (c.eliminado || c.id == 0) continue;
+
+        bool citaValida = true;
+
+        // Verificar paciente
+        Paciente p = leerRegistro<Paciente>("pacientes.bin", c.pacienteID - 1);
+        if (p.id == 0 || p.eliminado) {
+            cout << "Cita ID " << c.id << " tiene pacienteID inválido: " << c.pacienteID << "\n";
+            citaValida = false;
+            integridadOk = false;
+        }
+
+        // Verificar doctor
+        Doctor d = leerRegistro<Doctor>("doctores.bin", c.pacienteID - 1);
+        if (d.id == 0 || d.eliminado) {
+            cout << "Cita ID " << c.id << " tiene doctorID inválido: " << c.pacienteID << "\n";
+            citaValida = false;
+            integridadOk = false;
+        }
+
+        // Reparar: marcar como eliminada si no es válida
+        if (!citaValida) {
+            c.eliminado = true;
+            escribirRegistro<Cita>("citas.bin", c, i);
+            cout << "Cita ID " << c.id << " eliminada automáticamente.\n";
+        }
+    }
+
+    // --- 2. Revisar historiales ---
+    ArchivoHeader headerHist = leerHeader("historiales.bin");
+    for (int i = 0; i < headerHist.cantidadRegistros; i++) {
+        HistorialMedico h = leerRegistro<HistorialMedico>("historiales.bin", i);
+        if (h.eliminado || h.id == 0) continue;
+
+        Paciente p = leerRegistro<Paciente>("pacientes.bin", h.pacienteID - 1);
+        if (p.id == 0 || p.eliminado) {
+            cout << "Historial ID " << h.id << " tiene pacienteID inválido: " << h.pacienteID << "\n";
+            h.eliminado = true;
+            escribirRegistro<HistorialMedico>("historiales.bin", h, i);
+            cout << "Historial ID " << h.id << " eliminado automáticamente.\n";
+            integridadOk = false;
+        }
+    }
+
+    // --- 3. Revisar pacientes y sus citas ---
+    ArchivoHeader headerPac = leerHeader("pacientes.bin");
+    for (int i = 0; i < headerPac.cantidadRegistros; i++) {
+        Paciente pac = leerRegistro<Paciente>("pacientes.bin", i);
+        if (pac.eliminado || pac.id == 0) continue;
+
+        bool cambios = false;
+        for (int j = 0; j < pac.cantidadCitas; j++) {
+            int idCita = pac.citasIDs[j];
+            if (idCita == 0) continue;
+
+            Cita c = leerRegistro<Cita>("citas.bin", idCita - 1);
+            if (c.id == 0 || c.eliminado) {
+                cout << "Paciente ID " << pac.id << " tiene cita inválida ID " << idCita << "\n";
+                pac.citasIDs[j] = 0; // Reparar
+                cambios = true;
+                integridadOk = false;
+            }
+        }
+
+        if (cambios) {
+            escribirRegistro<Paciente>("pacientes.bin", pac, i);
+            cout << "Paciente ID " << pac.id << " actualizado.\n";
+        }
+    }
+
+    if (integridadOk)
+        cout << "\nIntegridad referencial OK. No se encontraron errores.\n";
+    else
+        cout << "\nSe repararon automáticamente las referencias rotas.\n";
+
+    return integridadOk;
+}
+Cita* obtenerCitasPorFecha(const char* fechaBuscada, int* cantidad) {
+    *cantidad = 0; // Inicializar cantidad
+
+    ArchivoHeader header = leerHeader("citas.bin");
+    if (header.cantidadRegistros == 0) {
+        cout << "No hay citas registradas.\n";
+        return nullptr;
+    }
+
+    // Array temporal para almacenar todas las coincidencias (máx: cantidad de registros)
+    Cita* temp = new Cita[header.cantidadRegistros];
+    int contador = 0;
+
+    for (int i = 0; i < header.cantidadRegistros; i++) {
+        Cita c = leerRegistro<Cita>("citas.bin", i);
+        if (c.eliminado || c.id == 0) continue;
+
+        // Comparar la fecha (case-sensitive, puedes hacer case-insensitive si quieres)
+        if (strcmp(c.fecha, fechaBuscada) == 0) {
+            temp[contador++] = c;
+        }
+    }
+
+    // Ajustar array final
+    if (contador == 0) {
+        delete[] temp;
+        return nullptr;
+    }
+
+    Cita* resultado = new Cita[contador];
+    for (int i = 0; i < contador; i++) resultado[i] = temp[i];
+    delete[] temp;
+
+    *cantidad = contador;
+    return resultado;
 }
 
