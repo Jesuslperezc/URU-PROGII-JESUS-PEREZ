@@ -16,13 +16,13 @@ bool validarCedula(const char* cedula){
     if (cedula[0] == '\0') return false;
     size_t len = strlen(cedula);
     if (len > 19) { // deja espacio para el terminador
-        cout << "Excede el limite de caracteres para cédula.\n";
+        std::cout << "Excede el limite de caracteres para cédula.\n";
         return false;
     }
     // Solo dígitos
     for (size_t i = 0; i < len; ++i) {
         if (!isdigit((unsigned char)cedula[i])) {
-            cout << "La cédula debe contener solo números.\n";
+            std::cout << "La cédula debe contener solo números.\n";
             return false;
         }
     }
@@ -35,7 +35,7 @@ bool validarNombreSinEspacios(const char* nombre) {
     // No permitir espacios en blanco
     for (size_t i = 0; i < strlen(nombre); ++i) {
         if (isspace((unsigned char)nombre[i])) {
-            cout << "El nombre/apellido no debe contener espacios.\n";
+            std::cout << "El nombre/apellido no debe contener espacios.\n";
             return false;
         }
     }
@@ -44,11 +44,11 @@ bool validarNombreSinEspacios(const char* nombre) {
 
 bool validarEdad(int edad) {
     if (edad < 0) {
-        cout << "La edad no puede ser negativa.\n";
+        std::cout << "La edad no puede ser negativa.\n";
         return false;
     }
     if (edad > 120) {
-        cout << "La edad supera el límite razonable (120).\n";
+        std::cout << "La edad supera el límite razonable (120).\n";
         return false;
     }
     return true;
@@ -61,17 +61,17 @@ bool validarSexoChar(char sexo) {
     return false;
 }
 
-// Requisito: Inicializar hospital con datos
+ // Requisito: Inicializar hospital con datos
 void RegistrarHospital(Hospital* hospital) {
-    cout << "=== Registro del Hospital ===\n";
-    cout << "Ingrese el nombre del hospital: ";
-    cin.getline(hospital->nombre, 100);
-    cout << "Ingrese la direccion del hospital: ";
-    cin.getline(hospital->direccion, 150);
-    cout << "Ingrese el telefono del hospital: ";
-    cin.getline(hospital->telefono, 15);
+    std::cout << "=== Registro del Hospital ===\n";
+    std::cout << "Ingrese el nombre del hospital: ";
+    std::cin.getline(hospital->nombre, 100);
+    std::cout << "Ingrese la direccion del hospital: ";
+    std::cin.getline(hospital->direccion, 150);
+    std::cout << "Ingrese el telefono del hospital: ";
+    std::cin.getline(hospital->telefono, 15);
 
-    cout << "\n Hospital registrado exitosamente.\n\n";
+    std::cout << "\n Hospital registrado exitosamente.\n\n";
 }
 bool compararCaseInsensitive(const char* a, const char* b) {
     while (*a && *b) {
@@ -669,9 +669,9 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
          << " entre Dr. " << doctor.nombre
          << " y paciente " << paciente.nombre << ".\n";
 
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    std::cin.ignore(numeric_limits<streamsize>::max(), '\n');
     cout << "Presione Enter para continuar...";
-    cin.get();
+    std::cin.get();
 
     return nuevaCita;
 }
@@ -785,7 +785,7 @@ bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,
 case 4: { // Ver citas de un paciente
     system("cls");
     int idPac, cantidad = 0;
-    cout << "Ingrese ID del paciente: "; cin >> idPac;
+    cout << "Ingrese ID del paciente: "; std::cin >> idPac;
 
     // Obtener las citas del paciente
     Cita* citas = leerCitasDePaciente(idPac, &cantidad);
@@ -819,15 +819,15 @@ case 4: { // Ver citas de un paciente
     cout << "Total de citas encontradas: " << cantidad << "\n";
 
     cout << "Presione Enter para continuar...";
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    cin.get();
+    std::cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    std::cin.get();
     break;
 }
 
 case 5: { // Ver citas de un doctor
     system("cls");
     int idDoc, cantidad = 0;
-    cout << "Ingrese ID del doctor: "; cin >> idDoc;
+    cout << "Ingrese ID del doctor: "; std::cin >> idDoc;
 
     // Obtener las citas del doctor
     Cita* citas = leerCitasDoctor(idDoc, &cantidad);
@@ -861,8 +861,8 @@ case 5: { // Ver citas de un doctor
     cout << "Total de citas encontradas: " << cantidad << "\n";
 
     cout << "Presione Enter para continuar...";
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    cin.get();
+    std::cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    std::cin.get();
     break;
 }
 
@@ -1220,8 +1220,8 @@ bool verificarYRepararIntegridadReferencial() {
 
     return integridadOk;
 }
-Cita* obtenerCitasPorFecha(const char* fechaBuscada, int* cantidad) {
-    *cantidad = 0; // Inicializar cantidad
+Cita* obtenerCitasPorFecha(const char* fechaBuscada, int& cantidad) {
+    cantidad = 0; // Inicializar cantidad
 
     ArchivoHeader header = leerHeader("citas.bin");
     if (header.cantidadRegistros == 0) {
@@ -1253,7 +1253,7 @@ Cita* obtenerCitasPorFecha(const char* fechaBuscada, int* cantidad) {
     for (int i = 0; i < contador; i++) resultado[i] = temp[i];
     delete[] temp;
 
-    *cantidad = contador;
+    cantidad = contador;
     return resultado;
 }
 Hospital* RegistrarHospital() {
@@ -1262,11 +1262,11 @@ Hospital* RegistrarHospital() {
     // Pedir datos
     cout << "=== Registro del Hospital ===\n";
     cout << "Nombre: ";
-    cin.getline(hospital->nombre, 100);
+    std::cin.getline(hospital->nombre, 100);
     cout << "Direccion: ";
-    cin.getline(hospital->direccion, 150);
+    std::cin.getline(hospital->direccion, 150);
     cout << "Telefono: ";
-    cin.getline(hospital->telefono, 15);
+    std::cin.getline(hospital->telefono, 15);
 
     // Inicializar contadores e IDs
     hospital->siguienteIDPaciente = 1;
