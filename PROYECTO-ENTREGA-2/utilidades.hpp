@@ -235,9 +235,10 @@ void listarRegistros(const char* nombreArchivo) {
     std::cout << std::string(80, '-') << "\n";
     std::cout << "Total de registros activos: " << activos << "\n\n";
 }
+
 template <typename T>
 int encontrarIndicePorID(const char* nombreArchivo, int idBuscado) {
-    fstream archivo(nombreArchivo, ios::binary | ios::in);
+    std::fstream archivo(nombreArchivo, std::ios::binary | std::ios::in);
     if (!archivo.is_open()) return -1;
 
     ArchivoHeader header{};
@@ -246,7 +247,7 @@ int encontrarIndicePorID(const char* nombreArchivo, int idBuscado) {
 
     T reg{};
     for (int i = 0; i < header.cantidadRegistros; ++i) {
-        archivo.seekg(calcularPosicion<T>(i), ios::beg);
+        archivo.seekg(calcularPosicion<T>(i), std::ios::beg);
         archivo.read(reinterpret_cast<char*>(&reg), sizeof(T));
         if (!archivo.good()) break;
 

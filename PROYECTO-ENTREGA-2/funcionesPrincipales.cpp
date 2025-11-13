@@ -94,14 +94,12 @@ Paciente crearPaciente(Hospital* hospital, const char* nombre,
     if (!validarEdad(edad)) return {};
     if (!validarSexoChar(sexo)) return {};
 
-    // Inicializar datos del paciente
     Paciente p{};
     strcpy(p.nombre, nombre);
     strcpy(p.apellido, apellido);
     strcpy(p.cedula, cedula);
     p.edad = edad;
     p.sexo = toupper((unsigned char)sexo);
-    p.activo = true;
     p.eliminado = false;
     p.fechaCreacion = time(nullptr);
     p.fechaModificacion = p.fechaCreacion;
@@ -110,35 +108,27 @@ Paciente crearPaciente(Hospital* hospital, const char* nombre,
     p.cantidadCitas = 0;
     for (int i = 0; i < 20; i++) p.citasIDs[i] = -1;
 
-     asegurarArchivo("pacientes.bin");
-
-    // Leer header actual
+    asegurarArchivo("pacientes.bin");
     ArchivoHeader header = leerHeader("pacientes.bin");
 
-    // Asignar ID secuencial
     p.id = header.proximoID;
 
-    // Escribir paciente al final
     fstream archivo("pacientes.bin", ios::binary | ios::in | ios::out);
     archivo.seekp(calcularPosicion<Paciente>(header.cantidadRegistros), ios::beg);
     archivo.write(reinterpret_cast<const char*>(&p), sizeof(Paciente));
     archivo.close();
 
-    // Actualizar header
     header.cantidadRegistros++;
     header.registrosActivos++;
     header.proximoID++;
     actualizarHeader("pacientes.bin", header);
 
-    // Actualizar hospital en hospital.bin
+    // Actualizar hospital
+    hospital->totalPacientesRegistrados++;
     fstream fh("hospital.bin", ios::binary | ios::in | ios::out);
     if (fh.is_open()) {
-        Hospital htmp{};
-        fh.seekg(sizeof(ArchivoHeader), ios::beg);
-        fh.read(reinterpret_cast<char*>(&htmp), sizeof(Hospital));
-        htmp.totalPacientesRegistrados++;
         fh.seekp(sizeof(ArchivoHeader), ios::beg);
-        fh.write(reinterpret_cast<const char*>(&htmp), sizeof(Hospital));
+        fh.write(reinterpret_cast<const char*>(hospital), sizeof(Hospital));
         fh.close();
     }
 
@@ -342,66 +332,53 @@ HistorialMedico* leerHistorialCompleto(int pacienteID, int* cantidad) {
 Doctor crearDoctor(Hospital* hospital, const char* nombre,
                    const char* apellido, const char* cedula,
                    const char* especialidad, int aniosExperiencia,
-                   float costoConsulta)
-{
-    // Validaciones básicas
+                   float costoConsulta) {
     if (!validarNombreSinEspacios(nombre) || !validarNombreSinEspacios(apellido)) return {};
     if (!validarCedula(cedula)) return {};
     if (aniosExperiencia < 0 || costoConsulta < 0) return {};
 
-    Doctor nuevoDoctor{};
-    strcpy(nuevoDoctor.nombre, nombre);
-    strcpy(nuevoDoctor.apellido, apellido);
-    strcpy(nuevoDoctor.cedulaProfesional, cedula);
-    strcpy(nuevoDoctor.especialidad, especialidad);
-    nuevoDoctor.aniosExperiencia = aniosExperiencia;
-    nuevoDoctor.costoConsulta = costoConsulta;
-    nuevoDoctor.disponible = true;
-    nuevoDoctor.eliminado = false;
-    nuevoDoctor.fechaCreacion = time(nullptr);
-    nuevoDoctor.fechaModificacion = nuevoDoctor.fechaCreacion;
-    nuevoDoctor.cantidadPacientes = 0;
-    nuevoDoctor.cantidadCitas = 0;
-    for (int i = 0; i < 50; i++) nuevoDoctor.pacientesIDs[i] = -1;
-    for (int i = 0; i < 30; i++) nuevoDoctor.citasIDs[i] = -1;
+    Doctor d{};
+    strcpy(d.nombre, nombre);
+    strcpy(d.apellido, apellido);
+    strcpy(d.cedulaProfesional, cedula);
+    strcpy(d.especialidad, especialidad);
+    d.aniosExperiencia = aniosExperiencia;
+    d.costoConsulta = costoConsulta;
+    d.eliminado = false;
+    d.fechaCreacion = time(nullptr);
+    d.fechaModificacion = d.fechaCreacion;
+    d.cantidadPacientes = 0;
+    d.cantidadCitas = 0;
+    for (int i = 0; i < 50; i++) d.pacientesIDs[i] = -1;
+    for (int i = 0; i < 30; i++) d.citasIDs[i] = -1;
 
-    // Asegurar archivo
     asegurarArchivo("doctores.bin");
-
-    // Leer header actual
     ArchivoHeader header = leerHeader("doctores.bin");
 
-    // Asignar ID secuencial
-    nuevoDoctor.id = header.proximoID;
+    d.id = header.proximoID;
 
-    // Escribir doctor al final del archivo
     fstream archivo("doctores.bin", ios::binary | ios::in | ios::out);
     archivo.seekp(calcularPosicion<Doctor>(header.cantidadRegistros), ios::beg);
-    archivo.write(reinterpret_cast<const char*>(&nuevoDoctor), sizeof(Doctor));
+    archivo.write(reinterpret_cast<const char*>(&d), sizeof(Doctor));
     archivo.close();
 
-    // Actualizar header
     header.cantidadRegistros++;
     header.registrosActivos++;
     header.proximoID++;
     actualizarHeader("doctores.bin", header);
 
-    // Actualizar hospital en hospital.bin
+    // Actualizar hospital
+    hospital->totalDoctoresRegistrados++;
     fstream fh("hospital.bin", ios::binary | ios::in | ios::out);
     if (fh.is_open()) {
-        Hospital htmp{};
-        fh.seekg(sizeof(ArchivoHeader), ios::beg);
-        fh.read(reinterpret_cast<char*>(&htmp), sizeof(Hospital));
-        htmp.totalDoctoresRegistrados++;
         fh.seekp(sizeof(ArchivoHeader), ios::beg);
-        fh.write(reinterpret_cast<const char*>(&htmp), sizeof(Hospital));
+        fh.write(reinterpret_cast<const char*>(hospital), sizeof(Hospital));
         fh.close();
     }
 
-    cout << "Doctor creado exitosamente con ID: " << nuevoDoctor.id << "\n";
-    return nuevoDoctor;
+    cout << "Doctor creado exitosamente con ID: " << d.id << "\n";
+    return d;
 }
-
 
 
 bool asignarPacienteADoctor(int idDoctor, int idPaciente) {
@@ -551,33 +528,21 @@ bool obtenerUltimaConsulta(Paciente* paciente, HistorialMedico& salida) {
 
 Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
                  const char* fecha, const char* hora, const char* motivo) {
-
-    // Asegurar archivos
     asegurarArchivo("pacientes.bin");
     asegurarArchivo("doctores.bin");
     asegurarArchivo("citas.bin");
 
-    // Leer headers
     ArchivoHeader headerCitas = leerHeader("citas.bin");
 
-    // Buscar paciente y doctor por ID
     Paciente paciente = buscarRegistroPorID<Paciente>("pacientes.bin", idPaciente);
     Doctor doctor     = buscarRegistroPorID<Doctor>("doctores.bin", idDoctor);
 
-    if (paciente.id == 0 || paciente.eliminado) {
-        cout << "Paciente no encontrado.\n";
-        return {};
-    }
-    if (doctor.id == 0 || doctor.eliminado) {
-        cout << "Doctor no encontrado.\n";
-        return {};
-    }
+    if (paciente.id == 0 || paciente.eliminado) { cout << "Paciente no encontrado.\n"; return {}; }
+    if (doctor.id == 0 || doctor.eliminado)     { cout << "Doctor no encontrado.\n"; return {}; }
 
-    // Validar formatos
     if (!validarFormatoFecha(fecha)) { cout << "Formato de fecha inválido.\n"; return {}; }
     if (!validarFormatoHora(hora))   { cout << "Formato de hora inválido.\n"; return {}; }
 
-    // Crear nueva cita
     Cita nuevaCita{};
     nuevaCita.id = headerCitas.proximoID;
     nuevaCita.pacienteID = idPaciente;
@@ -592,19 +557,16 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
     nuevaCita.fechaCreacion = time(nullptr);
     nuevaCita.fechaModificacion = nuevaCita.fechaCreacion;
 
-    // Guardar la cita en citas.bin
     fstream archivoCitas("citas.bin", ios::binary | ios::in | ios::out);
     archivoCitas.seekp(calcularPosicion<Cita>(headerCitas.cantidadRegistros), ios::beg);
     archivoCitas.write(reinterpret_cast<const char*>(&nuevaCita), sizeof(Cita));
     archivoCitas.close();
 
-    // Actualizar header de citas
     headerCitas.cantidadRegistros++;
     headerCitas.registrosActivos++;
     headerCitas.proximoID++;
     actualizarHeader("citas.bin", headerCitas);
 
-    // Actualizar paciente
     if (paciente.cantidadCitas < 20) {
         paciente.citasIDs[paciente.cantidadCitas++] = nuevaCita.id;
         paciente.fechaModificacion = time(nullptr);
@@ -612,7 +574,6 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
         escribirRegistro<Paciente>("pacientes.bin", paciente, idxPaciente);
     }
 
-    // Actualizar doctor
     if (doctor.cantidadCitas < 30) {
         doctor.citasIDs[doctor.cantidadCitas++] = nuevaCita.id;
         doctor.fechaModificacion = time(nullptr);
@@ -620,16 +581,13 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
         escribirRegistro<Doctor>("doctores.bin", doctor, idxDoctor);
     }
 
-    // Actualizar hospital en hospital.bin
+    // Actualizar hospital
+    hospital->totalCitasAgendadas++;
+    hospital->siguienteIDCita = headerCitas.proximoID;
     fstream fh("hospital.bin", ios::binary | ios::in | ios::out);
     if (fh.is_open()) {
-        Hospital htmp{};
-        fh.seekg(sizeof(ArchivoHeader), ios::beg);
-        fh.read(reinterpret_cast<char*>(&htmp), sizeof(Hospital));
-        htmp.totalCitasAgendadas++;
-        htmp.siguienteIDCita = headerCitas.proximoID;
         fh.seekp(sizeof(ArchivoHeader), ios::beg);
-        fh.write(reinterpret_cast<const char*>(&htmp), sizeof(Hospital));
+        fh.write(reinterpret_cast<const char*>(hospital), sizeof(Hospital));
         fh.close();
     }
 
