@@ -391,6 +391,7 @@ int main() {
                             system("cls");
                             int idPac, idDoc;
                             char fecha[11], hora[6], motivo[100];
+
                             cout << "Ingrese ID del paciente: "; cin >> idPac;
                             cout << "Ingrese ID del doctor: "; cin >> idDoc;
                             cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -398,15 +399,14 @@ int main() {
                             cout << "Ingrese hora (HH:MM): "; cin.getline(hora, 6);
                             cout << "Ingrese motivo de la cita: "; cin.getline(motivo, 100);
 
-                            if (!verificarDisponibilidad(hospital, idDoc, fecha, hora))
-                                cout << "El doctor no esta disponible en esa fecha y hora.\n";
-                            else {
+                            if (!verificarDisponibilidad(hospital, idDoc, fecha, hora)) {
+                                cout << "El doctor no está disponible en esa fecha y hora.\n";
+                            } else {
                                 agendarCita(hospital, idPac, idDoc, fecha, hora, motivo);
-                                cout << "Cita agendada correctamente.\n";
                             }
-                            cin.get();
                             break;
                         }
+
 
                         case 2: { // Cancelar cita
                             system("cls");

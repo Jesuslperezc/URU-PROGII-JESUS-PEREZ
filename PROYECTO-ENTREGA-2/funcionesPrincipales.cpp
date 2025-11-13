@@ -6,6 +6,8 @@
 #include <fstream>
 #include "utilidades.hpp"
 #include <iomanip>
+#include <unistd.h>
+#include <limits>
 using namespace std;
 
 // VALIDACIONES adicionales
@@ -564,22 +566,52 @@ bool obtenerUltimaConsulta(Paciente* paciente, HistorialMedico& salida) {
 Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
                  const char* fecha, const char* hora, const char* motivo) {
 
-    // Leer paciente y doctor desde archivos
+    // Abrir archivos en modo lectura/escritura, crear si no existen
     fstream archivoPacientes("pacientes.bin", ios::binary | ios::in | ios::out);
     fstream archivoDoctores("doctores.bin", ios::binary | ios::in | ios::out);
     fstream archivoCitas("citas.bin", ios::binary | ios::in | ios::out);
 
-    if (!archivoPacientes.is_open() || !archivoDoctores.is_open() || !archivoCitas.is_open()) {
-        cout << "Error al abrir archivos necesarios.\n";
+    ArchivoHeader headerPacientes{}, headerDoctores{}, headerCitas{};
+
+    // Crear archivos si no existen
+    if (!archivoPacientes.is_open()) {
+        archivoPacientes.open("pacientes.bin", ios::binary | ios::out);
+        headerPacientes = {0, 1, 0, 1};
+        archivoPacientes.write(reinterpret_cast<char*>(&headerPacientes), sizeof(ArchivoHeader));
+        archivoPacientes.close();
+        archivoPacientes.open("pacientes.bin", ios::binary | ios::in | ios::out);
+    }
+    if (!archivoDoctores.is_open()) {
+        archivoDoctores.open("doctores.bin", ios::binary | ios::out);
+        headerDoctores = {0, 1, 0, 1};
+        archivoDoctores.write(reinterpret_cast<char*>(&headerDoctores), sizeof(ArchivoHeader));
+        archivoDoctores.close();
+        archivoDoctores.open("doctores.bin", ios::binary | ios::in | ios::out);
+    }
+    if (!archivoCitas.is_open()) {
+        archivoCitas.open("citas.bin", ios::binary | ios::out);
+        headerCitas = {0, 1, 0, 1};
+        archivoCitas.write(reinterpret_cast<char*>(&headerCitas), sizeof(ArchivoHeader));
+        archivoCitas.close();
+        archivoCitas.open("citas.bin", ios::binary | ios::in | ios::out);
+    }
+
+    // Leer headers actuales
+    archivoPacientes.read(reinterpret_cast<char*>(&headerPacientes), sizeof(ArchivoHeader));
+    archivoDoctores.read(reinterpret_cast<char*>(&headerDoctores), sizeof(ArchivoHeader));
+    archivoCitas.read(reinterpret_cast<char*>(&headerCitas), sizeof(ArchivoHeader));
+
+    // Validar IDs
+    if (idPaciente < 1 || idPaciente > headerPacientes.cantidadRegistros) {
+        cout << "Paciente no encontrado.\n";
+        return {};
+    }
+    if (idDoctor < 1 || idDoctor > headerDoctores.cantidadRegistros) {
+        cout << "Doctor no encontrado.\n";
         return {};
     }
 
-    // Leer headers
-    leerHeader("pacientes.bin");
-    leerHeader("doctores.bin");
-    ArchivoHeader headerCitas = leerHeader("citas.bin");
-
-    // Leer paciente y doctor desde archivo
+    // Leer registros usando seek
     Paciente paciente{};
     Doctor doctor{};
     archivoPacientes.seekg(sizeof(ArchivoHeader) + (idPaciente - 1) * sizeof(Paciente));
@@ -587,9 +619,7 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
     archivoDoctores.seekg(sizeof(ArchivoHeader) + (idDoctor - 1) * sizeof(Doctor));
     archivoDoctores.read(reinterpret_cast<char*>(&doctor), sizeof(Doctor));
 
-    // Validaciones
-    if (paciente.id == 0) { cout << "Paciente no encontrado.\n"; return {}; }
-    if (doctor.id == 0) { cout << "Doctor no encontrado.\n"; return {}; }
+    // Validar formatos
     if (!validarFormatoFecha(fecha)) { cout << "Formato de fecha inválido.\n"; return {}; }
     if (!validarFormatoHora(hora)) { cout << "Formato de hora inválido.\n"; return {}; }
 
@@ -598,13 +628,13 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
     nuevaCita.id = headerCitas.proximoID++;
     nuevaCita.pacienteID = idPaciente;
     nuevaCita.doctorID = idDoctor;
-    strncpy(nuevaCita.fecha, fecha, sizeof(nuevaCita.fecha) - 1);
-    strncpy(nuevaCita.hora, hora, sizeof(nuevaCita.hora) - 1);
-    strncpy(nuevaCita.motivo, motivo, sizeof(nuevaCita.motivo) - 1);
-    strncpy(nuevaCita.estado, "Agendada", sizeof(nuevaCita.estado) - 1);
+    strncpy(nuevaCita.fecha, fecha, sizeof(nuevaCita.fecha)-1);
+    strncpy(nuevaCita.hora, hora, sizeof(nuevaCita.hora)-1);
+    strncpy(nuevaCita.motivo, motivo, sizeof(nuevaCita.motivo)-1);
+    strncpy(nuevaCita.estado, "Agendada", sizeof(nuevaCita.estado)-1);
     nuevaCita.atendida = false;
 
-    // Guardar la cita al final del archivo
+    // Guardar la cita
     archivoCitas.seekp(sizeof(ArchivoHeader) + headerCitas.cantidadRegistros * sizeof(Cita));
     archivoCitas.write(reinterpret_cast<char*>(&nuevaCita), sizeof(Cita));
     headerCitas.cantidadRegistros++;
@@ -612,22 +642,17 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
     archivoCitas.write(reinterpret_cast<char*>(&headerCitas), sizeof(ArchivoHeader));
 
     // Actualizar paciente
-    const int maxCitas = 20;
-    if (paciente.cantidadCitas < maxCitas) {
+    if (paciente.cantidadCitas < 20) {
         paciente.citasIDs[paciente.cantidadCitas++] = nuevaCita.id;
         archivoPacientes.seekp(sizeof(ArchivoHeader) + (idPaciente - 1) * sizeof(Paciente));
         archivoPacientes.write(reinterpret_cast<char*>(&paciente), sizeof(Paciente));
-    } else {
-        cout << "Advertencia: paciente ha alcanzado el límite de citas.\n";
     }
 
     // Actualizar doctor
-    if (doctor.cantidadCitas < maxCitas) {
+    if (doctor.cantidadCitas < 20) {
         doctor.citasIDs[doctor.cantidadCitas++] = nuevaCita.id;
         archivoDoctores.seekp(sizeof(ArchivoHeader) + (idDoctor - 1) * sizeof(Doctor));
         archivoDoctores.write(reinterpret_cast<char*>(&doctor), sizeof(Doctor));
-    } else {
-        cout << "Advertencia: doctor ha alcanzado el límite de citas.\n";
     }
 
     // Actualizar hospital
@@ -635,16 +660,22 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
     hospital->siguienteIDCita = nuevaCita.id + 1;
     guardarHospital(*hospital);
 
+    // Cerrar archivos
     archivoPacientes.close();
     archivoDoctores.close();
     archivoCitas.close();
 
     cout << "Cita agendada exitosamente con ID: " << nuevaCita.id
-         << " entre el Dr. " << doctor.nombre
-         << " y el paciente " << paciente.nombre << ".\n";
+         << " entre Dr. " << doctor.nombre
+         << " y paciente " << paciente.nombre << ".\n";
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cout << "Presione Enter para continuar...";
+    cin.get();
 
     return nuevaCita;
 }
+
 
 void listarPacientesDeDoctor(int idDoctor) {
     // Leer el doctor directamente del archivo
