@@ -36,7 +36,8 @@ int main() {
         cout << "1. Gestion de Pacientes\n";
         cout << "2. Gestion de Doctores\n";
         cout << "3. Gestion de Citas\n";
-        cout << "4. Salir\n";
+        cout<< "Mantenimiento\n";
+        cout << "5. Salir\n";
         cout << "Seleccione una opcion: ";
         cin >> opMenu;
 
@@ -610,7 +611,8 @@ int main() {
                                 cout << "2. Hacer respaldo de datos\n";
                                 cout << "3. Restaurar desde respaldo\n";
                                 cout << "4. Estadísticas de uso de archivos\n";
-                                cout << "5. Volver al menú principal\n";
+                                cout << "5. Compactar\n";
+                                 cout << "6. salir\n";
                                 cout << "Opción: ";
                                 cin >> subop;
             
@@ -619,7 +621,19 @@ int main() {
                                     case 2: hacerRespaldo(); break;
                                     case 3: restaurarRespaldo(); break;
                                     case 4: mostrarEstadisticasArchivos(); break;
-                                    case 5: /* volver */ break;
+                                    case 5: 
+                                        if (compactarArchivoDoctores()) {
+                                            cout << "Archivo de doctores compactado correctamente.\n";
+                                        } else {
+                                            cout << "Error al compactar el archivo de doctores.\n";
+                                        }
+                                        if (compactarArchivoPacientes()) {
+                                            cout << "Archivo de pacientes compactado correctamente.\n";
+                                        } else {
+                                            cout << "Error al compactar el archivo de pacientes.\n";
+                                        }
+                                        break;
+                                    case 6: /* volver */ break;
                                     default: cout << "Opción inválida.\n"; break;
                                 }
             
