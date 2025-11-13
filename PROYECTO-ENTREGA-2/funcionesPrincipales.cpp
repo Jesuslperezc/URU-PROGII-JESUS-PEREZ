@@ -502,20 +502,36 @@ bool validarFormatoFecha(const char* fecha) {
 
 // Mostrar historial
 void mostrarHistorialMedico(Paciente* paciente) {
-    cout << "=== Historial Medico del Paciente ID: " << paciente->id << " ===\n";
-    for (int i = 0; i < paciente->cantidadConsultas; i++) {
-        HistorialMedico c = leerRegistro<HistorialMedico>("historiales.bin", paciente->citasIDs[i] - 1);
-        cout << "Consulta ID: " << c.id
-             << ", Fecha: " << c.fecha
-             << ", Hora: " << c.hora
-             << ", Diagnostico: " << c.diagnostico
-             << ", Tratamiento: " << c.tratamiento
-             << ", Medicamentos: " << c.medicamentos
-             << ", ID Doctor: " << c.doctorID
-             << ", Costo: " << c.costo << "\n";
-    }
-}
+    cout << "=== Historial Médico del Paciente ID: " << paciente->id << " ===\n";
+    cout << left << setw(6)  << "ID"
+         << setw(12) << "Fecha"
+         << setw(10) << "Hora"
+         << setw(30) << "Diagnostico"
+         << setw(30) << "Tratamiento"
+         << setw(30) << "Medicamentos"
+         << setw(8)  << "DocID"
+         << setw(10) << "Costo" << "\n";
+    cout << string(140, '-') << "\n";
 
+    for (int i = 0; i < paciente->cantidadConsultas; i++) {
+        // Buscar consulta por ID en historiales
+        HistorialMedico c = buscarRegistroPorID<HistorialMedico>("historiales.bin", paciente->citasIDs[i]);
+
+        if (c.id != 0) {
+            cout << left << setw(6)  << c.id
+                 << setw(12) << c.fecha
+                 << setw(10) << c.hora
+                 << setw(30) << c.diagnostico
+                 << setw(30) << c.tratamiento
+                 << setw(30) << c.medicamentos
+                 << setw(8)  << c.doctorID
+                 << setw(10) << c.costo << "\n";
+        }
+    }
+
+    cout << string(140, '-') << "\n";
+    cout << "Total consultas: " << paciente->cantidadConsultas << "\n";
+}
 
 bool obtenerUltimaConsulta(Paciente* paciente, HistorialMedico& salida) {
     if (!paciente || paciente->cantidadConsultas == 0)
@@ -699,17 +715,24 @@ bool atenderCita(Hospital* hospital, int idCita,
     actualizarHeader("historiales.bin", headerHist);
 
     // Asociar consulta al paciente
-    if (paciente.cantidadConsultas < 100) {
-        if (paciente.cantidadConsultas == 0)
-            paciente.primerConsultaID = nuevaConsulta.id;
-        paciente.cantidadConsultas++;
+    // Asociar la consulta al paciente
+if (paciente.cantidadConsultas < 100) {
+    // Guardar el ID de la nueva consulta en el arreglo citasIDs[]
+    paciente.citasIDs[paciente.cantidadConsultas] = nuevaConsulta.id;
 
-        int idxPac = encontrarIndicePorID<Paciente>("pacientes.bin", paciente.id);
-        escribirRegistro<Paciente>("pacientes.bin", paciente, idxPac);
-    } else {
-        cout << "Advertencia: paciente ha alcanzado el máximo de consultas.\n";
-    }
+    // Si es la primera consulta, marcarla como primerConsultaID
+    if (paciente.cantidadConsultas == 0)
+        paciente.primerConsultaID = nuevaConsulta.id;
 
+    // Incrementar contador
+    paciente.cantidadConsultas++;
+
+    // Guardar cambios del paciente en archivo
+    int idxPac = encontrarIndicePorID<Paciente>("pacientes.bin", paciente.id);
+    escribirRegistro<Paciente>("pacientes.bin", paciente, idxPac);
+} else {
+    cout << "Advertencia: paciente ha alcanzado el máximo de consultas.\n";
+}
     // Guardar cambios de la cita
     int idxCita = encontrarIndicePorID<Cita>("citas.bin", cita.id);
     escribirRegistro<Cita>("citas.bin", cita, idxCita);
