@@ -33,7 +33,7 @@ void mostrarHistorialMedico(Paciente* paciente);
 bool obtenerUltimaConsulta(Paciente* paciente, HistorialMedico& salida);
 Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
                  const char* fecha, const char* hora, const char* motivo);
-void listarPacientesDeDoctor(Hospital* hospital, int idDoctor);
+void listarPacientesDeDoctor( int idDoctor);
 bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,
                  const char* tratamiento, const char* medicamentos);
 Cita* leerCitasDePaciente(int pacienteID, int* cantidad);

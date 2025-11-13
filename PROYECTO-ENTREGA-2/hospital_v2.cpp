@@ -12,7 +12,6 @@
 using namespace std;
 
 int main() {
-    RegistrarHospital();
     Hospital* hospital = cargarDatosHospital();
 
 
@@ -297,7 +296,7 @@ int main() {
                                     if (opc == 's' || opc == 'S') continue;
                                     break;
                                 }
-                                listarPacientesDeDoctor(hospital, idDoc);
+                                listarPacientesDeDoctor(idDoc);
                                 cout << "\nPresione Enter para continuar...";
                                 cin.get();
                                 break;
@@ -532,3 +531,4 @@ delete hospital;
 
 return 0;
 }
+//g++ -Wall -Wextra -g3 ` ..\hospital_v2.cpp ` ..\funcionesPrincipales.cpp `  ..\funcionesArchivos.cpp `   -o hospital_v2.exe

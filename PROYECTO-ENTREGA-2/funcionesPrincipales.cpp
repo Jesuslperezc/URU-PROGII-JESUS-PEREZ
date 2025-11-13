@@ -136,7 +136,8 @@ Paciente* crearPaciente(Hospital* hospital, const char* nombre,
     archivo.close();
 
     hospital->totalPacientesRegistrados++;
-    actualizarHeader("hospital.bin", *reinterpret_cast<ArchivoHeader*>(&hospital));
+    guardarHospital(*hospital);
+
     
 
     cout << "Paciente creado exitosamente con ID: " << p.id << "\n";
@@ -610,7 +611,7 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
     return nuevaCita;
 }
 
-void listarPacientesDeDoctor(Hospital* hospital, int idDoctor) {
+void listarPacientesDeDoctor(int idDoctor) {
     // Leer el doctor directamente del archivo
     Doctor doctor = buscarRegistroPorID<Doctor>("doctores.bin", idDoctor);
 
@@ -1222,3 +1223,8 @@ Hospital* RegistrarHospital() {
     cout << "\nHospital registrado y guardado correctamente.\n\n";
     return hospital;
 }
+//g++ -Wall -Wextra -g3 `
+ //   ..\hospital_v2.cpp `
+ //   ..\funcionesPrincipales.cpp `
+ //   ..\funcionesArchivos.cpp `
+//    -o hospital_v2.exe
