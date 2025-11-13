@@ -800,7 +800,7 @@ Hospital* cargarDatosHospital() {
         inicializarArchivo("historiales.bin");
     }
 
-    fstream archivo("hospital.bin", ios::binary | ios::in);
+    fstream archivo("hospital.bin", ios::binary | ios::in | ios::out);
     if (!archivo.is_open()) {
         cout << "Error al abrir hospital.bin\n";
         return nullptr;
@@ -811,15 +811,25 @@ Hospital* cargarDatosHospital() {
     Hospital* hospital = new Hospital();
     archivo.read(reinterpret_cast<char*>(hospital), sizeof(Hospital));
 
-    archivo.close();
+    // Validar lectura
+    if (archivo.gcount() != sizeof(Hospital)) {
+        cout << "Hospital vacío, inicializando...\n";
+        strcpy(hospital->nombre, "Hospital Central");
+        hospital->totalPacientesRegistrados = 0;
+        hospital->totalDoctoresRegistrados = 0;
+        hospital->totalCitasAgendadas = 0;
+        hospital->totalConsultasRealizadas = 0;
+        hospital->siguienteIDPaciente = 1;
+        hospital->siguienteIDDoctor = 1;
+        hospital->siguienteIDCita = 1;
 
-    if (!archivo.good()) {
-        cout << "Error al leer hospital.bin\n";
-        delete hospital;
-        return nullptr;
+        archivo.seekp(sizeof(ArchivoHeader), ios::beg);
+        archivo.write(reinterpret_cast<const char*>(hospital), sizeof(Hospital));
     }
 
-    cout << "Datos del hospital cargados correctamente: " 
+    archivo.close();
+
+    cout << "Datos del hospital cargados correctamente: "
          << hospital->nombre << "\n";
 
     return hospital;

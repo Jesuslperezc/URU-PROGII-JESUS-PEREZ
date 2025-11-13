@@ -12,17 +12,17 @@
 using namespace std;
 
 int main() {
+
     asegurarArchivo("hospital.bin");
     asegurarArchivo("pacientes.bin");
     asegurarArchivo("doctores.bin");
     asegurarArchivo("citas.bin");
     asegurarArchivo("historiales.bin");
     // Cargar hospital
+
     Hospital* hospital = cargarDatosHospital();
-    if (hospital == nullptr) {
-        cout << "No se pudo cargar la informacion del hospital. Saliendo...\n";
-        return 1;
-    }
+
+   
 
 
     int opMenu;
