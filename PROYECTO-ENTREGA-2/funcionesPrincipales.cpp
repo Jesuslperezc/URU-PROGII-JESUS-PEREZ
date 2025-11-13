@@ -644,9 +644,11 @@ void listarPacientesDeDoctor(int idDoctor) {
     cout << "Total de pacientes asignados: " << doctor.cantidadPacientes << "\n\n";
 }
 
-bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,
-                 const char* tratamiento, const char* medicamentos) {
-    
+bool atenderCita(Hospital* hospital, int idCita,
+                 const char* diagnostico,
+                 const char* tratamiento,
+                 const char* medicamentos) {
+
     // Buscar la cita
     Cita cita = buscarRegistroPorID<Cita>("citas.bin", idCita);
     if (cita.id == 0) {
@@ -663,7 +665,7 @@ bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,
 
     // Buscar paciente y doctor
     Paciente paciente = buscarRegistroPorID<Paciente>("pacientes.bin", cita.pacienteID);
-    Doctor doctor = buscarRegistroPorID<Doctor>("doctores.bin", cita.doctorID);
+    Doctor doctor     = buscarRegistroPorID<Doctor>("doctores.bin", cita.doctorID);
 
     if (paciente.id == 0 || doctor.id == 0) {
         cout << "Error: paciente o doctor no encontrados.\n";
@@ -671,21 +673,28 @@ bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,
     }
 
     // Crear nueva consulta (historial médico)
-    HistorialMedico nuevaConsulta;
+    HistorialMedico nuevaConsulta{};
     nuevaConsulta.id = hospital->siguienteIDConsulta++;
-    strcpy(nuevaConsulta.fecha, cita.fecha);
-    strcpy(nuevaConsulta.hora, cita.hora);
-    strcpy(nuevaConsulta.diagnostico, diagnostico);
-    strcpy(nuevaConsulta.tratamiento, tratamiento);
-    strcpy(nuevaConsulta.medicamentos, medicamentos);
+    strncpy(nuevaConsulta.fecha, cita.fecha, sizeof(nuevaConsulta.fecha)-1);
+    strncpy(nuevaConsulta.hora, cita.hora, sizeof(nuevaConsulta.hora)-1);
+    strncpy(nuevaConsulta.diagnostico, diagnostico, sizeof(nuevaConsulta.diagnostico)-1);
+    strncpy(nuevaConsulta.tratamiento, tratamiento, sizeof(nuevaConsulta.tratamiento)-1);
+    strncpy(nuevaConsulta.medicamentos, medicamentos, sizeof(nuevaConsulta.medicamentos)-1);
     nuevaConsulta.doctorID = doctor.id;
-    nuevaConsulta.costo = doctor.costoConsulta;
+    nuevaConsulta.costo    = doctor.costoConsulta;
 
-    // Guardar consulta en el archivo de historiales
-    escribirRegistro<HistorialMedico>("historiales.bin", nuevaConsulta, nuevaConsulta.id - 1);
+    // Guardar consulta en historiales
+    ArchivoHeader headerHist = leerHeader("historiales.bin");
+    escribirRegistro<HistorialMedico>("historiales.bin", nuevaConsulta, headerHist.cantidadRegistros);
+
+    // Actualizar header de historiales
+    headerHist.cantidadRegistros++;
+    headerHist.registrosActivos++;
+    headerHist.proximoID++;
+    actualizarHeader("historiales.bin", headerHist);
 
     // Asociar la consulta al paciente
-    if (paciente.cantidadConsultas < 100) {  // por ejemplo, máximo 100 consultas
+    if (paciente.cantidadConsultas < 100) {
         if (paciente.cantidadConsultas == 0)
             paciente.primerConsultaID = nuevaConsulta.id;
         paciente.cantidadConsultas++;
@@ -694,11 +703,14 @@ bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,
         cout << "Advertencia: paciente ha alcanzado el máximo de consultas.\n";
     }
 
-    // Guardar los cambios de la cita y el hospital
+    // Guardar cambios de la cita
     escribirRegistro<Cita>("citas.bin", cita, cita.id - 1);
+
+    // Actualizar hospital
+    hospital->totalConsultasRealizadas++;
     escribirRegistro<Hospital>("hospital.bin", *hospital, 0);
 
-    cout << " Cita atendida correctamente y registrada en el historial médico.\n";
+    cout << "Cita atendida correctamente y registrada en el historial médico.\n";
     return true;
 }
 

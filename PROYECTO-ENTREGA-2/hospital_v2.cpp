@@ -447,22 +447,35 @@ int main() {
                                         cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
                                         break;
                                     }
-            
                                     case 3: { // Atender cita
                                         system("cls");
-                                        int idCita; char diagnostico[200], tratamiento[200], medicamentos[200];
-                                        cout << "Ingrese ID de la cita a atender: "; cin >> idCita;
+                                        int idCita;
+                                        char diagnostico[200], tratamiento[200], medicamentos[200];
+
+                                        cout << "Ingrese ID de la cita a atender: ";
+                                        cin >> idCita;
                                         cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                                        cout << "Ingrese diagnostico: "; cin.getline(diagnostico, 200);
-                                        cout << "Ingrese tratamiento: "; cin.getline(tratamiento, 200);
-                                        cout << "Ingrese medicamentos: "; cin.getline(medicamentos, 200);
-            
-                                        atenderCita(hospital, idCita, diagnostico, tratamiento, medicamentos);
-                                        cout << "Cita atendida correctamente.\n";
-                                        cin.get();
+
+                                        cout << "Ingrese diagnostico: ";
+                                        cin.getline(diagnostico, 200);
+
+                                        cout << "Ingrese tratamiento: ";
+                                        cin.getline(tratamiento, 200);
+
+                                        cout << "Ingrese medicamentos: ";
+                                        cin.getline(medicamentos, 200);
+
+                                        // Aquí verificamos el resultado de la función
+                                        if (atenderCita(hospital, idCita, diagnostico, tratamiento, medicamentos)) {
+                                            cout << " Cita atendida correctamente.\n";
+                                        } else {
+                                            cout << " Error al atender la cita.\n";
+                                        }
+
+                                        cin.get(); // Pausa
                                         break;
                                     }
-            
+                        
                                     case 4: { // Ver citas de un paciente
                                         system("cls");
                                         int idPac, cantidad = 0;
