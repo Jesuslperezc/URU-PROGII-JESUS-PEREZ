@@ -18,24 +18,11 @@ int main() {
     asegurarArchivo("citas.bin");
     asegurarArchivo("historiales.bin");
     // Cargar hospital
-    Hospital hospital{};
-    fstream fh("hospital.bin", ios::binary | ios::in | ios::out);
-    fh.seekg(sizeof(ArchivoHeader), ios::beg);
-    fh.read(reinterpret_cast<char*>(&hospital), sizeof(Hospital));
-    if (!fh.good()) {
-        // Si no hay hospital, inicializarlo
-        strcpy(hospital.nombre, "Hospital Central");
-        hospital.totalPacientesRegistrados = 0;
-        hospital.totalDoctoresRegistrados = 0;
-        hospital.totalCitasAgendadas = 0;
-        hospital.totalConsultasRealizadas = 0;
-        hospital.siguienteIDPaciente = 1;
-        hospital.siguienteIDDoctor = 1;
-        hospital.siguienteIDCita = 1;
-        fh.seekp(sizeof(ArchivoHeader), ios::beg);
-        fh.write(reinterpret_cast<const char*>(&hospital), sizeof(Hospital));
+    Hospital* hospital = cargarDatosHospital();
+    if (hospital == nullptr) {
+        cout << "No se pudo cargar la informacion del hospital. Saliendo...\n";
+        return 1;
     }
-    fh.close();
 
 
     int opMenu;
