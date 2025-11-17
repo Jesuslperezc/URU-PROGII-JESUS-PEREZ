@@ -27,13 +27,45 @@ public:
 
     //Destructor
     ~Hospital();
+
+
+    //Getters
+const char* getNombre() const { return nombre; }
+    const char* getDireccion() const { return direccion; }
+    const char* getTelefono() const { return telefono; }
+
+    int getSiguienteIDPaciente() const { return siguienteIDPaciente; }
+    int getSiguienteIDDoctor() const { return siguienteIDDoctor; }
+    int getSiguienteIDCita() const { return siguienteIDCita; }
+    int getSiguienteIDConsulta() const { return siguienteIDConsulta; }
+
+    int getTotalPacientesRegistrados() const { return totalPacientesRegistrados; }
+    int getTotalDoctoresRegistrados() const { return totalDoctoresRegistrados; }
+    int getTotalCitasAgendadas() const { return totalCitasAgendadas; }
+    int getTotalConsultasRealizadas() const { return totalConsultasRealizadas; }
+
+    // Incrementadores 
+    void incrementarIDPaciente() { siguienteIDPaciente++; }
+    void incrementarIDDoctor() { siguienteIDDoctor++; }
+    void incrementarIDCita() { siguienteIDCita++; }
+    void incrementarIDConsulta() { siguienteIDConsulta++; }
+
+    void aumentarPacientesRegistrados() { totalPacientesRegistrados++; }
+    void aumentarDoctoresRegistrados() { totalDoctoresRegistrados++; }
+    void aumentarCitasAgendadas() { totalCitasAgendadas++; }
+    void aumentarConsultasRealizadas() { totalConsultasRealizadas++; }
+
+    //Setters
+    void setSiguienteIDPaciente(int id);
+    void setSiguienteIDDoctor(int id);
+    void setSiguienteIDCita(int id);
+    void setSiguienteIDConsulta(int id);
+
+    void setTotalPacientesRegistrados(int total);
+    void setTotalDoctoresRegistrados(int total);
+    void setTotalCitasAgendadas(int total);
+    void setTotalConsultasRealizadas(int total);
+
 };
 
-Hospital::Hospital(/* args */)
-{
-}
-
-Hospital::~Hospital()
-{
-}
  #endif

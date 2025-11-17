@@ -4,7 +4,10 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/PROYECTO-ENTREGA-2"
+                "${workspaceFolder}/PROYECTO-ENTREGA-2",
+                "${workspaceFolder}/PROYECTO-ENTREGA-3-/persistencia",
+                "${workspaceFolder}/PROYECTO-ENTREGA-3-/Pacientes",
+                "${workspaceFolder}/PROYECTO-ENTREGA-3-/Doctores"
             ],
             "defines": [
                 "_DEBUG",
