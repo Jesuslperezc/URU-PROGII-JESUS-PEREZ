@@ -1,8 +1,16 @@
 #ifndef HOSPITAL_HPP
 #define HOSPITAL_HPP
+#include <fstream>
+#include <cstring>
+#include <ctime>
+#include "GestionArchivos.hpp"
+#include "utilidades.hpp"
 
 class Hospital
 {
+    template<typename T>
+    friend bool escribirRegistro(const char* nombreArchivo, const T &registro, int indice);
+
 private:
     char nombre[100];
     char direccion[150];
@@ -65,6 +73,9 @@ const char* getNombre() const { return nombre; }
     void setTotalDoctoresRegistrados(int total);
     void setTotalCitasAgendadas(int total);
     void setTotalConsultasRealizadas(int total);
+    bool guardarHospital(const Hospital& hospital);
+    bool cargarHospital();
+
 
 };
 
