@@ -9,4 +9,10 @@ struct ArchivoHeader {
 };
 bool inicializarArchivo(const char* nombreArchivo);
 bool verificarArchivo(const char* nombreArchivo);
+// Lee el header desde el archivo; devuelve true si tuvo éxito y llena 'header'.
+bool leerArchivoHeader(const char* nombreArchivo, ArchivoHeader& header);
+bool actualizarHeader(const char* nombreArchivo, ArchivoHeader header);
+bool asegurarArchivo(const char* nombreArchivo);
+void verificarArchivos();
+
 #endif // GESTIONARCHIVOS_HPP

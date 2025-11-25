@@ -1,7 +1,7 @@
 #ifndef DOCTORES_HPP
 #define DOCTORES_HPP
 #include <fstream>
-class Doctores{
+class Doctor{
 private:
 // Datos originales
     int id;
@@ -29,11 +29,11 @@ private:
     time_t fechaModificacion;
 public:
     //Constructor
-    Doctores();
+    Doctor();
     Doctores( int id, const char* nombre, const char* apellido, const char* cedulaProfesional,
     const char* especialidad, int aniosExperiencia, float costoConsulta, const char* horarioAtencion,
     const char* telefono, const char* email, bool disponible);
     //Destructor
-    ~Doctores();
+    ~Doctor();
 };
 #endif // DOCTORES_HPP

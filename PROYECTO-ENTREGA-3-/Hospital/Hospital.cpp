@@ -3,7 +3,7 @@
 #include "Doctores.hpp"
 #include "Historial.hpp"
 #include "Citas.hpp"
-#include "utilidades.hpp"
+#include "utilidad.hpp"
 #include <iostream>
 #include <cstring>
 #include <vector>

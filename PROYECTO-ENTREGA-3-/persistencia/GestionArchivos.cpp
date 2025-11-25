@@ -112,6 +112,7 @@ void verificarArchivos() {
     verificarArchivo("historiales.bin");
     
 }
+
 #include <filesystem>
 #include <vector>
 namespace fs = std::filesystem;

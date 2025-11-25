@@ -4,7 +4,7 @@
 #include <cstring>
 #include <ctime>
 #include "GestionArchivos.hpp"
-#include "utilidades.hpp"
+#include "utilidad.hpp"
 
 class Hospital
 {

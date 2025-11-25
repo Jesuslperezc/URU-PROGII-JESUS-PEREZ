@@ -4,10 +4,13 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/PROYECTO-ENTREGA-2",
                 "${workspaceFolder}/PROYECTO-ENTREGA-3-/persistencia",
                 "${workspaceFolder}/PROYECTO-ENTREGA-3-/Pacientes",
-                "${workspaceFolder}/PROYECTO-ENTREGA-3-/Doctores"
+                "${workspaceFolder}/PROYECTO-ENTREGA-3-/Doctores",
+                "${workspaceFolder}/PROYECTO-ENTREGA-3-/Hospital",
+                "${workspaceFolder}/PROYECTO-ENTREGA-3-/utilidades",
+                "${workspaceFolder}/PROYECTO-ENTREGA-3-/Historiales",
+                "${workspaceFolder}/PROYECTO-ENTREGA-3-/Citas"
             ],
             "defines": [
                 "_DEBUG",
