@@ -4,7 +4,7 @@
 #include <ctime>
 class Cita{
 private:
-int id;
+    int id;
     int pacienteID;
     int doctorID;
     char fecha[11];

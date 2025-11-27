@@ -28,8 +28,8 @@ public:
     Historial( int id, int pacienteID, const char* fecha, const char* hora,
     const char* diagnostico, const char* tratamiento, const char* medicamentos);
     //Getters}
-    int gethistorialID(){return id;}
-    int getpacienteID(){return pacienteID;}
+    int gethistorialID()const{return id;}
+    int getpacienteID()const{return pacienteID;}
     const char* getFecha(){return fecha;}
     const char* getHora(){return hora;}
     const char* getDiagnostico(){return diagnostico;}

@@ -9,7 +9,11 @@ struct ArchivoHeader {
     int registrosActivos;       // Registros no eliminados
     int version;                // Versión del formato (ej: 1, 2, 3...)
 };
+class GestorArchivos{
+private:
 bool inicializarArchivo(const char* nombreArchivo);
+
+public:
 bool verificarArchivo(const char* nombreArchivo);
 // Lee el header desde el archivo; devuelve true si tuvo éxito y llena 'header'.
 bool leerArchivoHeader(const char* nombreArchivo, ArchivoHeader& header);
@@ -19,4 +23,11 @@ void verificarArchivos();
 bool guardarPaciente(const Paciente& paciente);
 bool guardarHospital(const Hospital& hospital);
 bool cargarHospital();
+bool guardarCita(const Cita& cita);
+bool guardarHistorial(const Historial& historial);
+bool guardarDoctores (const Doctor& doctor);
+void mostrarEstadisticasArchivos();
+
+};
+
 #endif // GESTIONARCHIVOS_HPP

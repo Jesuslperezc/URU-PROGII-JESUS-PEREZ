@@ -176,7 +176,7 @@ T leerRegistro(const char* nombreArchivo, int indice) {
 // ===================================================================
 // Leer header (no-template)
 // ===================================================================
- ArchivoHeader leerHeader(const char* nombreArchivo);
+
 
 // ===================================================================
 // Listar registros

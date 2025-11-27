@@ -54,17 +54,17 @@ bool verificarArchivo(const char* nombreArchivo) {
     return true;
 }
 
-ArchivoHeader leerArchivoHeader(const char* nombreArchivo) {
+bool GestorArchivos:: leerArchivoHeader(const char* nombreArchivo,ArchivoHeader&header) {
     fstream archivo(nombreArchivo, ios::binary | ios::in);
     if (!archivo.is_open()) {
         cout << "Error al abrir el archivo: " << nombreArchivo << endl;
-        return ArchivoHeader{0,0,0,0};
-    }
+        header= {0,0,0,0};
+        return false;
 
-    ArchivoHeader header{};
+    }
     archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
     archivo.close();
-    return header;
+    return true;
 }
 
 bool actualizarHeader(const char* nombreArchivo, ArchivoHeader header) {
@@ -147,26 +147,32 @@ void restaurarRespaldo() {
         }
     }
 }
-void mostrarEstadisticasArchivos() {
+void GestorArchivos::mostrarEstadisticasArchivos() {
     cout << "\n=== Estadísticas de Archivos ===\n";
 
-    auto mostrar = [](const char* nombreArchivo) {
-        ArchivoHeader header = leerArchivoHeader(nombreArchivo);
-        cout << nombreArchivo << ":\n";
-        cout << "  Registros totales: " << header.cantidadRegistros << "\n";
-        cout << "  Registros activos: " << header.registrosActivos << "\n";
-        cout << "  Próximo ID: " << header.proximoID << "\n";
-        cout << "  Versión: " << header.version << "\n\n";
+    std::vector<const char*> archivos = {
+        "hospital.bin",
+        "pacientes.bin",
+        "doctores.bin",
+        "citas.bin",
+        "historiales.bin"
     };
 
-    mostrar("hospital.bin");
-    mostrar("pacientes.bin");
-    mostrar("doctores.bin");
-    mostrar("citas.bin");
-    mostrar("historiales.bin");
-}//===========================================================
+    for (const char* nombreArchivo : archivos) {
+        ArchivoHeader header;
+        if (leerArchivoHeader(nombreArchivo, header)) {
+            cout << nombreArchivo << ":\n";
+            cout << "  Registros totales: " << header.cantidadRegistros << "\n";
+            cout << "  Registros activos: " << header.registrosActivos << "\n";
+            cout << "  Próximo ID: " << header.proximoID << "\n";
+            cout << "  Versión: " << header.version << "\n\n";
+        } else {
+            cout << nombreArchivo << ": no se pudieron leer estadísticas.\n\n";
+        }
+    }
+}
 
-bool guardarPaciente(const Paciente& paciente) {
+bool GestorArchivos::guardarPaciente(const Paciente& paciente) {
     // Leer header
     ArchivoHeader header{};
     if (!leerArchivoHeader("pacientes.bin", header)) {
@@ -194,7 +200,7 @@ bool guardarPaciente(const Paciente& paciente) {
     return true;
 }
 
-bool guardarCita(const Cita& cita) {
+bool GestorArchivos::guardarCita(const Cita& cita) {
     // Leer el header actual
     ArchivoHeader header{};
     if (!leerArchivoHeader("citas.bin", header)) {
@@ -220,7 +226,37 @@ bool guardarCita(const Cita& cita) {
         std::cout << "Error al actualizar header de citas.bin" << std::endl;
         return false;
     }
+      return true;
+}
+
+    bool GestorArchivos:: guardarHistorial(const Historial& historial) {
+           ArchivoHeader header{};
+    if (!leerArchivoHeader("historiales.bin", header)) {
+        std::cout << "Error al leer header de pacientes.bin" << std::endl;
+        return false;
+    }
+
+    // Usar cantidadRegistros como índice
+    int indice = header.cantidadRegistros;
+
+    // Escribir registro
+    if (!escribirRegistro<Historial>("historiales.bin", historial, indice)) {
+        return false;
+    }
+
+    // Actualizar header
+    header.cantidadRegistros++;
+    header.proximoID = historial.gethistorialID()+1;
+    header.registrosActivos++;
+    if (!actualizarHeader("pacientes.bin", header)) {
+        std::cout << "Error al actualizar header de pacientes.bin" << std::endl;
+        return false;
+    }
 
     return true;
+
 }
+
+  
+
     
