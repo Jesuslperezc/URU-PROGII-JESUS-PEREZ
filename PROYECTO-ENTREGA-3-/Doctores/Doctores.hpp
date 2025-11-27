@@ -30,9 +30,36 @@ private:
 public:
     //Constructor
     Doctor();
-    Doctores( int id, const char* nombre, const char* apellido, const char* cedulaProfesional,
+    Doctor( int id, const char* nombre, const char* apellido, const char* cedulaProfesional,
     const char* especialidad, int aniosExperiencia, float costoConsulta, const char* horarioAtencion,
     const char* telefono, const char* email, bool disponible);
+   // Getters
+    int getId() const { return id; }
+    const char* getNombre() const { return nombre; }
+    const char* getApellido() const { return apellido; }
+    const char* getCedulaProfesional() const { return cedulaProfesional; }
+    const char* getEspecialidad() const { return especialidad; }
+    int getAniosExperiencia() const { return aniosExperiencia; }
+    float getCostoConsulta() const { return costoConsulta; }
+    const char* getHorarioAtencion() const { return horarioAtencion; }
+    const char* getTelefono() const { return telefono; }
+    const char* getEmail() const { return email; }
+    bool getDisponible() const { return disponible; }
+
+    //Setters
+    // Setters
+    void setId(int nuevoId);
+    void setNombre(const char* nuevoNombre);
+    void setApellido(const char* nuevoApellido);
+    void setCedulaProfesional(const char* nuevaCedula);
+    void setEspecialidad(const char* nuevaEspecialidad);
+    void setAniosExperiencia(int nuevosAnios);
+    void setCostoConsulta(float nuevoCosto);
+    void setHorarioAtencion(const char* nuevoHorario);
+    void setTelefono(const char* nuevoTelefono);
+    void setEmail(const char* nuevoEmail);
+    void setDisponible(bool nuevoDisponible);
+
     //Destructor
     ~Doctor();
 };

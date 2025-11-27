@@ -3,8 +3,8 @@
 #include <fstream>
 #include <cstring>
 #include <ctime>
-#include "GestionArchivos.hpp"
-#include "utilidad.hpp"
+#include "../persistencia/GestionArchivos.hpp"
+#include "../utilidades/utilidad.hpp"
 
 class Hospital
 {

@@ -27,6 +27,27 @@ public:
     Historial();
     Historial( int id, int pacienteID, const char* fecha, const char* hora,
     const char* diagnostico, const char* tratamiento, const char* medicamentos);
+    //Getters}
+    int gethistorialID(){return id;}
+    int getpacienteID(){return pacienteID;}
+    const char* getFecha(){return fecha;}
+    const char* getHora(){return hora;}
+    const char* getDiagnostico(){return diagnostico;}
+    const char* getTratamiento () {return tratamiento;}
+    const char* getMedicamentos(){return medicamentos;}
+ 
+   // Setters
+    void setHistorialID(int nuevoID);
+    void setPacienteID(int nuevoPacienteID);
+    void setFecha(const char* nuevaFecha);
+
+    void setHora(const char* nuevaHora);
+    void setDiagnostico(const char* nuevoDiagnostico);
+
+    void setTratamiento(const char* nuevoTratamiento);
+
+    void setMedicamentos(const char* nuevosMedicamentos);
+
     //Destructor
     ~Historial();
 };

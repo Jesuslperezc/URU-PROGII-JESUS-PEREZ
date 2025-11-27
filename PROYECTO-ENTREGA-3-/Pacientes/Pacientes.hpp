@@ -6,6 +6,7 @@
 
 class Paciente
 {
+
     template<typename T>
     friend bool escribirRegistro(const char* nombreArchivo, const T &registro, int indice);
 private:
@@ -47,7 +48,7 @@ public:
     const char* getNombre(){return nombre;}
     const char* getApellido(){return apellido;}
     const char* getCedula(){return cedula;}
-    int getId(){return id;}
+    int getId()const{return id;}
     bool isActivo(){return activo;}
     bool isEliminado(){return eliminado;}
     int getCantidadConsultas(){return cantidadConsultas;}
@@ -61,7 +62,7 @@ public:
     char getSexo(){return sexo;}
     const char* getTipoSangre(){return tipoSangre;}
     //Setters
-    bool guardarPaciente(const Paciente& paciente);
+
     void setNombre(const char* nuevoNombre);
     void setApellido(const char* nuevoApellido);
     void setCedula(const char* nuevaCedula);

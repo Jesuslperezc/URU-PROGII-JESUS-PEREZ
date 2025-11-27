@@ -5,6 +5,9 @@
 #include "Pacientes.hpp"
 #include "Doctores.hpp"
 #include "Hospital.hpp"
+#include <filesystem>
+#include <vector>
+namespace fs = std::filesystem;
 using namespace std;
 
 bool inicializarArchivo(const char* nombreArchivo) {
@@ -51,7 +54,7 @@ bool verificarArchivo(const char* nombreArchivo) {
     return true;
 }
 
-ArchivoHeader leerHeader(const char* nombreArchivo) {
+ArchivoHeader leerArchivoHeader(const char* nombreArchivo) {
     fstream archivo(nombreArchivo, ios::binary | ios::in);
     if (!archivo.is_open()) {
         cout << "Error al abrir el archivo: " << nombreArchivo << endl;
@@ -113,9 +116,7 @@ void verificarArchivos() {
     
 }
 
-#include <filesystem>
-#include <vector>
-namespace fs = std::filesystem;
+
 
 void hacerRespaldo() {
     cout << "\n=== Creando respaldo ===\n";
@@ -150,7 +151,7 @@ void mostrarEstadisticasArchivos() {
     cout << "\n=== Estadísticas de Archivos ===\n";
 
     auto mostrar = [](const char* nombreArchivo) {
-        ArchivoHeader header = leerHeader(nombreArchivo);
+        ArchivoHeader header = leerArchivoHeader(nombreArchivo);
         cout << nombreArchivo << ":\n";
         cout << "  Registros totales: " << header.cantidadRegistros << "\n";
         cout << "  Registros activos: " << header.registrosActivos << "\n";
@@ -164,3 +165,62 @@ void mostrarEstadisticasArchivos() {
     mostrar("citas.bin");
     mostrar("historiales.bin");
 }//===========================================================
+
+bool guardarPaciente(const Paciente& paciente) {
+    // Leer header
+    ArchivoHeader header{};
+    if (!leerArchivoHeader("pacientes.bin", header)) {
+        std::cout << "Error al leer header de pacientes.bin" << std::endl;
+        return false;
+    }
+
+    // Usar cantidadRegistros como índice
+    int indice = header.cantidadRegistros;
+
+    // Escribir registro
+    if (!escribirRegistro<Paciente>("pacientes.bin", paciente, indice)) {
+        return false;
+    }
+
+    // Actualizar header
+    header.cantidadRegistros++;
+    header.proximoID = paciente.getId()+1;
+    header.registrosActivos++;
+    if (!actualizarHeader("pacientes.bin", header)) {
+        std::cout << "Error al actualizar header de pacientes.bin" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
+bool guardarCita(const Cita& cita) {
+    // Leer el header actual
+    ArchivoHeader header{};
+    if (!leerArchivoHeader("citas.bin", header)) {
+        std::cout << "Error al leer header de citas.bin" << std::endl;
+        return false;
+    }
+
+    // Usar cantidadRegistros como índice (escribir al final)
+    int indice = header.cantidadRegistros;
+
+    // Escribir la cita en el archivo
+    if (!escribirRegistro<Cita>("citas.bin", cita, indice)) {
+        std::cout << "Error al escribir cita en citas.bin" << std::endl;
+        return false;
+    }
+
+    // Actualizar el header
+    header.cantidadRegistros++;
+    header.proximoID = cita.getId() + 1;   // siguiente ID disponible
+    header.registrosActivos++;
+
+    if (!actualizarHeader("citas.bin", header)) {
+        std::cout << "Error al actualizar header de citas.bin" << std::endl;
+        return false;
+    }
+
+    return true;
+}
+    

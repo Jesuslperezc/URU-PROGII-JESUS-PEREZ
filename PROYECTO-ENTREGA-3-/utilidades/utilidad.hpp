@@ -105,7 +105,7 @@ T buscarRegistroPorNombre(const char* nombreArchivo, const char* nombreBuscado) 
                 archivo.close();
                 return registro;
             }
-        } else if constexpr (std::is_same_v<T, HistorialMedico>) {
+        } else if constexpr (std::is_same_v<T, Historial>) {
             if (!registro.eliminado && std::strcmp(registro.diagnostico, nombreBuscado) == 0) {
                 archivo.close();
                 return registro;
