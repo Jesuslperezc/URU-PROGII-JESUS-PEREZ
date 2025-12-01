@@ -2,15 +2,15 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
-#include "Pacientes.hpp"
-#include "Doctores.hpp"
-#include "Hospital.hpp"
+#include "../Pacientes/Pacientes.hpp"
+#include "../Doctores/Doctores.hpp"
+#include "../Hospital/Hospital.hpp"
 #include <filesystem>
 #include <vector>
 namespace fs = std::filesystem;
 using namespace std;
 
-bool inicializarArchivo(const char* nombreArchivo) {
+bool GestorArchivos:: inicializarArchivo(const char* nombreArchivo) {
     fstream archivo(nombreArchivo, ios::binary | ios::out);
     if (!archivo.is_open()) {
         cout << "Error al crear el archivo: " << nombreArchivo << endl;
@@ -23,7 +23,7 @@ bool inicializarArchivo(const char* nombreArchivo) {
     return true;
 }
 
-bool verificarArchivo(const char* nombreArchivo) {
+bool GestorArchivos:: verificarArchivo(const char* nombreArchivo) {
     fstream archivo(nombreArchivo, ios::binary | ios::in);
     if (!archivo.is_open()) {
         cout << "Error al abrir el archivo: " << nombreArchivo << endl;
@@ -67,7 +67,7 @@ bool GestorArchivos:: leerArchivoHeader(const char* nombreArchivo,ArchivoHeader&
     return true;
 }
 
-bool actualizarHeader(const char* nombreArchivo, ArchivoHeader header) {
+bool GestorArchivos:: actualizarHeader(const char* nombreArchivo, ArchivoHeader header) {
     fstream archivo(nombreArchivo, ios::binary | ios::in | ios::out);
     if (!archivo.is_open()) {
         cout << "Error al abrir el archivo: " << nombreArchivo << endl;
@@ -79,7 +79,7 @@ bool actualizarHeader(const char* nombreArchivo, ArchivoHeader header) {
     archivo.close();
     return true;
 }
-bool asegurarArchivo(const char* nombreArchivo) {
+bool GestorArchivos::asegurarArchivo(const char* nombreArchivo) {
     // Intentar abrir el archivo en modo lectura
     fstream archivo(nombreArchivo, ios::binary | ios::in);
     if (archivo.is_open()) {
@@ -106,7 +106,7 @@ bool asegurarArchivo(const char* nombreArchivo) {
 
     return true;
 }
-void verificarArchivos() {
+void GestorArchivos::verificarArchivos() {
     cout << "\n=== Verificación de Archivos ===\n";
     verificarArchivo("hospital.bin");
     verificarArchivo("pacientes.bin");
@@ -118,7 +118,7 @@ void verificarArchivos() {
 
 
 
-void hacerRespaldo() {
+void GestorArchivos:: hacerRespaldo() {
     cout << "\n=== Creando respaldo ===\n";
     fs::create_directory("backup");
 
@@ -131,7 +131,7 @@ void hacerRespaldo() {
         cout << "Respaldo creado: " << nombre << "\n";
     }
 }
-void restaurarRespaldo() {
+void GestorArchivos:: restaurarRespaldo() {
     cout << "\n=== Restaurando respaldo ===\n";
     vector<string> archivos = {
         "hospital.bin", "pacientes.bin", "doctores.bin", "citas.bin", "historiales.bin"
@@ -232,7 +232,7 @@ bool GestorArchivos::guardarCita(const Cita& cita) {
     bool GestorArchivos:: guardarHistorial(const Historial& historial) {
            ArchivoHeader header{};
     if (!leerArchivoHeader("historiales.bin", header)) {
-        std::cout << "Error al leer header de pacientes.bin" << std::endl;
+        std::cout << "Error al leer header de historiales.bin" << std::endl;
         return false;
     }
 
@@ -248,15 +248,46 @@ bool GestorArchivos::guardarCita(const Cita& cita) {
     header.cantidadRegistros++;
     header.proximoID = historial.gethistorialID()+1;
     header.registrosActivos++;
-    if (!actualizarHeader("pacientes.bin", header)) {
+    if (!actualizarHeader("historiales.bin", header)) {
+        std::cout << "Error al actualizar header de historiales.bin" << std::endl;
+        return false;
+    }
+    return true;
+}
+bool GestorArchivos:: guardarDoctores (const Doctor& doctor){
+                   ArchivoHeader header{};
+    if (!leerArchivoHeader("doctores.bin", header)) {
+        std::cout << "Error al leer header de doctores.bin" << std::endl;
+        return false;
+    }
+
+    // Usar cantidadRegistros como índice
+    int indice = header.cantidadRegistros;
+
+    // Escribir registro
+    if (!escribirRegistro<Doctor>("doctores.bin", doctor, indice)) {
+        return false;
+    }
+
+    // Actualizar header
+    header.cantidadRegistros++;
+    header.proximoID = doctor.getId()+1;
+    header.registrosActivos++;
+    if (!actualizarHeader("doctores.bin", header)) {
         std::cout << "Error al actualizar header de pacientes.bin" << std::endl;
         return false;
     }
 
     return true;
-
 }
-
   
-
+bool GestorArchivos::compararCaseInsensitive(const char* a, const char* b) {
+    while (*a && *b) {
+        if (tolower((unsigned char)*a) != tolower((unsigned char)*b))
+            return false;
+        ++a;
+        ++b;
+    }
+    return *a == *b;
+}
     

@@ -1,8 +1,12 @@
 #ifndef GESTIONARCHIVOS_HPP
 #define GESTIONARCHIVOS_HPP
 #include <fstream>
-#include "../Hospital/Hospital.hpp"
-#include "../Pacientes/Pacientes.hpp"
+// Forward declarations to avoid circular includes and 'does not name a type' errors
+class Hospital;
+class Paciente;
+class Cita;
+class Historial;
+class Doctor;
 struct ArchivoHeader {
     int cantidadRegistros;      // Cantidad actual de registros
     int proximoID;              // Siguiente ID disponible
@@ -27,6 +31,9 @@ bool guardarCita(const Cita& cita);
 bool guardarHistorial(const Historial& historial);
 bool guardarDoctores (const Doctor& doctor);
 void mostrarEstadisticasArchivos();
+void hacerRespaldo();
+void restaurarRespaldo();
+bool compararCaseInsensitive(const char* a, const char* b);
 
 };
 

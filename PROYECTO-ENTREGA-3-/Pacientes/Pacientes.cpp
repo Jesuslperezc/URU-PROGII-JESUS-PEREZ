@@ -33,7 +33,7 @@
 
     Paciente::Paciente(  int id,const char* nombre, const char* apellido, const char* cedula,
     int edad, char sexo, const char* tipoSangre,const char* telefono, const char* direccion,
-    const char* email, const char* alergias, const char* observaciones){
+    const char* email, const char* alergias, const char* observaciones, int cantidadCitas, int* citasIDs){
 
         this->id = id;
         std:: strncpy(this->nombre, nombre, sizeof(this->nombre) - 1);
@@ -55,23 +55,40 @@
         eliminado = false;
         fechaCreacion = time(nullptr);
         fechaModificacion = time(nullptr);
+
     }
 
     
-    
-    //Setters
-    void Paciente::setNombre(const char* nuevoNombre){
-        std::strncpy(this->nombre, nuevoNombre, sizeof(this->nombre) - 1);
-        this->nombre[sizeof(this->nombre) - 1] = '\0';
-        fechaModificacion = time(nullptr);
-        
+
+void Paciente::setNombre(const char* nuevoNombre) {
+    // Validar que no tenga espacios
+    for (size_t i = 0; i < std::strlen(nuevoNombre); ++i) {
+        if (std::isspace(static_cast<unsigned char>(nuevoNombre[i]))) {
+            std::cout << "Error: el nombre no puede contener espacios.\n";
+            return; // no asignamos nada
+        }
     }
-    void Paciente::setApellido(const char* nuevoApellido){
-        std::strncpy(this->apellido, nuevoApellido, sizeof(this->apellido) - 1);
-        this->apellido[sizeof(this->apellido) - 1] = '\0';
-        fechaModificacion = time(nullptr);
-        
+
+    // Copiar con seguridad
+    std::strncpy(this->nombre, nuevoNombre, sizeof(this->nombre) - 1);
+    this->nombre[sizeof(this->nombre) - 1] = '\0';
+    fechaModificacion = time(nullptr);
+}
+
+void Paciente::setApellido(const char* nuevoApellido) {
+    // Validar que no tenga espacios
+    for (size_t i = 0; i < std::strlen(nuevoApellido); ++i) {
+        if (std::isspace(static_cast<unsigned char>(nuevoApellido[i]))) {
+            std::cout << "Error: el apellido no puede contener espacios.\n";
+            return; // no asignamos nada
+        }
     }
+
+    // Copiar con seguridad
+    std::strncpy(this->apellido, nuevoApellido, sizeof(this->apellido) - 1);
+    this->apellido[sizeof(this->apellido) - 1] = '\0';
+    fechaModificacion = time(nullptr);
+}
     void Paciente::setCedula(const char* nuevaCedula){
         std::strncpy(this->cedula, nuevaCedula, sizeof(this->cedula) - 1);
         this->cedula[sizeof(this->cedula) - 1] = '\0';
@@ -175,3 +192,32 @@
             }
         }
     }
+     int Paciente:: setCantidadCitas(int nuevaCantidadCitas){
+        if(nuevaCantidadCitas < 0 || nuevaCantidadCitas > 20){
+            std::cout << "Cantidad de citas inválida. Debe estar entre 0 y 20." << std::endl;
+            return -1;
+        }
+        this->cantidadCitas = nuevaCantidadCitas;
+        fechaModificacion = time(nullptr);
+        return 0;
+     }
+    void Paciente::setCitasID(int index, int citaID){
+        if(index < 0 || index >= 20){
+            std::cout << "Índice de cita inválido. Debe estar entre 0 y 19." << std::endl;
+            return;
+        }
+        this->citasIDs[index] = citaID;
+        fechaModificacion = time(nullptr);
+        
+    }
+     void Paciente::setCantidadConsultas(int nuevaCantidadConsultas){
+        if(nuevaCantidadConsultas < 0){
+            std::cout << "Cantidad de consultas no puede ser negativa." << std::endl;
+            return;
+        }
+        this->cantidadConsultas = nuevaCantidadConsultas;
+        fechaModificacion = time(nullptr);
+        }   
+
+
+       

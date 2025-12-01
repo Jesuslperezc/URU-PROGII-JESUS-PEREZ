@@ -42,7 +42,7 @@ public:
 
     Paciente(  int id,const char* nombre, const char* apellido, const char* cedula,
     int edad, char sexo, const char* tipoSangre,const char* telefono, const char* direccion,
-    const char* email, const char* alergias, const char* observaciones);
+    const char* email, const char* alergias, const char* observaciones,int cantidadCitas, int* citasIDs);
 
     //Getters
     const char* getNombre(){return nombre;}
@@ -80,7 +80,9 @@ public:
     void setPrimerConsultaID(int consultaID);
     void agregarCitaID(int citaID);
     void eliminarCitaID(int citaID);
-
+    int setCantidadCitas(int nuevaCantidadCitas);
+    void setCitasID(int index, int citaID);
+    void setCantidadConsultas(int nuevaCantidadConsultas);
 
 
 

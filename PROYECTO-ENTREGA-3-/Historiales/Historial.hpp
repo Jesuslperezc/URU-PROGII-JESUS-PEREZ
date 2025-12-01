@@ -25,16 +25,19 @@ private:
 public:
     //Constructor
     Historial();
-    Historial( int id, int pacienteID, const char* fecha, const char* hora,
-    const char* diagnostico, const char* tratamiento, const char* medicamentos);
+    Historial( int id, int siguienteConsultaID, int pacienteID, int doctorID, const char* fecha, const char* hora,
+    const char* diagnostico, const char* tratamiento, const char* medicamentos, float costo);
     //Getters}
     int gethistorialID()const{return id;}
+    int getConsultaID()const{return siguienteConsultaID;}
     int getpacienteID()const{return pacienteID;}
-    const char* getFecha(){return fecha;}
+    int getDoctorID()const{return doctorID;}
     const char* getHora(){return hora;}
+    const char* getFecha()const{return fecha;}
     const char* getDiagnostico(){return diagnostico;}
     const char* getTratamiento () {return tratamiento;}
     const char* getMedicamentos(){return medicamentos;}
+    float getCosto()const{return costo;}
  
    // Setters
     void setHistorialID(int nuevoID);

@@ -173,6 +173,7 @@ T leerRegistro(const char* nombreArchivo, int indice) {
     return registro;
 }
 
+
 // ===================================================================
 // Leer header (no-template)
 // ===================================================================
@@ -183,7 +184,15 @@ T leerRegistro(const char* nombreArchivo, int indice) {
 // ===================================================================
 template <typename T>
 void listarRegistros(const char* nombreArchivo) {
-    ArchivoHeader header = leerHeader(nombreArchivo);
+    ArchivoHeader header{};
+    std::fstream file(nombreArchivo, std::ios::binary | std::ios::in);
+    if (file.is_open()) {
+        file.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
+        file.close();
+    } else {
+        // Si no se puede abrir el archivo, asumimos 0 registros
+        header.cantidadRegistros = 0;
+    }
     int total = header.cantidadRegistros, activos = 0;
 
     // Encabezados dinámicos según el tipo

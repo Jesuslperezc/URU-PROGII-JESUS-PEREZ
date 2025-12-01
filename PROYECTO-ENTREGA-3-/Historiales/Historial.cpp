@@ -8,55 +8,47 @@
     #include <ctime>
 
 // Constructor por defecto
-Cita::Cita() {
-    memset(fecha, 0, sizeof(fecha));
-    memset(hora, 0, sizeof(hora));
-    memset(motivo, 0, sizeof(motivo));
-    memset(estado, 0, sizeof(estado));
-    memset(observaciones, 0, sizeof(observaciones));
-
+Historial::Historial() {
     id = 0;
     pacienteID = 0;
+    std::memset(fecha, 0, sizeof(fecha));
+    std::strncpy(fecha, "0000-00-00", sizeof(fecha) - 1);
+    std::memset(hora, 0, sizeof(hora));
+    std::strncpy(hora, "00:00", sizeof(hora) - 1);
+    std::memset(diagnostico, 0, sizeof(diagnostico));
+    std::strncpy(diagnostico, "", sizeof(diagnostico) - 1);
+    std::memset(tratamiento, 0, sizeof(tratamiento));
+    std::strncpy(tratamiento, "", sizeof(tratamiento) - 1);
+    std::memset(medicamentos, 0, sizeof(medicamentos));
+    std::strncpy(medicamentos, "", sizeof(medicamentos) - 1);
     doctorID = 0;
-    consultaID = -1;       // por defecto no atendida
-    atendida = false;
+    costo = 0.0f;
+    siguienteConsultaID = -1; // Indica que no hay siguiente consulta
     eliminado = false;
-
-    fechaCreacion = std::time(nullptr);
-    fechaModificacion = fechaCreacion;
+    fechaRegistro = std::time(nullptr);
 }
-
-// Constructor parametrizado
-Cita::Cita(int id, int pacienteID, int doctorID, const char* fecha,
-           const char* hora, const char* motivo, const char* estado,
-           const char* observaciones, bool atendida) {
-    this->id = id;
+ Historial::Historial( int id,int siguienteConsultaID,int pacienteID, int doctorID, const char* fecha, const char* hora,
+    const char* diagnostico, const char* tratamiento, const char* medicamentos, float costo){
+    this->id = 0; // Se asignará al guardar
     this->pacienteID = pacienteID;
-    this->doctorID = doctorID;
-
     std::strncpy(this->fecha, fecha, sizeof(this->fecha) - 1);
     this->fecha[sizeof(this->fecha) - 1] = '\0';
-
     std::strncpy(this->hora, hora, sizeof(this->hora) - 1);
     this->hora[sizeof(this->hora) - 1] = '\0';
-
-    std::strncpy(this->motivo, motivo, sizeof(this->motivo) - 1);
-    this->motivo[sizeof(this->motivo) - 1] = '\0';
-
-    std::strncpy(this->estado, estado, sizeof(this->estado) - 1);
-    this->estado[sizeof(this->estado) - 1] = '\0';
-
-    std::strncpy(this->observaciones, observaciones, sizeof(this->observaciones) - 1);
-    this->observaciones[sizeof(this->observaciones) - 1] = '\0';
-
-    this->atendida = atendida;
-    this->consultaID = -1;   // aún no atendida
+    std::strncpy(this->diagnostico, diagnostico, sizeof(this->diagnostico) - 1);
+    this->diagnostico[sizeof(this->diagnostico) - 1] = '\0';
+    std::strncpy(this->tratamiento, tratamiento, sizeof(this->tratamiento) -
+        1);
+    this->tratamiento[sizeof(this->tratamiento) - 1] = '\0';
+    std::strncpy(this->medicamentos, medicamentos, sizeof(this->medicamentos) - 1);
+    this->medicamentos[sizeof(this->medicamentos) - 1] = '\0';
+    this->doctorID = doctorID;
+    this->costo = costo;
+    this->siguienteConsultaID = siguienteConsultaID;
     this->eliminado = false;
-
-    this->fechaCreacion = std::time(nullptr);
-    this->fechaModificacion = fechaCreacion;
-}
-
+    this->fechaRegistro = std::time(nullptr);
+    
+    }
    // Setters
     void Historial::setHistorialID(int nuevoID) { id = nuevoID; }
     void Historial::setPacienteID(int nuevoPacienteID) { pacienteID = nuevoPacienteID; }
