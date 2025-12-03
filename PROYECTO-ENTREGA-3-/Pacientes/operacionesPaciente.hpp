@@ -12,6 +12,6 @@ bool obtenerUltimaConsulta(Paciente* paciente, Historial& salida);
 void buscarPacientesPorNombre(const char* nombreBuscado);
 Paciente buscarPacientePorCedula(const char* nombreArchivo, const char* cedulaBuscada);
 bool actualizarPaciente(int id);
-void mostrarMenuPacientes(Hospital* hospital)
+void mostrarMenuPacientes(Hospital* hospital);
 //Regisrtar nuevo paciente esta en utilidades/utilidad.hpp ((PORQUE USA LA FUNCION GENERICA ESCRIBIRREGISTRO))
 #endif

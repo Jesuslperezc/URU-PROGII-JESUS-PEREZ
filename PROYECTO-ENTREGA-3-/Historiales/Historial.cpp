@@ -9,8 +9,6 @@
 
 // Constructor por defecto
 Historial::Historial() {
-    id = 0;
-    pacienteID = 0;
     std::memset(fecha, 0, sizeof(fecha));
     std::strncpy(fecha, "0000-00-00", sizeof(fecha) - 1);
     std::memset(hora, 0, sizeof(hora));
@@ -21,6 +19,8 @@ Historial::Historial() {
     std::strncpy(tratamiento, "", sizeof(tratamiento) - 1);
     std::memset(medicamentos, 0, sizeof(medicamentos));
     std::strncpy(medicamentos, "", sizeof(medicamentos) - 1);
+    id = 0;
+    pacienteID = 0;
     doctorID = 0;
     costo = 0.0f;
     siguienteConsultaID = -1; // Indica que no hay siguiente consulta
@@ -29,8 +29,7 @@ Historial::Historial() {
 }
  Historial::Historial( int id,int siguienteConsultaID,int pacienteID, int doctorID, const char* fecha, const char* hora,
     const char* diagnostico, const char* tratamiento, const char* medicamentos, float costo){
-    this->id = 0; // Se asignará al guardar
-    this->pacienteID = pacienteID;
+
     std::strncpy(this->fecha, fecha, sizeof(this->fecha) - 1);
     this->fecha[sizeof(this->fecha) - 1] = '\0';
     std::strncpy(this->hora, hora, sizeof(this->hora) - 1);
@@ -41,6 +40,8 @@ Historial::Historial() {
         1);
     this->tratamiento[sizeof(this->tratamiento) - 1] = '\0';
     std::strncpy(this->medicamentos, medicamentos, sizeof(this->medicamentos) - 1);
+    this->id = 0; // Se asignará al guardar
+    this->pacienteID = pacienteID;
     this->medicamentos[sizeof(this->medicamentos) - 1] = '\0';
     this->doctorID = doctorID;
     this->costo = costo;

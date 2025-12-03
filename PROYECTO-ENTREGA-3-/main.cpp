@@ -8,10 +8,11 @@ int main() {
     using namespace std;
 
     cout << "Sistema de Gestión Hospitalaria\n";
-    // Aquí podría ir la lógica para iniciar el sistema, mostrar menús, etc
-   Hospital hospital;
-   Hospital();
-   hospital.cargarHospital();
-   mostrarMenuPacientes(&hospital);
+
+    Hospital hospital;           // Se crea el objeto
+    hospital.cargarHospital();   // Se carga la info real
+
+    mostrarMenuPacientes(&hospital); // Se pasa al menú
+
     return 0;
 }

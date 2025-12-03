@@ -32,31 +32,49 @@
     }
 
     Paciente::Paciente(  int id,const char* nombre, const char* apellido, const char* cedula,
-    int edad, char sexo, const char* tipoSangre,const char* telefono, const char* direccion,
-    const char* email, const char* alergias, const char* observaciones, int cantidadCitas, int* citasIDs){
-
-        this->id = id;
-        std:: strncpy(this->nombre, nombre, sizeof(this->nombre) - 1);
-        std:: strncpy(this->apellido, apellido, sizeof(this->apellido) - 1);
-        std:: strncpy(this->cedula, cedula, sizeof(this->cedula) - 1);
-        this->edad = edad;
-        this->sexo = sexo;
-        std:: strncpy(this->tipoSangre, tipoSangre, sizeof(this->tipoSangre) - 1);
-        std:: strncpy(this->telefono, telefono, sizeof(this->telefono) - 1);
-        std:: strncpy(this->direccion, direccion, sizeof(this->direccion) - 1);
-        std:: strncpy(this->email, email, sizeof(this->email) - 1);
-        std:: strncpy(this->alergias, alergias, sizeof(this->alergias) - 1);
-        std:: strncpy(this->observaciones, observaciones, sizeof(this->observaciones) - 1);
-        activo = true;
-        cantidadConsultas = 0;
-        primerConsultaID = -1;
-        cantidadCitas = 0;
-        memset(citasIDs, -1, sizeof(citasIDs));
-        eliminado = false;
-        fechaCreacion = time(nullptr);
-        fechaModificacion = time(nullptr);
-
-    }
+        int edad, char sexo, const char* tipoSangre,const char* telefono, const char* direccion,
+        const char* email, const char* alergias, const char* observaciones, int cantidadCitas, int* citasIDs){
+    
+            this->id = id;
+            std:: strncpy(this->nombre, nombre, sizeof(this->nombre) - 1);
+            std:: strncpy(this->apellido, apellido, sizeof(this->apellido) - 1);
+            std:: strncpy(this->cedula, cedula, sizeof(this->cedula) - 1);
+            this->edad = edad;
+            this->sexo = sexo;
+            std:: strncpy(this->tipoSangre, tipoSangre, sizeof(this->tipoSangre) - 1);
+            std:: strncpy(this->telefono, telefono, sizeof(this->telefono) - 1);
+            std:: strncpy(this->direccion, direccion, sizeof(this->direccion) - 1);
+            std:: strncpy(this->email, email, sizeof(this->email) - 1);
+            std:: strncpy(this->alergias, alergias, sizeof(this->alergias) - 1);
+            std:: strncpy(this->observaciones, observaciones, sizeof(this->observaciones) - 1);
+            activo = true;
+            cantidadConsultas = 0;
+            primerConsultaID = -1;
+    
+            // Validate and store cantidadCitas (ensure it fits the internal array of 20)
+            if (cantidadCitas < 0) {
+                cantidadCitas = 0;
+            }
+            if (cantidadCitas > 20) {
+                cantidadCitas = 20;
+            }
+            this->cantidadCitas = cantidadCitas;
+    
+            // Initialize member citasIDs to -1 and copy provided IDs if any
+            for (int i = 0; i < 20; ++i) {
+                this->citasIDs[i] = -1;
+            }
+            if (citasIDs != nullptr) {
+                for (int i = 0; i < this->cantidadCitas; ++i) {
+                    this->citasIDs[i] = citasIDs[i];
+                }
+            }
+    
+            eliminado = false;
+            fechaCreacion = time(nullptr);
+            fechaModificacion = time(nullptr);
+    
+        }
 
     
 

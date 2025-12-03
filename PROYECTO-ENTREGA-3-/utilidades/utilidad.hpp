@@ -221,27 +221,27 @@ void listarRegistros(const char* nombreArchivo) {
     // Mostrar registros activos
     for (int i = 0; i < total; ++i) {
         T r = leerRegistro<T>(nombreArchivo, i);
-        if (!r.eliminado && r.id != 0) {
+        if (!r.getEliminado() && r.getId() != 0) {
             activos++;
 
             if constexpr (std::is_same_v<T, Paciente>) {
-                std::cout << std::left << std::setw(6) << r.id
-                          << std::setw(20) << r.nombre
-                          << std::setw(20) << r.apellido
-                          << std::setw(8)  << r.edad
-                          << std::setw(15) << r.cedula << "\n";
+                std::cout << std::left << std::setw(6) << r.getId()
+                          << std::setw(20) << r.getNombre()
+                          << std::setw(20) << r.getApellido()
+                          << std::setw(8)  << r.getEdad()
+                          << std::setw(15) << r.getCedula() << "\n";
             } else if constexpr (std::is_same_v<T, Doctor>) {
-                std::cout << std::left << std::setw(6) << r.id
-                          << std::setw(20) << r.nombre
-                          << std::setw(20) << r.apellido
-                          << std::setw(15) << r.especialidad << "\n";
+                std::cout << std::left << std::setw(6) << r.getId()
+                          << std::setw(20) << r.getNombre()
+                          << std::setw(20) << r.getApellido()
+                          << std::setw(15) << r.getEspecialidad() << "\n";
             } else if constexpr (std::is_same_v<T, Cita>) {
-                std::cout << std::left << std::setw(6)  << r.id
-                          << std::setw(12) << r.fecha
-                          << std::setw(10) << r.hora
-                          << std::setw(8)  << r.idDoctor
-                          << std::setw(8)  << r.idPaciente
-                          << std::setw(25) << r.motivo << "\n";
+                std::cout << std::left << std::setw(6)  << r.getId()
+                          << std::setw(12) << r.getFecha()
+                          << std::setw(10) << r.getHora()
+                          << std::setw(8)  << r.getIdDoctor()   
+                          << std::setw(8)  << r.getIdPaciente()
+                          << std::setw(25) << r.getMotivo() << "\n";
             }
         }
     }
@@ -265,7 +265,7 @@ int encontrarIndicePorID(const char* nombreArchivo, int idBuscado) {
         archivo.read(reinterpret_cast<char*>(&reg), sizeof(T));
         if (!archivo.good()) break;
 
-        if (!reg.eliminado && reg.id == idBuscado) {
+        if (!reg.getEliminado() && reg.getId() == idBuscado) {
             archivo.close();
             return i; // índice real en el archivo
         }

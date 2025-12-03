@@ -1,9 +1,9 @@
 #include "Hospital.hpp"
-#include "GestionArchivos.hpp"
-#include "Doctores.hpp"
-#include "Historial.hpp"
-#include "Citas.hpp"
-#include "utilidad.hpp"
+#include "../persistencia/GestionArchivos.hpp"
+#include "../Doctores/Doctores.hpp"
+#include "../Historiales/Historial.hpp"
+#include "../Citas/Citas.hpp"
+#include "../utilidades/utilidad.hpp"
 #include <iostream>
 #include <cstring>
 #include <vector>
