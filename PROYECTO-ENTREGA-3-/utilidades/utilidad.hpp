@@ -51,7 +51,7 @@ T buscarRegistroPorID(const char* nombreArchivo, int id) {
             break;
         }
 
-        if (!registro.getEliminado() && registro.getId() == id) {
+        if (!registro.isEliminado() && registro.getId() == id) {
             archivo.close();
             return registro;
         }
