@@ -38,6 +38,8 @@ public:
     const char* getTratamiento () {return tratamiento;}
     const char* getMedicamentos(){return medicamentos;}
     float getCosto()const{return costo;}
+    bool isEliminado() const { return eliminado; }
+    int getId() const { return id; }
  
    // Setters
     void setHistorialID(int nuevoID);

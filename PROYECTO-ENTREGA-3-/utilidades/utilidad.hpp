@@ -221,7 +221,7 @@ void listarRegistros(const char* nombreArchivo) {
     // Mostrar registros activos
     for (int i = 0; i < total; ++i) {
         T r = leerRegistro<T>(nombreArchivo, i);
-        if (!r.setEliminado() && r.getId() != 0) {
+        if (!r.isEliminado() && r.getId() != 0) {
             activos++;
 
             if constexpr (std::is_same_v<T, Paciente>) {
@@ -265,7 +265,7 @@ int encontrarIndicePorID(const char* nombreArchivo, int idBuscado) {
         archivo.read(reinterpret_cast<char*>(&reg), sizeof(T));
         if (!archivo.good()) break;
 
-        if (!reg.setEliminado() && reg.getId() == idBuscado) {
+        if (!reg.isEliminado() && reg.getId() == idBuscado) {
             archivo.close();
             return i; // índice real en el archivo
         }
