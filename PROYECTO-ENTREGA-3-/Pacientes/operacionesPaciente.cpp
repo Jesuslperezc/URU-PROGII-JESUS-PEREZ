@@ -194,6 +194,45 @@ Paciente crearPaciente(Hospital* hospital,
                        int edad,
                        char sexo);
 
+// ===================================================================
+
+Paciente buscarPacientePorCedula(const char* nombreArchivo, const char* cedulaBuscada){
+    std::fstream archivo(nombreArchivo, std::ios::binary | std::ios::in);
+    if (!archivo.is_open()) {
+        std::cout << "Error al abrir el archivo: " << nombreArchivo << std::endl;
+        return Paciente{}; // Objeto vacío
+    }
+
+    ArchivoHeader header{};
+    archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
+
+    if (!archivo) {
+        std::cout << "Error al leer el header de " << nombreArchivo << std::endl;
+        archivo.close();
+        return Paciente{};
+    }
+
+    Paciente registro{};
+    for (int i = 0; i < header.cantidadRegistros; ++i) {
+        archivo.seekg(sizeof(ArchivoHeader) + i * sizeof(Paciente), std::ios::beg);
+        archivo.read(reinterpret_cast<char*>(&registro), sizeof(Paciente));
+
+        if (!archivo) {
+            std::cout << "Error al leer el registro " << i << std::endl;
+            break;
+        }
+
+        if (!registro.isEliminado() && std::strcmp(registro.getCedula(), cedulaBuscada) == 0) {
+            archivo.close();
+            std::cout << "Paciente encontrado: " << registro.getNombre() << " " << registro.getApellido() << "\n";
+            return registro;
+        }
+    }
+
+    archivo.close();
+    std::cout << "Paciente con cedula " << cedulaBuscada << " no encontrado en " << nombreArchivo << std::endl;
+    return Paciente{};
+}
 void mostrarMenuPacientes(Hospital* hospital) {
     int opPaciente = -1;
 
