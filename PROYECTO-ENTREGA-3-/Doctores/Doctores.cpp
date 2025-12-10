@@ -152,11 +152,20 @@ void Doctor::setCitaID(int index, int citaID) {
 void Doctor::setCantidadCitas(int nuevaCantidad) {
     this->cantidadCitas = nuevaCantidad;
 }
-void Doctor::setPacienteID(int index, int pacienteID) {
-    if (index >= 0) {
-        this->pacientesIDs[index] = pacienteID;
+bool Doctor::setPacienteID( int pacienteID) {
+const int MAX_PACIENTES = 30;
+
+    for (int i = 0; i < MAX_PACIENTES; ++i) {
+        if (pacientesIDs[i] == -1) {
+            pacientesIDs[i] = pacienteID;
+            cantidadPacientes++;
+            return true;
+        }
     }
+
+    return false;
 }
+
 void Doctor::setEliminado(bool nuevoEliminado) {
     eliminado = nuevoEliminado;
 }
@@ -168,6 +177,28 @@ void Doctor::setfechaCreacion(time_t nuevaFecha) {
 void Doctor::setfechaModificacion(time_t nuevaFecha) {
     fechaModificacion = nuevaFecha;
 }
+void Doctor::inicializarPaciente(int index) {
+    if (index >= 0 && index < 50)
+        pacientesIDs[index] = -1;
+}
+
+void Doctor::inicializarCita(int index) {
+    if (index >= 0 && index < 30)
+        citasIDs[index] = -1;
+}
+bool Doctor::removerPaciente(int idPaciente) {
+    for (int i = 0; i < 50; ++i) {
+        if (pacientesIDs[i] == idPaciente) {
+            pacientesIDs[i] = -1;           // liberar slot
+            if (cantidadPacientes > 0)
+                cantidadPacientes--;        // actualizar contador
+            return true;                    // paciente removido
+        }
+    }
+    return false; // paciente no encontrado
+}
+
+
 Doctor::~Doctor() {
     // No se requiere limpieza especial por uso de arrays fijos
 }

@@ -37,9 +37,8 @@ bool validarCedula(const char* cedula);
 bool validarNombreSinEspacios(const char* nombre);
 bool validarEdad(int edad);
 bool validarSexoChar(char sexo);
-
-
-
+bool validarFormatoHora(const char* hora);
+bool validarFormatoFecha(const char* fecha);
 };
 
 #endif // GESTIONARCHIVOS_HPP

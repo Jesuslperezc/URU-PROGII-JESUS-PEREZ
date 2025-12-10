@@ -51,10 +51,10 @@ Doctor crearDoctor(Hospital* hospital,   const char* nombre,  const char* apelli
 
     // Inicializar listas de IDs
     for (int i = 0; i < 50; i++)
-        d.setPacienteID(i, -1);
+        d.inicializarPaciente(i);
 
     for (int i = 0; i < 30; i++)
-        d.setCitaID(i, -1);
+        d.inicializarCita(i);
     // Timestamps
     time_t ahora = time(nullptr);
     d.setfechaCreacion(ahora);
@@ -115,7 +115,6 @@ bool eliminarDoctor(int id) {
     archivo.close();
     return false;
 }
-
 bool asignarPacienteADoctor(Hospital* hospital, int idDoctor, int idPaciente) {
     if (!hospital) return false;
 
@@ -131,7 +130,6 @@ bool asignarPacienteADoctor(Hospital* hospital, int idDoctor, int idPaciente) {
 
     for (int i = 0; i < headerDoctores.cantidadRegistros; ++i) {
         Doctor d = leerRegistro<Doctor>("doctores.bin", i);
-
         if (!d.isEliminado() && d.getId() == idDoctor) {
             doctor = d;
             indiceDoctor = i;
@@ -166,23 +164,13 @@ bool asignarPacienteADoctor(Hospital* hospital, int idDoctor, int idPaciente) {
         return false;
     }
 
-    bool asignado = false;
-
-    for (int i = 0; i < doctor.getCantidadPacientes(); ++i) {
-
-        if (doctor.getPacienteID(i) == -1) {
-            doctor.setPacienteID(i, paciente.getId());
-            doctor.setCantidadPacientes(doctor.getCantidadPacientes() + 1);
-            asignado = true;
-            break;
-        }
-    }
-
-    if (!asignado) {
+    // ---------- ASIGNAR PACIENTE ----------
+    if (!doctor.setPacienteID(paciente.getId())) { // aquí usamos tu método que busca un slot libre
         std::cout << "Doctor ya tiene todos los pacientes asignados.\n";
         return false;
     }
 
+    // ---------- GUARDAR DOCTOR ACTUALIZADO ----------
     if (!escribirRegistro<Doctor>("doctores.bin", doctor, indiceDoctor)) {
         std::cout << "Error al guardar doctor actualizado.\n";
         return false;
@@ -194,49 +182,24 @@ bool asignarPacienteADoctor(Hospital* hospital, int idDoctor, int idPaciente) {
     return true;
 }
 
+
 bool removerPacienteDeDoctor(Doctor* doctor, int idPaciente) {
-    if (doctor == nullptr) return false;
+    if (!doctor) return false;
 
-    bool encontrado = false;
-
-    // Buscar al paciente en el arreglo
-    for (int i = 0; i < doctor->getCantidadPacientes(); ++i) {
-        if (doctor->getPacienteID(i) == idPaciente) {
-
-            doctor->setPacienteID(i, -1);
-
-            int nuevaCantidad = doctor->getCantidadPacientes();
-            if (nuevaCantidad > 0)
-                doctor->setCantidadPacientes(nuevaCantidad - 1);
-
-            encontrado = true;
-            break;
-        }
-    }
-
-    if (!encontrado) {
+    if (!doctor->removerPaciente(idPaciente)) {
         std::cout << "El doctor no tiene asignado al paciente con ID "
                   << idPaciente << ".\n";
         return false;
     }
 
-    // ----------------------------------------
-
     GestorArchivos gestor;
     ArchivoHeader header;
     gestor.leerArchivoHeader("doctores.bin", header);
 
-    // Buscar índice del registro del doctor
     for (int i = 0; i < header.cantidadRegistros; ++i) {
-
         Doctor d = leerRegistro<Doctor>("doctores.bin", i);
-
         if (d.getId() == doctor->getId()) {
-
-            // Actualizar metadata antes de guardar
             doctor->setfechaModificacion(time(nullptr));
-
-            // Guardar en archivo usando tu función genérica
             if (!escribirRegistro("doctores.bin", *doctor, i)) {
                 std::cout << "Error al actualizar doctor en archivo.\n";
                 return false;

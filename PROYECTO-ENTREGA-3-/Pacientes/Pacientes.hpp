@@ -84,6 +84,8 @@ public:
     void setCitasID(int index, int citaID);
     void setCantidadConsultas(int nuevaCantidadConsultas);
     void setId(int nuevoId);
+    void setFechaCreacion(time_t nuevaFechaCreacion);
+    void setFechaModificacion(time_t nuevaFechaModificacion);
 
 
     //Destructor

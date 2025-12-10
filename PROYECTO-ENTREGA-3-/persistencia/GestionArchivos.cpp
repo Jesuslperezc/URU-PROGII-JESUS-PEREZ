@@ -246,7 +246,7 @@ bool GestorArchivos::guardarCita(const Cita& cita) {
 
     // Actualizar header
     header.cantidadRegistros++;
-    header.proximoID = historial.gethistorialID()+1;
+    header.proximoID = historial.getHistorialID()+1;
     header.registrosActivos++;
     if (!actualizarHeader("historiales.bin", header)) {
         std::cout << "Error al actualizar header de historiales.bin" << std::endl;
@@ -331,6 +331,17 @@ bool GestorArchivos::validarEdad(int edad) {
         return false;
     }
     return true;
+}
+
+bool GestorArchivos::validarFormatoHora(const char* hora) {
+    int hh, mm;
+    return (sscanf(hora, "%2d:%2d", &hh, &mm) == 2 && hh >= 0 && hh < 24 && mm >= 0 && mm < 60);
+}
+
+bool GestorArchivos::validarFormatoFecha(const char* fecha) {
+    int anio, mes, dia;
+    return (sscanf(fecha, "%4d-%2d-%2d", &anio, &mes, &dia) == 3 &&
+            anio > 1900 && mes >= 1 && mes <= 12 && dia >= 1 && dia <= 31);
 }
 
 bool GestorArchivos::validarSexoChar(char sexo) {

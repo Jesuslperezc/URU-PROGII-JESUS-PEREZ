@@ -75,6 +75,14 @@ Historial::Historial() {
     void Historial::setMedicamentos(const char* nuevosMedicamentos) {std::strncpy(medicamentos, nuevosMedicamentos, sizeof(medicamentos) - 1);
     medicamentos[sizeof(medicamentos) - 1] = '\0';
     }
+    void Historial::setDoctorID(int nuevoDoctorID) { doctorID = nuevoDoctorID; }
+    void Historial::setCosto(float nuevoCosto) { costo = nuevoCosto; }
+    void Historial::setEliminado(bool estadoEliminado) { eliminado = estadoEliminado; }
+    void Historial::setSiguienteConsultaID(int nuevaConsultaID) { siguienteConsultaID = nuevaConsultaID; }
+    void Historial::setFechaRegistro(time_t nuevaFecha) {
+     fechaRegistro = nuevaFecha;
+}
+    //Destructor
     Historial::~Historial() {
 
     }

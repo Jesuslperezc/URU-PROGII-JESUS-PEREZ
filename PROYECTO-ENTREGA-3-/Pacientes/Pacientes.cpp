@@ -259,6 +259,13 @@ void Paciente::setApellido(const char* nuevoApellido) {
         fechaModificacion = time(nullptr);
         
     }
+    void Paciente::setFechaCreacion(time_t nuevaFecha) {
+    fechaCreacion = nuevaFecha;
+}
+
+    void Paciente::setFechaModificacion(time_t nuevaFecha) {
+        fechaModificacion = nuevaFecha;
+    }
 Paciente::~Paciente(){
 
 }

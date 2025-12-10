@@ -65,13 +65,16 @@ public:
     void setTelefono(const char* nuevoTelefono);
     void setEmail(const char* nuevoEmail);
     void setDisponible(bool nuevoDisponible);
-    void setPacienteID(int index, int pacienteID);
+    bool setPacienteID( int pacienteID);
     void setCantidadPacientes(int nuevaCantidad);
     void setCitaID(int index, int citaID);
     void setCantidadCitas(int nuevaCantidad);
     void setEliminado(bool nuevoEliminado);
     void setfechaCreacion(time_t nuevaFecha);
     void setfechaModificacion(time_t nuevaFecha);
+    void inicializarPaciente(int index); // pone pacientesIDs[index] = -1
+    void inicializarCita(int index); 
+    bool removerPaciente(int idPaciente);
 
     //Destructor
     ~Doctor();

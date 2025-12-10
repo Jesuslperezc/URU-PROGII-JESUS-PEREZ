@@ -24,8 +24,8 @@ void mostrarHistorialMedico(Paciente* paciente) {
         // Buscar consulta por ID en historiales
         Historial c = buscarRegistroPorID<Historial>("historiales.bin", paciente->getCitasIDs()[i]);
 
-        if (c.gethistorialID() != 0) {
-            std::cout << std::left << std::setw(6)  << c.gethistorialID()
+        if (c.getHistorialID() != 0) {
+            std::cout << std::left << std::setw(6)  << c.getHistorialID()
                       << std::setw(12) << c.getFecha()
                       << std::setw(10) << c.getHora()
                       << std::setw(30) << c.getDiagnostico()
@@ -48,7 +48,7 @@ bool obtenerUltimaConsulta(Paciente* paciente, Historial& salida){
     int ultimaConsultaID = paciente->getCitasIDs()[paciente->getCantidadConsultas() - 1];
     Historial consulta = buscarRegistroPorID<Historial>("historiales.bin", ultimaConsultaID);
 
-    if (consulta.gethistorialID() != 0) {
+    if (consulta.getHistorialID() != 0) {
         salida = consulta;
         return true;
     }
