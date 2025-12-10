@@ -1,6 +1,7 @@
-#include "hospital/Hospital.hpp"
+#include "Hospital/Hospital.hpp"
 #include "persistencia/GestionArchivos.hpp"
-#include "pacientes/operacionesPaciente.hpp"
+#include "Pacientes/operacionesPaciente.hpp"
+#include "Doctores/operacionDoctores.hpp"
 #include <iostream>
 
 
@@ -12,7 +13,7 @@ int main() {
     Hospital hospital;           // Se crea el objeto
     hospital.cargarHospital();   // Se carga la info real
 
-    mostrarMenuPacientes(&hospital); // Se pasa al menú
+   // Se pasa al menú
 
     return 0;
 }

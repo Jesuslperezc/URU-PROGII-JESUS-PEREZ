@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <cstring>
 #include <fstream>
+#include <limits>
 
 void mostrarHistorialMedico(Paciente* paciente) {
     std::cout << "=== Historial Médico del Paciente ID: " << paciente->getId() << " ===\n";
@@ -137,15 +138,13 @@ bool actualizarPaciente(int id){
     return true;    
 }
 
-Paciente crearPaciente(Hospital* hospital, const char* nombre,
-                       const char* apellido, const char* cedula,const char* alergias, int edad, char sexo) {
-
+Paciente crearPaciente(Hospital* hospital, const char* nombre,const char* apellido, const char* cedula,
+ const char* alergias, int edad, char sexo) {
 
     Paciente p{};
     p.setNombre(nombre);
     p.setApellido(apellido);
     p.setCedula(cedula);
-
     p.setEdad(edad);
     p.setSexo(toupper((unsigned char)sexo));
     p.setEliminado(false);
@@ -153,18 +152,23 @@ Paciente crearPaciente(Hospital* hospital, const char* nombre,
 
     p.setCantidadCitas(0);
     p.setPrimerConsultaID(-1);
-    p.setCantidadCitas(0);
     for (int i = 0; i < 20; i++) p.setCitasID(i, -1);
-    ArchivoHeader header; GestorArchivos gestor;
-    gestor.asegurarArchivo("pacientes.bin");
-    gestor.leerArchivoHeader("pacientes.bin",header);
-    int nuevoId = header.proximoID; // Guardamos el ID que se asignará a este paciente
 
+    ArchivoHeader header;
+    GestorArchivos gestor;
+    gestor.asegurarArchivo("pacientes.bin");
+    gestor.leerArchivoHeader("pacientes.bin", header);
+
+    int nuevoId = header.proximoID;
+    p.setId(nuevoId);
+
+    // Guardar paciente en archivo
     std::fstream archivo("pacientes.bin", std::ios::binary | std::ios::in | std::ios::out);
     archivo.seekp(calcularPosicion<Paciente>(header.cantidadRegistros), std::ios::beg);
     archivo.write(reinterpret_cast<const char*>(&p), sizeof(Paciente));
     archivo.close();
 
+    // Actualizar header
     header.cantidadRegistros++;
     header.registrosActivos++;
     header.proximoID++;
@@ -183,6 +187,29 @@ Paciente crearPaciente(Hospital* hospital, const char* nombre,
     return p;
 }
 
+bool eliminarPaciente(int id) {
+   std::fstream archivo("pacientes.bin", std::ios::binary | std::ios::in | std::ios::out);
+    if (!archivo.is_open()) return false;
+
+    ArchivoHeader header;
+    archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
+
+    Paciente p{};
+    for (int i = 0; i < header.cantidadRegistros; i++) {
+        archivo.seekg(sizeof(ArchivoHeader) + i * sizeof(Paciente));
+        archivo.read(reinterpret_cast<char*>(&p), sizeof(Paciente));
+        if (p.getId() == id && !p.isEliminado()) {
+            p.setEliminado(true);
+            archivo.seekp(sizeof(ArchivoHeader) + i * sizeof(Paciente));
+            archivo.write(reinterpret_cast<char*>(&p), sizeof(Paciente));
+            archivo.close();
+            std::cout << "Paciente eliminado.\n";
+            return true;
+        }
+    }
+    archivo.close();
+    return false;
+}
 using namespace std;
 
 // Prototipo de la función (puede ir en el .h)
@@ -196,42 +223,39 @@ Paciente crearPaciente(Hospital* hospital,
 
 // ===================================================================
 
+
 Paciente buscarPacientePorCedula(const char* nombreArchivo, const char* cedulaBuscada){
     std::fstream archivo(nombreArchivo, std::ios::binary | std::ios::in);
     if (!archivo.is_open()) {
-        std::cout << "Error al abrir el archivo: " << nombreArchivo << std::endl;
-        return Paciente{}; // Objeto vacío
+        std::cout << "No se pudo abrir el archivo de pacientes.\n";
+        return Paciente{};
     }
 
     ArchivoHeader header{};
     archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
-
-    if (!archivo) {
-        std::cout << "Error al leer el header de " << nombreArchivo << std::endl;
+    if (!archivo.good()) {
         archivo.close();
+        std::cout << "Error al leer el header del archivo de pacientes.\n";
         return Paciente{};
     }
 
-    Paciente registro{};
+    Paciente reg{};
     for (int i = 0; i < header.cantidadRegistros; ++i) {
-        archivo.seekg(sizeof(ArchivoHeader) + i * sizeof(Paciente), std::ios::beg);
-        archivo.read(reinterpret_cast<char*>(&registro), sizeof(Paciente));
+        archivo.seekg(calcularPosicion<Paciente>(i), std::ios::beg);
+        archivo.read(reinterpret_cast<char*>(&reg), sizeof(Paciente));
+        if (!archivo.good()) break;
 
-        if (!archivo) {
-            std::cout << "Error al leer el registro " << i << std::endl;
-            break;
-        }
-
-        if (!registro.isEliminado() && std::strcmp(registro.getCedula(), cedulaBuscada) == 0) {
+        if (!reg.isEliminado() && std::strcmp(reg.getCedula(), cedulaBuscada) == 0) {
             archivo.close();
-            std::cout << "Paciente encontrado: " << registro.getNombre() << " " << registro.getApellido() << "\n";
-            return registro;
+            std::cout << "Paciente encontrado: " << reg.getNombre() << " " << reg.getApellido() << "\n";
+            return reg;
         }
     }
 
     archivo.close();
-    std::cout << "Paciente con cedula " << cedulaBuscada << " no encontrado en " << nombreArchivo << std::endl;
-    return Paciente{};
+    std::cout << "Paciente con cedula " << cedulaBuscada << " no encontrado.\n";
+    return Paciente{}; // no encontrado
+
 }
 void mostrarMenuPacientes(Hospital* hospital) {
     int opPaciente = -1;
@@ -250,35 +274,37 @@ void mostrarMenuPacientes(Hospital* hospital) {
         cout << "0. Volver al menu principal\n";
         cout << "Seleccione una opcion: ";
         cin >> opPaciente;
-        cin.ignore(); // limpiar buffer
+         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
 
         switch (opPaciente) {
             case 1: {
                 cout << ">>> Registrar nuevo paciente...\n";
-
                 char nombre[50], apellido[50], cedula[20], alergias[100];
                 int edad;
                 char sexo;
 
                 cout << "Ingrese nombre: ";
                 cin.getline(nombre, sizeof(nombre));
+                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
 
                 cout << "Ingrese apellido: ";
                 cin.getline(apellido, sizeof(apellido));
+                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
 
                 cout << "Ingrese cedula: ";
                 cin.getline(cedula, sizeof(cedula));
+                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
 
                 cout << "Ingrese alergias: ";
                 cin.getline(alergias, sizeof(alergias));
+                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
 
                 cout << "Ingrese edad: ";
                 cin >> edad;
-                cin.ignore();
-
+                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
                 cout << "Ingrese sexo (M/F): ";
                 cin >> sexo;
-                cin.ignore();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
 
                 // Llamamos a tu función crearPaciente
                 Paciente nuevo = crearPaciente(hospital, nombre, apellido, cedula, alergias, edad, sexo);
@@ -288,8 +314,9 @@ void mostrarMenuPacientes(Hospital* hospital) {
                 cout << ">>> Buscar paciente por cedula...\n";
                 char cedula[20];
                 cout << "Ingrese cedula: ";
-                cin.ignore(); // limpiar buffer
+              // limpiar buffer
                 cin.getline(cedula, sizeof(cedula));
+                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
                 buscarPacientePorCedula("pacientes.bin", cedula);
                 break;
             case 3:
@@ -297,7 +324,7 @@ void mostrarMenuPacientes(Hospital* hospital) {
             
                 char nombre[50];
                 cout << "Ingrese nombre: ";
-                cin.ignore(); // limpiar buffer
+                // limpiar buffer
                 cin.getline(nombre, sizeof(nombre));
                 buscarPacientesPorNombre(nombre);
                 break;
@@ -332,7 +359,9 @@ void mostrarMenuPacientes(Hospital* hospital) {
                 cout << ">>> Eliminar paciente...\n";
                 cout << "Ingrese ID del paciente a eliminar: ";
                 cin >> pacienteID;
-                cin.ignore(); // limpiar buffer
+                cin.ignore();
+                eliminarPaciente(pacienteID);
+                break; // limpiar buffer
 
                 
                 break;

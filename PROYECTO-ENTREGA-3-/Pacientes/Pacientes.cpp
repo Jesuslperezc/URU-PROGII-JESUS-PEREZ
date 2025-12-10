@@ -5,76 +5,93 @@
     #include <fstream>
     #include <iostream>
 
-    Paciente::Paciente(){
-        memset(nombre, 0, sizeof(nombre));
-        memset(apellido, 0, sizeof(apellido));
-        memset(cedula, 0, sizeof(cedula));
-        memset(tipoSangre, 0, sizeof(tipoSangre));
-        memset(telefono, 0, sizeof(telefono));
-        memset(direccion, 0, sizeof(direccion));
-        memset(email, 0, sizeof(email));
-        memset(alergias, 0, sizeof(alergias));
-        memset(observaciones, 0, sizeof(observaciones));
-        id = 0;
-        edad = 0;
-        sexo = ' ';
-        activo = true;
-        cantidadConsultas = 0;
-        primerConsultaID = -1;
-        cantidadCitas = 0;
-        memset(citasIDs, -1, sizeof(citasIDs));
-        activo= true;
-        eliminado = false;
-        fechaCreacion = time(nullptr);
-        fechaModificacion = time(nullptr);
+   Paciente::Paciente() {
+    memset(nombre, 0, sizeof(nombre));
+    memset(apellido, 0, sizeof(apellido));
+    memset(cedula, 0, sizeof(cedula));
+    memset(tipoSangre, 0, sizeof(tipoSangre));
+    memset(telefono, 0, sizeof(telefono));
+    memset(direccion, 0, sizeof(direccion));
+    memset(email, 0, sizeof(email));
+    memset(alergias, 0, sizeof(alergias));
+    memset(observaciones, 0, sizeof(observaciones));
+
+    id = 0;
+    edad = 0;
+    sexo = ' ';
+    activo = true;
+
+    cantidadConsultas = 0;
+    primerConsultaID = -1;
+
+    cantidadCitas = 0;
+    memset(citasIDs, -1, sizeof(citasIDs));
+
+    eliminado = false;
+
+    fechaCreacion = time(nullptr);
+    fechaModificacion = time(nullptr);
+}
 
 
-    }
+   Paciente::Paciente(int id, const char* nombre, const char* apellido, const char* cedula,
+                   int edad, char sexo, const char* tipoSangre, const char* telefono, 
+                   const char* direccion, const char* email, const char* alergias, 
+                   const char* observaciones, int cantidadCitas, int* citasIDs)
+{
+    this->id = id;
 
-    Paciente::Paciente(  int id,const char* nombre, const char* apellido, const char* cedula,
-        int edad, char sexo, const char* tipoSangre,const char* telefono, const char* direccion,
-        const char* email, const char* alergias, const char* observaciones, int cantidadCitas, int* citasIDs){
-    
-            this->id = id;
-            std:: strncpy(this->nombre, nombre, sizeof(this->nombre) - 1);
-            std:: strncpy(this->apellido, apellido, sizeof(this->apellido) - 1);
-            std:: strncpy(this->cedula, cedula, sizeof(this->cedula) - 1);
-            this->edad = edad;
-            this->sexo = sexo;
-            std:: strncpy(this->tipoSangre, tipoSangre, sizeof(this->tipoSangre) - 1);
-            std:: strncpy(this->telefono, telefono, sizeof(this->telefono) - 1);
-            std:: strncpy(this->direccion, direccion, sizeof(this->direccion) - 1);
-            std:: strncpy(this->email, email, sizeof(this->email) - 1);
-            std:: strncpy(this->alergias, alergias, sizeof(this->alergias) - 1);
-            std:: strncpy(this->observaciones, observaciones, sizeof(this->observaciones) - 1);
-            activo = true;
-            cantidadConsultas = 0;
-            primerConsultaID = -1;
-    
-            // Validate and store cantidadCitas (ensure it fits the internal array of 20)
-            if (cantidadCitas < 0) {
-                cantidadCitas = 0;
-            }
-            if (cantidadCitas > 20) {
-                cantidadCitas = 20;
-            }
-            this->cantidadCitas = cantidadCitas;
-    
-            // Initialize member citasIDs to -1 and copy provided IDs if any
-            for (int i = 0; i < 20; ++i) {
-                this->citasIDs[i] = -1;
-            }
-            if (citasIDs != nullptr) {
-                for (int i = 0; i < this->cantidadCitas; ++i) {
-                    this->citasIDs[i] = citasIDs[i];
-                }
-            }
-    
-            eliminado = false;
-            fechaCreacion = time(nullptr);
-            fechaModificacion = time(nullptr);
-    
-        }
+    std::strncpy(this->nombre, nombre, sizeof(this->nombre) - 1);
+    this->nombre[sizeof(this->nombre) - 1] = '\0';
+
+    std::strncpy(this->apellido, apellido, sizeof(this->apellido) - 1);
+    this->apellido[sizeof(this->apellido) - 1] = '\0';
+
+    std::strncpy(this->cedula, cedula, sizeof(this->cedula) - 1);
+    this->cedula[sizeof(this->cedula) - 1] = '\0';
+
+    this->edad = edad;
+    this->sexo = sexo;
+
+    std::strncpy(this->tipoSangre, tipoSangre, sizeof(this->tipoSangre) - 1);
+    this->tipoSangre[sizeof(this->tipoSangre) - 1] = '\0';
+
+    std::strncpy(this->telefono, telefono, sizeof(this->telefono) - 1);
+    this->telefono[sizeof(this->telefono) - 1] = '\0';
+
+    std::strncpy(this->direccion, direccion, sizeof(this->direccion) - 1);
+    this->direccion[sizeof(this->direccion) - 1] = '\0';
+
+    std::strncpy(this->email, email, sizeof(this->email) - 1);
+    this->email[sizeof(this->email) - 1] = '\0';
+
+    std::strncpy(this->alergias, alergias, sizeof(this->alergias) - 1);
+    this->alergias[sizeof(this->alergias) - 1] = '\0';
+
+    std::strncpy(this->observaciones, observaciones, sizeof(this->observaciones) - 1);
+    this->observaciones[sizeof(this->observaciones) - 1] = '\0';
+
+    activo = true;
+
+    cantidadConsultas = 0;
+    primerConsultaID = -1;
+
+    if (cantidadCitas < 0) cantidadCitas = 0;
+    if (cantidadCitas > 20) cantidadCitas = 20;
+
+    this->cantidadCitas = cantidadCitas;
+
+    for (int i = 0; i < 20; ++i)
+        this->citasIDs[i] = -1;
+
+    if (citasIDs != nullptr)
+        for (int i = 0; i < this->cantidadCitas; ++i)
+            this->citasIDs[i] = citasIDs[i];
+
+    eliminado = false;
+    fechaCreacion = time(nullptr);
+    fechaModificacion = time(nullptr);
+}
 
     
 
@@ -235,7 +252,15 @@ void Paciente::setApellido(const char* nuevoApellido) {
         }
         this->cantidadConsultas = nuevaCantidadConsultas;
         fechaModificacion = time(nullptr);
-        }   
+        }  
+        
+    void Paciente::setId(int nuevoId){
+        this->id = nuevoId;
+        fechaModificacion = time(nullptr);
+        
+    }
+Paciente::~Paciente(){
 
+}
 
        

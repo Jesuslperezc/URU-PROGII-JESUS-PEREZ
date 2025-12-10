@@ -42,7 +42,7 @@ Hospital::Hospital(const char* nombre, const char* direccion, const char* telefo
     totalConsultasRealizadas = 0;
 }
 
-bool guardarHospital(const Hospital& hospital) {
+bool Hospital::guardarHospital(const Hospital& hospital) {
  escribirRegistro<Hospital>("hospital.bin", hospital, 0);
     return true;
 }
@@ -78,3 +78,7 @@ bool Hospital::cargarHospital() {
     std::cout << "Datos del hospital cargados correctamente: " << getNombre() << "\n";
     return true;
 }
+Hospital::~Hospital() {
+
+    // No hay recursos dinámicos que liberar
+}   

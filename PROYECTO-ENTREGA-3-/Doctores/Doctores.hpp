@@ -30,9 +30,11 @@ private:
 public:
     //Constructor
     Doctor();
-    Doctor( int id, const char* nombre, const char* apellido, const char* cedulaProfesional,
-    const char* especialidad, int aniosExperiencia, float costoConsulta, const char* horarioAtencion,
-    const char* telefono, const char* email, bool disponible);
+    
+    Doctor(int id, const char* nombre, const char* apellido, const char* cedulaProfesional,
+               const char* especialidad, int aniosExperiencia, float costoConsulta,
+               const char* horarioAtencion, const char* telefono, const char* email,
+               bool disponible);
    // Getters
     int getId() const { return id; }
     const char* getNombre() const { return nombre; }
@@ -45,7 +47,11 @@ public:
     const char* getTelefono() const { return telefono; }
     const char* getEmail() const { return email; }
     bool getDisponible() const { return disponible; }
-
+    bool isEliminado() const { return eliminado; }
+    int getPacienteID(int index) const { return pacientesIDs[index]; }
+    int getCantidadPacientes() const { return cantidadPacientes; }
+    int getCitaID(int index) const { return citasIDs[index]; }
+    int getCantidadCitas() const { return cantidadCitas; }
     //Setters
     // Setters
     void setId(int nuevoId);
@@ -59,6 +65,13 @@ public:
     void setTelefono(const char* nuevoTelefono);
     void setEmail(const char* nuevoEmail);
     void setDisponible(bool nuevoDisponible);
+    void setPacienteID(int index, int pacienteID);
+    void setCantidadPacientes(int nuevaCantidad);
+    void setCitaID(int index, int citaID);
+    void setCantidadCitas(int nuevaCantidad);
+    void setEliminado(bool nuevoEliminado);
+    void setfechaCreacion(time_t nuevaFecha);
+    void setfechaModificacion(time_t nuevaFecha);
 
     //Destructor
     ~Doctor();

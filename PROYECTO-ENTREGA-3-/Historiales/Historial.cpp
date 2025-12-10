@@ -10,9 +10,12 @@
 // Constructor por defecto
 Historial::Historial() {
     std::memset(fecha, 0, sizeof(fecha));
-    std::strncpy(fecha, "0000-00-00", sizeof(fecha) - 1);
+    std::strncpy(fecha, "0000-00-00", sizeof(fecha));
+    fecha[sizeof(fecha)-1] = '\0';
     std::memset(hora, 0, sizeof(hora));
-    std::strncpy(hora, "00:00", sizeof(hora) - 1);
+    std::strncpy(hora, "00:00", sizeof(hora));
+    hora[sizeof(hora)-1] = '\0';
+
     std::memset(diagnostico, 0, sizeof(diagnostico));
     std::strncpy(diagnostico, "", sizeof(diagnostico) - 1);
     std::memset(tratamiento, 0, sizeof(tratamiento));
@@ -27,8 +30,10 @@ Historial::Historial() {
     eliminado = false;
     fechaRegistro = std::time(nullptr);
 }
+
  Historial::Historial( int id,int siguienteConsultaID,int pacienteID, int doctorID, const char* fecha, const char* hora,
     const char* diagnostico, const char* tratamiento, const char* medicamentos, float costo){
+    (void)id; // Ignorar el parámetro id al crear un nuevo Historial
 
     std::strncpy(this->fecha, fecha, sizeof(this->fecha) - 1);
     this->fecha[sizeof(this->fecha) - 1] = '\0';
@@ -69,4 +74,7 @@ Historial::Historial() {
 
     void Historial::setMedicamentos(const char* nuevosMedicamentos) {std::strncpy(medicamentos, nuevosMedicamentos, sizeof(medicamentos) - 1);
     medicamentos[sizeof(medicamentos) - 1] = '\0';
+    }
+    Historial::~Historial() {
+
     }

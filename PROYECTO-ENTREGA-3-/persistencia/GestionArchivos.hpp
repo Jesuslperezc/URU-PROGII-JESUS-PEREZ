@@ -25,7 +25,6 @@ bool actualizarHeader(const char* nombreArchivo, ArchivoHeader header);
 bool asegurarArchivo(const char* nombreArchivo);
 void verificarArchivos();
 bool guardarPaciente(const Paciente& paciente);
-bool guardarHospital(const Hospital& hospital);
 bool cargarHospital();
 bool guardarCita(const Cita& cita);
 bool guardarHistorial(const Historial& historial);
@@ -34,6 +33,12 @@ void mostrarEstadisticasArchivos();
 void hacerRespaldo();
 void restaurarRespaldo();
 bool compararCaseInsensitive(const char* a, const char* b);
+bool validarCedula(const char* cedula);
+bool validarNombreSinEspacios(const char* nombre);
+bool validarEdad(int edad);
+bool validarSexoChar(char sexo);
+
+
 
 };
 

@@ -83,7 +83,7 @@ public:
     int setCantidadCitas(int nuevaCantidadCitas);
     void setCitasID(int index, int citaID);
     void setCantidadConsultas(int nuevaCantidadConsultas);
-
+    void setId(int nuevoId);
 
 
     //Destructor

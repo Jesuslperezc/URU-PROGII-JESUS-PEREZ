@@ -42,7 +42,7 @@ public:
     const char* getObservaciones() const { return observaciones; }
     bool getAtendida() const { return atendida; }
     int getConsultaID() const { return consultaID; }
-    bool getEliminado() const { return eliminado; }
+    bool isEliminado() const { return eliminado; }
     time_t getFechaCreacion() const { return fechaCreacion; }
     time_t getFechaModificacion() const { return fechaModificacion; }
 

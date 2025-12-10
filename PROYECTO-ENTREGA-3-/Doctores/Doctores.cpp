@@ -7,6 +7,7 @@
 
 // Constructor por defecto
 Doctor::Doctor() {
+    // Limpiar cadenas
     memset(nombre, 0, sizeof(nombre));
     memset(apellido, 0, sizeof(apellido));
     memset(cedulaProfesional, 0, sizeof(cedulaProfesional));
@@ -15,22 +16,40 @@ Doctor::Doctor() {
     memset(telefono, 0, sizeof(telefono));
     memset(email, 0, sizeof(email));
 
+    // Valores base
     id = 0;
     aniosExperiencia = 0;
     costoConsulta = 0.0f;
     disponible = false;
+
+    cantidadPacientes = 0;
+    cantidadCitas = 0;
+
+    // Inicializar arrays de IDs a -1
+    for (int i = 0; i < 50; i++)
+        pacientesIDs[i] = -1;
+
+    for (int i = 0; i < 30; i++)
+        citasIDs[i] = -1;
+
+    // Metadata
+    eliminado = false;
+    fechaCreacion = time(nullptr);
+    fechaModificacion = time(nullptr);
 }
 
-// Constructor parametrizado
+
 Doctor::Doctor(int id, const char* nombre, const char* apellido, const char* cedulaProfesional,
                const char* especialidad, int aniosExperiencia, float costoConsulta,
                const char* horarioAtencion, const char* telefono, const char* email,
-               bool disponible) {
+               bool disponible)
+{
     this->id = id;
     this->aniosExperiencia = aniosExperiencia;
     this->costoConsulta = costoConsulta;
     this->disponible = disponible;
 
+    // Copia segura de cadenas
     std::strncpy(this->nombre, nombre, sizeof(this->nombre) - 1);
     this->nombre[sizeof(this->nombre) - 1] = '\0';
 
@@ -51,6 +70,21 @@ Doctor::Doctor(int id, const char* nombre, const char* apellido, const char* ced
 
     std::strncpy(this->email, email, sizeof(this->email) - 1);
     this->email[sizeof(this->email) - 1] = '\0';
+
+
+
+
+    cantidadPacientes = 0;
+    cantidadCitas = 0;
+
+    // Limpia arrays de IDs
+    for (int i = 0; i < 50; i++) pacientesIDs[i] = -1;
+    for (int i = 0; i < 30; i++) citasIDs[i] = -1;
+
+    // Metadata
+    eliminado = false;
+    fechaCreacion = time(nullptr);
+    fechaModificacion = time(nullptr);
 }
 
 // Setters
@@ -103,4 +137,37 @@ void Doctor::setEmail(const char* nuevoEmail) {
 
 void Doctor::setDisponible(bool nuevoDisponible) {
     disponible = nuevoDisponible;
+}
+
+void Doctor::setCantidadPacientes(int nuevaCantidad) {
+    this->cantidadPacientes = nuevaCantidad;
+}
+
+void Doctor::setCitaID(int index, int citaID) {
+    if (index >= 0) {
+        this->citasIDs[index] = citaID;
+    }
+}
+
+void Doctor::setCantidadCitas(int nuevaCantidad) {
+    this->cantidadCitas = nuevaCantidad;
+}
+void Doctor::setPacienteID(int index, int pacienteID) {
+    if (index >= 0) {
+        this->pacientesIDs[index] = pacienteID;
+    }
+}
+void Doctor::setEliminado(bool nuevoEliminado) {
+    eliminado = nuevoEliminado;
+}
+
+void Doctor::setfechaCreacion(time_t nuevaFecha) {
+    fechaCreacion = nuevaFecha;
+}
+
+void Doctor::setfechaModificacion(time_t nuevaFecha) {
+    fechaModificacion = nuevaFecha;
+}
+Doctor::~Doctor() {
+    // No se requiere limpieza especial por uso de arrays fijos
 }

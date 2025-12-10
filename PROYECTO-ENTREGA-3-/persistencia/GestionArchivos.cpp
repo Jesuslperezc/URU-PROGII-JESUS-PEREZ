@@ -290,4 +290,52 @@ bool GestorArchivos::compararCaseInsensitive(const char* a, const char* b) {
     }
     return *a == *b;
 }
-    
+bool GestorArchivos::validarCedula(const char* cedula){
+    if (cedula == nullptr) return false;
+    if (cedula[0] == '\0') return false;
+    size_t len = strlen(cedula);
+    if (len > 19) { // deja espacio para el terminador
+        cout << "Excede el limite de caracteres para cédula.\n";
+        return false;
+    }
+    // Solo dígitos
+    for (size_t i = 0; i < len; ++i) {
+        if (!isdigit((unsigned char)cedula[i])) {
+            cout << "La cédula debe contener solo números.\n";
+            return false;
+        }
+    }
+    return true;
+}
+
+bool GestorArchivos::validarNombreSinEspacios(const char* nombre) {
+    if (nombre == nullptr) return false;
+    if (nombre[0] == '\0') return false;
+    // No permitir espacios en blanco
+    for (size_t i = 0; i < strlen(nombre); ++i) {
+        if (isspace((unsigned char)nombre[i])) {
+            cout << "El nombre/apellido no debe contener espacios.\n";
+            return false;
+        }
+    }
+    return true;
+}
+
+bool GestorArchivos::validarEdad(int edad) {
+    if (edad < 0) {
+        cout << "La edad no puede ser negativa.\n";
+        return false;
+    }
+    if (edad > 120) {
+        cout << "La edad supera el límite razonable (120).\n";
+        return false;
+    }
+    return true;
+}
+
+bool GestorArchivos::validarSexoChar(char sexo) {
+    char s = toupper((unsigned char)sexo);
+    if (s == 'M' || s == 'F') return true;
+    cout << "Sexo inválido. Use M o F.\n";
+    return false;
+}
