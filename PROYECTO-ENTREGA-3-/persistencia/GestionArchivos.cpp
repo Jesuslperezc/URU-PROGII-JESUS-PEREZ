@@ -345,11 +345,11 @@ void mostrarMenuMantenimiento() {
                 break;
 
             case 6:
-                Formato::mensaje("\nSaliendo del menú de mantenimiento...\n", Formato::AMARILLO);
+                Formato::mensaje("\nSaliendo del menu de mantenimiento...\n", Formato::AMARILLO);
                 break;
 
             default:
-                Formato::mensaje("\nOpción inválida. Intente nuevamente.\n", Formato::ROJO);
+                Formato::mensaje("\nOpcion invalida. Intente nuevamente.\n", Formato::ROJO);
         }
 
         if (subop != 6) {

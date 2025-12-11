@@ -154,7 +154,7 @@ Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
         int idxDoctor = encontrarIndicePorID<Doctor>("doctores.bin", idDoctor);
         escribirRegistro<Doctor>("doctores.bin", doctor, idxDoctor);
     } else {
-        Formato::mensaje("Aviso: doctor ya alcanzó máximo de citas, no se guardó en doctor.\n", Formato::AMARILLO);
+        Formato::mensaje("Aviso: doctor ya alcanzO máximo de citas, no se guardó en doctor.\n", Formato::AMARILLO);
     }
 
     return nuevaCita;
@@ -459,7 +459,7 @@ void mostrarMenuCitas(Hospital* hospital) {
                 break;
 
             default:
-                Formato::mensaje("Opción inválida.", Formato::ROJO);
+                Formato::mensaje("Opción invAlida.", Formato::ROJO);
                 pausarPantalla();
         }
 

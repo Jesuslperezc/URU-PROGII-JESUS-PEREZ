@@ -50,7 +50,7 @@ int main() {
                 break;
 
             default:
-                Formato::mensaje("Opción inválida. Intente nuevamente.", Formato::ROJO);
+                Formato::mensaje("Opcion invalida. Intente nuevamente.", Formato::ROJO);
                 std::cin.get();
         }
 

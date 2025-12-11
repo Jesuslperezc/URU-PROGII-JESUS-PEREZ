@@ -16,7 +16,7 @@ void mostrarHistorialMedico(Paciente* paciente) {
     asegurarArchivo("historiales.bin");
 
     // Encabezado del historial
-    Formato::encabezadoTabla("Historial Médico del Paciente ID: " 
+    Formato::encabezadoTabla("Historial Medico del Paciente ID: " 
                               + std::to_string(paciente->getId()) 
                               + " (" + paciente->getNombre() + ")");
 
