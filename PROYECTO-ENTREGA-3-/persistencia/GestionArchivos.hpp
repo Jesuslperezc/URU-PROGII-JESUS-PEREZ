@@ -18,27 +18,25 @@ private:
 bool inicializarArchivo(const char* nombreArchivo);
 
 public:
-bool verificarArchivo(const char* nombreArchivo);
+
 // Lee el header desde el archivo; devuelve true si tuvo éxito y llena 'header'.
 bool leerArchivoHeader(const char* nombreArchivo, ArchivoHeader& header);
 bool actualizarHeader(const char* nombreArchivo, ArchivoHeader header);
-bool asegurarArchivo(const char* nombreArchivo);
-void verificarArchivos();
+
 bool guardarPaciente(const Paciente& paciente);
 bool cargarHospital();
 bool guardarCita(const Cita& cita);
 bool guardarHistorial(const Historial& historial);
 bool guardarDoctores (const Doctor& doctor);
-void mostrarEstadisticasArchivos();
-void hacerRespaldo();
-void restaurarRespaldo();
-bool compararCaseInsensitive(const char* a, const char* b);
-bool validarCedula(const char* cedula);
-bool validarNombreSinEspacios(const char* nombre);
-bool validarEdad(int edad);
-bool validarSexoChar(char sexo);
-bool validarFormatoHora(const char* hora);
-bool validarFormatoFecha(const char* fecha);
+
+
 };
 
+bool verificarArchivo(const char* nombreArchivo);
+void hacerRespaldo();
+void restaurarRespaldo();
+bool asegurarArchivo(const char* nombreArchivo);
+void verificarArchivos();
+void mostrarEstadisticasArchivos();
+void mostrarMenuMantenimiento();
 #endif // GESTIONARCHIVOS_HPP

@@ -2,6 +2,8 @@
 #include "Pacientes.hpp"
 #include "../persistencia/GestionArchivos.hpp"
 #include "../utilidades/utilidad.hpp"
+#include "../utilidades/formato.hpp"
+#include "../utilidades/validaciones.hpp"
 #include <iostream>
 #include <iomanip>
 #include <cstring>
@@ -9,36 +11,64 @@
 #include <limits>
 
 void mostrarHistorialMedico(Paciente* paciente) {
-    std::cout << "=== Historial Médico del Paciente ID: " << paciente->getId() << " ===\n";
-    std::cout << std::left << std::setw(6)  << "ID"
-         << std::setw(12) << "Fecha"
-         << std::setw(10) << "Hora"
-         << std::setw(30) << "Diagnostico"
-         << std::setw(30) << "Tratamiento"
-         << std::setw(30) << "Medicamentos"
-         << std::setw(8)  << "DocID"
-         << std::setw(10) << "Costo" << "\n";
+    if (!paciente) return;
+
+    asegurarArchivo("historiales.bin");
+
+    // Encabezado del historial
+    Formato::encabezadoTabla("Historial Médico del Paciente ID: " 
+                              + std::to_string(paciente->getId()) 
+                              + " (" + paciente->getNombre() + ")");
+
+    // Encabezado de la tabla
+    std::cout << Formato::NEGRITA
+              << std::left << std::setw(6)  << "ID"
+              << std::setw(12) << "Fecha"
+              << std::setw(10) << "Hora"
+              << std::setw(30) << "Diagnostico"
+              << std::setw(30) << "Tratamiento"
+              << std::setw(30) << "Medicamentos"
+              << std::setw(8)  << "DocID"
+              << std::setw(10) << "Costo" << Formato::RESET << "\n";
+
     std::cout << std::string(140, '-') << "\n";
 
-    for (int i = 0; i < paciente->getCantidadConsultas(); i++) {
-        // Buscar consulta por ID en historiales
-        Historial c = buscarRegistroPorID<Historial>("historiales.bin", paciente->getCitasIDs()[i]);
+    int consultasMostradas = 0;
+    int* citas = paciente->getCitasIDs();
 
-        if (c.getHistorialID() != 0) {
-            std::cout << std::left << std::setw(6)  << c.getHistorialID()
-                      << std::setw(12) << c.getFecha()
-                      << std::setw(10) << c.getHora()
-                      << std::setw(30) << c.getDiagnostico()
-                      << std::setw(30) << c.getTratamiento()
-                      << std::setw(30) << c.getMedicamentos()
-                      << std::setw(8)  << c.getDoctorID()
-                      << std::setw(10) << c.getCosto() << "\n";
-        }
+    for (int i = 0; i < paciente->getCantidadCitas(); i++) {
+        int idCita = citas[i];
+        if (idCita <= 0) continue;
+
+        Cita cita = buscarRegistroPorID<Cita>("citas.bin", idCita);
+        if (cita.getId() == 0 || cita.getConsultaID() <= 0) continue;
+
+        Historial h = buscarRegistroPorID<Historial>("historiales.bin", cita.getConsultaID());
+        if (h.getHistorialID() == 0) continue;
+
+        // Colores según estado: atendido en verde
+        std::cout << Formato::VERDE
+                  << std::left << std::setw(6)  << h.getHistorialID()
+                  << std::setw(12) << h.getFecha()
+                  << std::setw(10) << h.getHora()
+                  << std::setw(30) << h.getDiagnostico()
+                  << std::setw(30) << h.getTratamiento()
+                  << std::setw(30) << h.getMedicamentos()
+                  << std::setw(8)  << h.getDoctorID()
+                  << std::setw(10) << h.getCosto() << Formato::RESET << "\n";
+
+        consultasMostradas++;
     }
 
+    if (consultasMostradas == 0)
+        Formato::mensaje("No hay historial médico registrado para este paciente.", Formato::AMARILLO);
+
     std::cout << std::string(140, '-') << "\n";
-    std::cout << "Total consultas: " << paciente->getCantidadConsultas() << "\n";
+    std::cout << Formato::NEGRITA << "Total consultas atendidas: " 
+              << consultasMostradas << Formato::RESET << "\n";
 }
+
+
 bool obtenerUltimaConsulta(Paciente* paciente, Historial& salida){
 
     if (paciente->getCantidadConsultas() == 0) {
@@ -60,7 +90,7 @@ void buscarPacientesPorNombre(const char* nombreBuscado) {
     GestorArchivos gestor;
 
     if (!gestor.leerArchivoHeader("pacientes.bin", header)) {
-        std::cout << "No se pudo leer el archivo de pacientes.\n";
+       Formato::mensaje("Error al leer el archivo de pacientes.", Formato::ROJO);
         return;
     }
 
@@ -68,7 +98,7 @@ void buscarPacientesPorNombre(const char* nombreBuscado) {
 
     for (int i = 0; i < header.cantidadRegistros; ++i) {
         Paciente p = leerRegistro<Paciente>("pacientes.bin", i);
-        if (!p.isEliminado() && gestor.compararCaseInsensitive(p.getNombre(), nombreBuscado)) {
+        if (!p.isEliminado() && compararCaseInsensitive(p.getNombre(), nombreBuscado)) {
             std::cout << "Paciente encontrado: "
                       << p.getNombre() << " " << p.getApellido()
                       << " | Cedula: " << p.getCedula() << std::endl;
@@ -77,66 +107,64 @@ void buscarPacientesPorNombre(const char* nombreBuscado) {
     }
 
     if (coincidencias == 0) {
-        std::cout << "No se encontraron pacientes con el nombre: " << nombreBuscado << std::endl;
+        Formato::mensaje("No se encontraron pacientes con el nombre especificado.", Formato::ROJO);
     } else {
         std::cout << "Coincidencias encontradas: " << coincidencias << std::endl;
     }
 }
-bool actualizarPaciente(int id){
+bool actualizarPaciente(int id) {
     int indice = encontrarIndicePorID<Paciente>("pacientes.bin", id);
     if (indice == -1) {
-        std::cout << "Paciente con ID " << id << " no encontrado.\n";
+        Formato::mensaje("Paciente con ID " + std::to_string(id) + " no encontrado.", Formato::ROJO);
         return false;
     }
 
     Paciente paciente = leerRegistro<Paciente>("pacientes.bin", indice);
 
-    std::cout << "Actualizando datos del paciente ID: " << paciente.getId() << "\n";
+    Formato::titulo("Actualizando datos del paciente ID: " + std::to_string(paciente.getId()));
 
     char buffer[100];
 
-    std::cout << "Nombre actual (" << paciente.getNombre() << "), ingrese nuevo o ENTER para mantener: ";
+    std::cout << Formato::SUBRAYADO << "Nombre actual (" << paciente.getNombre() << ")" 
+              << Formato::RESET << ", ingrese nuevo o ENTER para mantener: ";
     std::cin.getline(buffer, sizeof(buffer));
-    if (strlen(buffer) > 0) {
-        paciente.setNombre(buffer);
-    }
+    if (strlen(buffer) > 0) paciente.setNombre(buffer);
 
-    std::cout << "Apellido actual (" << paciente.getApellido() << "), ingrese nuevo o ENTER para mantener: ";
+    std::cout << Formato::SUBRAYADO << "Apellido actual (" << paciente.getApellido() << ")" 
+              << Formato::RESET << ", ingrese nuevo o ENTER para mantener: ";
     std::cin.getline(buffer, sizeof(buffer));
-    if (strlen(buffer) > 0) {
-        paciente.setApellido(buffer);
-    }
-    std::cout << "Cedula actual (" << paciente.getCedula() << "), ingrese nuevo o ENTER para mantener: ";
-    std::cin.getline(buffer, sizeof(buffer));
-    if (strlen(buffer) > 0) {
-        paciente.setCedula(buffer);
-    }
-    std::cout << "Edad actual (" << paciente.getEdad() << "), ingrese nuevo o ENTER para mantener: ";
-    std::cin.getline(buffer, sizeof(buffer));
-    if (strlen(buffer) > 0) {
-        paciente.setEdad(std::stoi(buffer));
-    }
-    std::cout << "Sexo actual (" << paciente.getSexo() << "), ingrese nuevo o ENTER para mantener: ";
-    std::cin.getline(buffer, sizeof(buffer));
-    if (strlen(buffer) > 0) {
-        paciente.setSexo(buffer[0]);
-    }
-    std::cout << "Tipo de sangre actual (" << paciente.getTipoSangre() << "), ingrese nuevo o ENTER para mantener: ";
-    std::cin.getline(buffer, sizeof(buffer));
-    if (strlen(buffer) > 0) {
-        paciente.setTipoSangre(buffer);
-    }
+    if (strlen(buffer) > 0) paciente.setApellido(buffer);
 
-    // Aquí se pueden agregar más campos según sea necesario
+    std::cout << Formato::SUBRAYADO << "Cedula actual (" << paciente.getCedula() << ")" 
+              << Formato::RESET << ", ingrese nuevo o ENTER para mantener: ";
+    std::cin.getline(buffer, sizeof(buffer));
+    if (strlen(buffer) > 0) paciente.setCedula(buffer);
 
+    std::cout << Formato::SUBRAYADO << "Edad actual (" << paciente.getEdad() << ")" 
+              << Formato::RESET << ", ingrese nuevo o ENTER para mantener: ";
+    std::cin.getline(buffer, sizeof(buffer));
+    if (strlen(buffer) > 0) paciente.setEdad(std::stoi(buffer));
+
+    std::cout << Formato::SUBRAYADO << "Sexo actual (" << paciente.getSexo() << ")" 
+              << Formato::RESET << ", ingrese nuevo o ENTER para mantener: ";
+    std::cin.getline(buffer, sizeof(buffer));
+    if (strlen(buffer) > 0) paciente.setSexo(buffer[0]);
+
+    std::cout << Formato::SUBRAYADO << "Tipo de sangre actual (" << paciente.getTipoSangre() << ")" 
+              << Formato::RESET << ", ingrese nuevo o ENTER para mantener: ";
+    std::cin.getline(buffer, sizeof(buffer));
+    if (strlen(buffer) > 0) paciente.setTipoSangre(buffer);
+
+    // Escribir cambios en archivo
     if (!escribirRegistro<Paciente>("pacientes.bin", paciente, indice)) {
-        std::cout << "Error al actualizar el paciente en el archivo.\n";
+        Formato::mensaje("Error al actualizar el paciente en el archivo.", Formato::ROJO);
         return false;
     }
 
-    std::cout << "Paciente actualizado exitosamente.\n";
+    Formato::mensaje("Paciente actualizado exitosamente.", Formato::VERDE);
     return true;    
 }
+
 
 Paciente crearPaciente(Hospital* hospital, const char* nombre,const char* apellido, const char* cedula,
  const char* alergias, int edad, char sexo) {
@@ -156,7 +184,7 @@ Paciente crearPaciente(Hospital* hospital, const char* nombre,const char* apelli
 
     ArchivoHeader header;
     GestorArchivos gestor;
-    gestor.asegurarArchivo("pacientes.bin");
+    asegurarArchivo("pacientes.bin");
     gestor.leerArchivoHeader("pacientes.bin", header);
 
     int nuevoId = header.proximoID;
@@ -188,10 +216,11 @@ Paciente crearPaciente(Hospital* hospital, const char* nombre,const char* apelli
 }
 
 bool eliminarPaciente(int id) {
-   std::fstream archivo("pacientes.bin", std::ios::binary | std::ios::in | std::ios::out);
-    if (!archivo.is_open()) return false;
 
     ArchivoHeader header;
+    std::fstream archivo("pacientes.bin", std::ios::binary | std::ios::in | std::ios::out);
+    if (!archivo.is_open()) return false;
+
     archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
 
     Paciente p{};
@@ -199,17 +228,28 @@ bool eliminarPaciente(int id) {
         archivo.seekg(sizeof(ArchivoHeader) + i * sizeof(Paciente));
         archivo.read(reinterpret_cast<char*>(&p), sizeof(Paciente));
         if (p.getId() == id && !p.isEliminado()) {
+            // Marcar paciente como eliminado
             p.setEliminado(true);
+
+            // Eliminar todas sus citas
+            int* citas = p.getCitasIDs();
+            for (int j = 0; j < p.getCantidadCitas(); j++) {
+                int idCita = citas[j];
+                if (idCita <= 0) continue;
+                p.eliminarCitaID(idCita); // función de abajo
+            }
+
             archivo.seekp(sizeof(ArchivoHeader) + i * sizeof(Paciente));
             archivo.write(reinterpret_cast<char*>(&p), sizeof(Paciente));
             archivo.close();
-            std::cout << "Paciente eliminado.\n";
+            Formato::mensaje("Paciente con ID " + std::to_string(id) + " eliminado exitosamente.", Formato::VERDE);
             return true;
         }
     }
     archivo.close();
     return false;
 }
+
 using namespace std;
 
 // Prototipo de la función (puede ir en el .h)
@@ -257,119 +297,165 @@ Paciente buscarPacientePorCedula(const char* nombreArchivo, const char* cedulaBu
     return Paciente{}; // no encontrado
 
 }
+
+
 void mostrarMenuPacientes(Hospital* hospital) {
     int opPaciente = -1;
 
     do {
-        cout << "\n=======================================\n";
-        cout << "||        GESTION DE PACIENTES        ||\n";
-        cout << "=======================================\n";
-        cout << "1. Registrar nuevo paciente\n";
-        cout << "2. Buscar paciente por cedula\n";
-        cout << "3. Buscar paciente por nombre\n";
-        cout << "4. Ver historial medico completo\n";
-        cout << "5. Actualizar datos del paciente\n";
-        cout << "6. Listar todos los pacientes\n";
-        cout << "7. Eliminar paciente\n";
-        cout << "0. Volver al menu principal\n";
-        cout << "Seleccione una opcion: ";
-        cin >> opPaciente;
-         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
+        system("cls");
+
+        // Título
+        Formato::titulo("GESTION DE PACIENTES", '=');
+
+        // Opciones del menú
+        Formato::mensaje("1. Registrar nuevo paciente", Formato::CYAN);
+        Formato::mensaje("2. Buscar paciente por cedula", Formato::CYAN);
+        Formato::mensaje("3. Buscar paciente por nombre", Formato::CYAN);
+        Formato::mensaje("4. Ver historial medico completo", Formato::CYAN);
+        Formato::mensaje("5. Actualizar datos del paciente", Formato::CYAN);
+        Formato::mensaje("6. Listar todos los pacientes", Formato::CYAN);
+        Formato::mensaje("7. Eliminar paciente", Formato::CYAN);
+        Formato::mensaje("0. Volver al menu principal", Formato::CYAN);
+
+        Formato::mensaje("Seleccione una opcion: ", Formato::AMARILLO);
+        std::cin >> opPaciente;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
         switch (opPaciente) {
+
+            // ---------------------------------------------------------
             case 1: {
-                cout << ">>> Registrar nuevo paciente...\n";
+                Formato::mensaje(">>> Registrar nuevo paciente...", Formato::VERDE);
+
                 char nombre[50], apellido[50], cedula[20], alergias[100];
                 int edad;
                 char sexo;
 
-                cout << "Ingrese nombre: ";
-                cin.getline(nombre, sizeof(nombre));
-                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
+                Formato::mensaje("Ingrese nombre: ", Formato::AMARILLO);
+                std::cin.getline(nombre, sizeof(nombre));
 
-                cout << "Ingrese apellido: ";
-                cin.getline(apellido, sizeof(apellido));
-                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
+                Formato::mensaje("Ingrese apellido: ", Formato::AMARILLO);
+                std::cin.getline(apellido, sizeof(apellido));
 
-                cout << "Ingrese cedula: ";
-                cin.getline(cedula, sizeof(cedula));
-                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
+                Formato::mensaje("Ingrese cedula: ", Formato::AMARILLO);
+                std::cin.getline(cedula, sizeof(cedula));
 
-                cout << "Ingrese alergias: ";
-                cin.getline(alergias, sizeof(alergias));
-                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
+                Formato::mensaje("Ingrese alergias: ", Formato::AMARILLO);
+                std::cin.getline(alergias, sizeof(alergias));
 
-                cout << "Ingrese edad: ";
-                cin >> edad;
-                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
-                cout << "Ingrese sexo (M/F): ";
-                cin >> sexo;
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
+                Formato::mensaje("Ingrese edad: ", Formato::AMARILLO);
+                std::cin >> edad;
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-                // Llamamos a tu función crearPaciente
-                Paciente nuevo = crearPaciente(hospital, nombre, apellido, cedula, alergias, edad, sexo);
+                Formato::mensaje("Ingrese sexo (M/F): ", Formato::AMARILLO);
+                std::cin >> sexo;
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+                crearPaciente(hospital, nombre, apellido, cedula, alergias, edad, sexo);
+
+                pausarPantalla();
                 break;
             }
-            case 2:
-                cout << ">>> Buscar paciente por cedula...\n";
-                char cedula[20];
-                cout << "Ingrese cedula: ";
-              // limpiar buffer
-                cin.getline(cedula, sizeof(cedula));
-                 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
-                buscarPacientePorCedula("pacientes.bin", cedula);
-                break;
-            case 3:
-                cout << ">>> Buscar paciente por nombre...\n";
-            
-                char nombre[50];
-                cout << "Ingrese nombre: ";
-                // limpiar buffer
-                cin.getline(nombre, sizeof(nombre));
-                buscarPacientesPorNombre(nombre);
-                break;
-            case 4:
-                cout << ">>> Ver historial medico completo...\n";
-                int pacienteID;
-                cout << "Ingrese ID del paciente: ";
-                cin >> pacienteID;
-                cin.ignore(); // limpiar buffer
-                {
-                    int indice = encontrarIndicePorID<Paciente>("pacientes.bin", pacienteID);
-                    if (indice != -1) {
-                        Paciente p = leerRegistro<Paciente>("pacientes.bin", indice);
-                        mostrarHistorialMedico(&p);
-                    } else {
-                        cout << "Paciente con ID " << pacienteID << " no encontrado.\n";
-                    }
-                }
-                break;
-            case 5:
-                cout << ">>> Actualizar datos del paciente...\n";
-                cout << "Ingrese ID del paciente a actualizar: ";
-                cin >> pacienteID;
-                cin.ignore(); // limpiar buffer
-                actualizarPaciente(pacienteID);
-                break;
-            case 6:
-                cout << ">>> Listar todos los pacientes...\n";
-                listarRegistros<Paciente>("pacientes.bin");
-                break;
-            case 7:
-                cout << ">>> Eliminar paciente...\n";
-                cout << "Ingrese ID del paciente a eliminar: ";
-                cin >> pacienteID;
-                cin.ignore();
-                eliminarPaciente(pacienteID);
-                break; // limpiar buffer
 
+            // ---------------------------------------------------------
+            case 2: {
+                Formato::mensaje(">>> Buscar paciente por cedula...", Formato::VERDE);
                 
+                char cedula[20];
+                Formato::mensaje("Ingrese cedula: ", Formato::AMARILLO);
+                std::cin.getline(cedula, sizeof(cedula));
+
+                buscarPacientePorCedula("pacientes.bin", cedula);
+
+                pausarPantalla();
                 break;
+            }
+
+            // ---------------------------------------------------------
+            case 3: {
+                Formato::mensaje(">>> Buscar paciente por nombre...", Formato::VERDE);
+
+                char nombre[50];
+                Formato::mensaje("Ingrese nombre: ", Formato::AMARILLO);
+                std::cin.getline(nombre, sizeof(nombre));
+
+                buscarPacientesPorNombre(nombre);
+
+                pausarPantalla();
+                break;
+            }
+
+            // ---------------------------------------------------------
+            case 4: {
+                Formato::mensaje(">>> Ver historial medico completo...", Formato::VERDE);
+
+                int pacienteID;
+                Formato::mensaje("Ingrese ID del paciente: ", Formato::AMARILLO);
+                std::cin >> pacienteID;
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+                int indice = encontrarIndicePorID<Paciente>("pacientes.bin", pacienteID);
+                if (indice != -1) {
+                    Paciente p = leerRegistro<Paciente>("pacientes.bin", indice);
+                    mostrarHistorialMedico(&p);
+                } else {
+                    Formato::mensaje("Paciente no encontrado.", Formato::ROJO);
+                }
+
+                pausarPantalla();
+                break;
+            }
+
+            // ---------------------------------------------------------
+            case 5: {
+                Formato::mensaje(">>> Actualizar datos del paciente...", Formato::VERDE);
+
+                int pacienteID;
+                Formato::mensaje("Ingrese ID del paciente a actualizar: ", Formato::AMARILLO);
+                std::cin >> pacienteID;
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+                actualizarPaciente(pacienteID);
+
+                pausarPantalla();
+                break;
+            }
+
+            // ---------------------------------------------------------
+            case 6:
+                Formato::mensaje(">>> Listar todos los pacientes...", Formato::VERDE);
+
+                listarRegistros<Paciente>("pacientes.bin");
+
+                pausarPantalla();
+                break;
+
+            // ---------------------------------------------------------
+            case 7: {
+                Formato::mensaje(">>> Eliminar paciente...", Formato::VERDE);
+
+                int pacienteID;
+                Formato::mensaje("Ingrese ID del paciente a eliminar: ", Formato::AMARILLO);
+                std::cin >> pacienteID;
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+                if (!eliminarPaciente(pacienteID))
+                    Formato::mensaje("No se pudo eliminar el paciente.", Formato::ROJO);
+
+                pausarPantalla();
+                break;
+            }
+
+            // ---------------------------------------------------------
             case 0:
-                cout << "Volviendo al menu principal...\n";
+                Formato::mensaje("Volviendo al menu principal...", Formato::VERDE);
                 break;
+
+            // ---------------------------------------------------------
             default:
-                cout << "Opcion invalida. Intente de nuevo.\n";
+                Formato::mensaje("Opcion invalida. Intente de nuevo.", Formato::ROJO);
+                pausarPantalla();
                 break;
         }
 

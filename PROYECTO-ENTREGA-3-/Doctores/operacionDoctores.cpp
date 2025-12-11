@@ -2,8 +2,13 @@
 #include "../Hospital/Hospital.hpp"
 #include "../persistencia/GestionArchivos.hpp"
 #include "../utilidades/utilidad.hpp"
+#include "../utilidades/formato.hpp"
+#include "../utilidades/validaciones.hpp"
+#include <cctype>
+#include <limits>
 #include <iostream>
 #include <cstring>
+#include <string>
 #include <fstream>
 #include <ctime>
 
@@ -17,7 +22,7 @@ void buscarDoctoresPorEspecialidad(const char* nombreBuscado){
 
     for (int i = 0; i < header.cantidadRegistros; ++i) {
         Doctor d = leerRegistro<Doctor>("doctores.bin", i);
-        if (!d.isEliminado() && gestor.compararCaseInsensitive(d.getEspecialidad(), nombreBuscado)) {
+        if (!d.isEliminado() && compararCaseInsensitive(d.getEspecialidad(), nombreBuscado)) {
             std:: cout << "Paciente encontrado: " 
                  << d.getNombre() << " " << d.getApellido() 
                  << " | Especialidad: " << d.getEspecialidad() <<std:: endl;
@@ -32,8 +37,8 @@ Doctor crearDoctor(Hospital* hospital,   const char* nombre,  const char* apelli
  float costoConsulta) 
 {
      GestorArchivos gestor;
-    if (!gestor.validarNombreSinEspacios(nombre) || !gestor.validarNombreSinEspacios(apellido)) return {};
-    if (!gestor.validarCedula(cedula)) return {};
+    if (!validarNombreSinEspacios(nombre) || !validarNombreSinEspacios(apellido)) return {};
+    if (!validarCedula(cedula)) return {};
     if (aniosExperiencia < 0 || costoConsulta < 0) return {};
 
     Doctor d;  // Constructor por defecto
@@ -64,7 +69,7 @@ Doctor crearDoctor(Hospital* hospital,   const char* nombre,  const char* apelli
 
     // Archivo
    
-    gestor.asegurarArchivo("doctores.bin");
+    asegurarArchivo("doctores.bin");
     ArchivoHeader header; gestor.leerArchivoHeader("doctores.bin", header);
 
     d.setId(header.proximoID);
@@ -93,10 +98,11 @@ Doctor crearDoctor(Hospital* hospital,   const char* nombre,  const char* apelli
 }
 
 bool eliminarDoctor(int id) {
+
+    ArchivoHeader header;
     std::fstream archivo("doctores.bin", std::ios::binary | std::ios::in | std::ios::out);
     if (!archivo.is_open()) return false;
 
-    ArchivoHeader header;
     archivo.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
 
     Doctor d{};
@@ -105,16 +111,25 @@ bool eliminarDoctor(int id) {
         archivo.read(reinterpret_cast<char*>(&d), sizeof(Doctor));
         if (d.getId() == id && !d.isEliminado()) {
             d.setEliminado(true);
+
+            // Marcar todas sus citas como eliminadas
+            for (int j = 0; j < d.getCantidadCitas(); j++) {
+                int idCita = d.getCitaID(j);
+                if (idCita <= 0) continue;
+                d.eliminarCitaID(idCita);
+            }
+
             archivo.seekp(sizeof(ArchivoHeader) + i * sizeof(Doctor));
             archivo.write(reinterpret_cast<char*>(&d), sizeof(Doctor));
             archivo.close();
-            std::cout << "Doctor eliminado.\n";
+            std::cout << "Doctor eliminado correctamente.\n";
             return true;
         }
     }
     archivo.close();
     return false;
 }
+
 bool asignarPacienteADoctor(Hospital* hospital, int idDoctor, int idPaciente) {
     if (!hospital) return false;
 
@@ -214,25 +229,29 @@ bool removerPacienteDeDoctor(Doctor* doctor, int idPaciente) {
     return false;
 }
 
-void listarDoctores(){
-    ArchivoHeader header;
+void listarDoctores() {
     GestorArchivos gestor;
+    ArchivoHeader header;
     gestor.leerArchivoHeader("doctores.bin", header);
-    
-        for (int i = 0; i < header.cantidadRegistros; ++i) {
-            Doctor d = leerRegistro<Doctor>("doctores.bin", i);
-            if (!d.isEliminado()) {
-                std:: cout << "ID: " << d.getId()
-                    << " | Nombre: " << d.getNombre() << " " << d.getApellido()
-                    << " | Especialidad: " << d.getEspecialidad()
-                    << " | Costo Consulta: $" << d.getCostoConsulta()
-                    << " | Disponible: " << (d.getDisponible() ? "Sí" : "No") 
-                    << std:: endl;
-            }
-        }
-}
-void listarPacientesDeDoctor( int idDoctor){
 
+    Formato::titulo("LISTADO DE DOCTORES");
+
+    for (int i = 0; i < header.cantidadRegistros; ++i) {
+        Doctor d = leerRegistro<Doctor>("doctores.bin", i);
+        std::cout << Formato::NEGRITA << "ID: " << d.getId() << Formato::RESET
+                  << " | Nombre: " << Formato::acentos(d.getNombre()) << " "
+                  << Formato::acentos(d.getApellido())
+                  << " | Especialidad: " << Formato::acentos(d.getEspecialidad())
+                  << " | Costo Consulta: " << Formato::AMARILLO << "$"
+                  << d.getCostoConsulta() << Formato::RESET
+                  << " | Disponible: "
+                  << (d.getDisponible() ? (std::string(Formato::VERDE) + "Sí") : (std::string(Formato::ROJO) + "No"))
+                  << Formato::RESET
+                  << "\n\n";
+    }
+}
+
+void listarPacientesDeDoctor(int idDoctor) {
     GestorArchivos gestor;
     ArchivoHeader headerDoctores;
     gestor.leerArchivoHeader("doctores.bin", headerDoctores);
@@ -242,7 +261,6 @@ void listarPacientesDeDoctor( int idDoctor){
 
     for (int i = 0; i < headerDoctores.cantidadRegistros; ++i) {
         Doctor d = leerRegistro<Doctor>("doctores.bin", i);
-
         if (!d.isEliminado() && d.getId() == idDoctor) {
             doctor = d;
             indiceDoctor = i;
@@ -251,11 +269,13 @@ void listarPacientesDeDoctor( int idDoctor){
     }
 
     if (indiceDoctor == -1) {
-        std::cout << "Doctor con ID " << idDoctor << " no encontrado.\n";
+        Formato::mensaje("Doctor con ID " + std::to_string(idDoctor) + " no encontrado.", Formato::ROJO);
         return;
     }
 
-    std::cout << "Pacientes del Doctor " << doctor.getNombre() << " " << doctor.getApellido() << ":\n";
+    // Construir el título como std::string antes de pasarlo a Formato::titulo
+    std::string nombreCompleto = std::string(doctor.getNombre()) + " " + std::string(doctor.getApellido());
+    Formato::titulo(std::string("PACIENTES DEL DOCTOR ") + Formato::acentos(nombreCompleto));
 
     ArchivoHeader headerPacientes;
     gestor.leerArchivoHeader("pacientes.bin", headerPacientes);
@@ -266,10 +286,11 @@ void listarPacientesDeDoctor( int idDoctor){
             for (int j = 0; j < headerPacientes.cantidadRegistros; ++j) {
                 Paciente p = leerRegistro<Paciente>("pacientes.bin", j);
                 if (!p.isEliminado() && p.getId() == pacienteID) {
-                    std::cout << "ID: " << p.getId()
-                              << " | Nombre: " << p.getNombre() << " " << p.getApellido()
-                              << " | Cédula: " << p.getCedula()
-                              << std::endl;
+                    std::cout << Formato::NEGRITA << "ID: " << p.getId() << Formato::RESET
+                              << " | Nombre: " << Formato::acentos(p.getNombre()) << " " 
+                              << Formato::acentos(p.getApellido())
+                              << " | Cedula: " << p.getCedula()
+                              << "\n";
                     break;
                 }
             }
@@ -282,99 +303,140 @@ void mostrarMenuDoctor(Hospital* hospital) {
 
     do {
         system("cls");
-        cout << "\n=======================================\n";
-        cout << "||        GESTION DE DOCTORES        ||\n";
-        cout << "=======================================\n";
-        cout << "1. Registrar nuevo doctor\n";
-        cout << "2. Buscar doctor por ID\n";
-        cout << "3. Buscar doctores por especialidad\n";
-        cout << "4. Asignar paciente a doctor\n";
-        cout << "5. Ver pacientes asignados a doctor\n";
-        cout << "6. Listar todos los doctores\n";
-        cout << "7. Eliminar doctor\n";
-        cout << "0. Volver al menú principal\n";
-        cout << "Seleccione una opción: ";
-        cin >> opDoct;
+
+        // Título
+        Formato::titulo("GESTION DE DOCTORES", '=');
+
+        // Opciones
+        Formato::mensaje("1. Registrar nuevo doctor", Formato::CYAN);
+        Formato::mensaje("2. Buscar doctor por ID", Formato::CYAN);
+        Formato::mensaje("3. Buscar doctores por especialidad", Formato::CYAN);
+        Formato::mensaje("4. Asignar paciente a doctor", Formato::CYAN);
+        Formato::mensaje("5. Ver pacientes asignados a doctor", Formato::CYAN);
+        Formato::mensaje("6. Listar todos los doctores", Formato::CYAN);
+        Formato::mensaje("7. Eliminar doctor", Formato::CYAN);
+        Formato::mensaje("0. Volver al menú principal", Formato::CYAN);
+
+        Formato::mensaje("Seleccione una opción: ", Formato::AMARILLO);
+        std::cin >> opDoct;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
         switch (opDoct) {
-            case 1:
+
+            // ------------------------------------------------------------------
+            case 1: {
                 char nombre[50], apellido[50], cedula[20], especialidad[50];
                 int aniosExperiencia;
                 float costoConsulta;
-                cout << "Ingrese nombre del doctor: ";
-                cin.ignore(); // Limpiar el buffer
-                cin.getline(nombre, sizeof(nombre));
-                cout << "Ingrese apellido del doctor: ";
-                cin.getline(apellido, sizeof(apellido));
-                cout << "Ingrese cédula: ";
-                cin.getline(cedula, sizeof(cedula));
-                cout << "Ingrese especialidad: ";
-                cin.getline(especialidad, sizeof(especialidad));
-                cout << "Ingrese años de experiencia: ";
-                cin >> aniosExperiencia;
-                cout << "Ingrese costo de consulta: ";
-                cin >> costoConsulta;
-                cin.ignore(); // Limpiar el buffer después de leer un número
-                crearDoctor(hospital,nombre, apellido, cedula, especialidad, aniosExperiencia, costoConsulta);
-                break;
 
-            case 2:
-                int id;
-                cout << "Ingrese ID del doctor a buscar: ";
-                cin >> id;
-                buscarRegistroPorID<Doctor>("doctores.bin", id);
-                break;
+                Formato::mensaje("Ingrese nombre del doctor: ", Formato::AMARILLO);
+                std::cin.getline(nombre, sizeof(nombre));
 
-            case 3:
-                char nombreEspecialidad[50];
-                cout << "Ingrese la especialidad a buscar: ";
-                cin.ignore(); // Limpiar el buffer
-                cin.getline(nombreEspecialidad, sizeof(nombreEspecialidad));
-                buscarDoctoresPorEspecialidad(nombreEspecialidad);
-                break;
+                Formato::mensaje("Ingrese apellido del doctor: ", Formato::AMARILLO);
+                std::cin.getline(apellido, sizeof(apellido));
 
-            case 4: {
-                int idDoc, idPac;
-                cout << "Ingrese ID del doctor: ";
-                cin >> idDoc;
-                cout << "Ingrese ID del paciente: ";
-                cin >> idPac;
-                asignarPacienteADoctor(hospital, idDoc, idPac);
+                Formato::mensaje("Ingrese cedula: ", Formato::AMARILLO);
+                std::cin.getline(cedula, sizeof(cedula));
+
+                Formato::mensaje("Ingrese especialidad: ", Formato::AMARILLO);
+                std::cin.getline(especialidad, sizeof(especialidad));
+
+                Formato::mensaje("Ingrese años de experiencia: ", Formato::AMARILLO);
+                std::cin >> aniosExperiencia;
+
+                Formato::mensaje("Ingrese costo de consulta: ", Formato::AMARILLO);
+                std::cin >> costoConsulta;
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+                crearDoctor(hospital, nombre, apellido, cedula, especialidad, aniosExperiencia, costoConsulta);
+
+               pausarPantalla();
                 break;
             }
 
-            case 5:
+            // ------------------------------------------------------------------
+            case 2: {
+                int id;
+                Formato::mensaje("Ingrese ID del doctor a buscar: ", Formato::AMARILLO);
+                std::cin >> id;
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-                int idDoc;
-                cout << "Ingrese ID del doctor: ";
-                cin >> idDoc;
-                listarPacientesDeDoctor(idDoc);
+                buscarRegistroPorID<Doctor>("doctores.bin", id);
+
+                pausarPantalla();
                 break;
+            }
 
+            // ------------------------------------------------------------------
+            case 3: {
+                char nombreEspecialidad[50];
+                Formato::mensaje("Ingrese la especialidad a buscar: ", Formato::AMARILLO);
+                std::cin.getline(nombreEspecialidad, sizeof(nombreEspecialidad));
+
+                buscarDoctoresPorEspecialidad(nombreEspecialidad);
+
+                pausarPantalla();
+                break;
+            }
+
+            // ------------------------------------------------------------------
+            case 4: {
+                int idDoc, idPac;
+
+                Formato::mensaje("Ingrese ID del doctor: ", Formato::AMARILLO);
+                std::cin >> idDoc;
+
+                Formato::mensaje("Ingrese ID del paciente: ", Formato::AMARILLO);
+                std::cin >> idPac;
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+                asignarPacienteADoctor(hospital, idDoc, idPac);
+
+                pausarPantalla();
+                break;
+            }
+
+            // ------------------------------------------------------------------
+            case 5: {
+                int idDoc;
+                Formato::mensaje("Ingrese ID del doctor: ", Formato::AMARILLO);
+                std::cin >> idDoc;
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+                listarPacientesDeDoctor(idDoc);
+
+                pausarPantalla();
+                break;
+            }
+
+            // ------------------------------------------------------------------
             case 6:
                 listarDoctores();
+                pausarPantalla();
                 break;
 
-            case 7:
-                int ID;
-                cout << "Ingrese ID del doctor a eliminar: ";
-                cin >> ID;
-                eliminarDoctor(ID);
-                break;
+            // ------------------------------------------------------------------
+            case 7: {
+                int id;
+                Formato::mensaje("Ingrese ID del doctor a eliminar: ", Formato::AMARILLO);
+                std::cin >> id;
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
+                eliminarDoctor(id);
+
+                pausarPantalla();
+                break;
+            }
+
+            // ------------------------------------------------------------------
             case 0:
-                cout << "Volviendo al menú principal...\n";
+                Formato::mensaje("Volviendo al menú principal...", Formato::VERDE);
                 break;
 
             default:
-                cout << "Opción inválida. Intente nuevamente.\n";
+                Formato::mensaje("Opción inválida. Intente nuevamente.", Formato::ROJO);
+                pausarPantalla();
                 break;
-        }
-
-        if (opDoct != 0) {
-            cout << "\nPresione ENTER para continuar...";
-            cin.ignore();
-            cin.get();
         }
 
     } while (opDoct != 0);

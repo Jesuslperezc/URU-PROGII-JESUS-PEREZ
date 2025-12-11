@@ -3,29 +3,27 @@
 #include "Pacientes/operacionesPaciente.hpp"
 #include "Doctores/operacionDoctores.hpp"
 #include "Citas/operacionCita.hpp"
+#include "utilidades/formato.hpp"
 #include <iostream>
 
-
 int main() {
-    using namespace std;
+    Hospital hospital;
 
-    cout << "Sistema de Gestión Hospitalaria\n";
-
-    Hospital hospital;           // Se crea el objeto
-    hospital.cargarHospital();   // Se carga la info real
     int opMenu;
-
     do {
         system("cls"); // limpiar pantalla
-        std::cout << "===========================================\n";
-        std::cout << "||   SISTEMA DE GESTION HOSPITALARIA     ||\n";
-        std::cout << "===========================================\n";
-        std::cout << "1. Gestion de Pacientes\n";
-        std::cout << "2. Gestion de Doctores\n";
-        std::cout << "3. Gestion de Citas\n";
-        std::cout << "4. Mantenimiento\n";
-        std::cout << "5. Salir\n";
-        std::cout << "Seleccione una opcion: ";
+
+        // Título del sistema
+        Formato::titulo("SISTEMA DE GESTION HOSPITALARIA", '=');
+
+        // Opciones del menú con colores
+        Formato::mensaje("1. Gestion de Pacientes", Formato::CYAN);
+        Formato::mensaje("2. Gestion de Doctores", Formato::CYAN);
+        Formato::mensaje("3. Gestion de Citas", Formato::CYAN);
+        Formato::mensaje("4. Mantenimiento", Formato::CYAN);
+        Formato::mensaje("5. Salir", Formato::CYAN);
+
+        Formato::mensaje("Seleccione una opcion: ", Formato::AMARILLO);
         std::cin >> opMenu;
         std::cin.ignore(); // limpiar buffer
 
@@ -43,17 +41,16 @@ int main() {
                 break;
 
             case 4:
-                std::cout << "Mantenimiento no implementado aún.\n";
-                std::cout << "Presione Enter para continuar...";
+                mostrarMenuMantenimiento();
                 std::cin.get();
                 break;
 
             case 5:
-                std::cout << "Saliendo del sistema...\n";
+                Formato::mensaje("Saliendo del sistema...", Formato::VERDE);
                 break;
 
             default:
-                std::cout << "Opción inválida. Intente nuevamente.\n";
+                Formato::mensaje("Opción inválida. Intente nuevamente.", Formato::ROJO);
                 std::cin.get();
         }
 
@@ -61,4 +58,4 @@ int main() {
 
     return 0;
 }
-   // Se pasa al menú
+

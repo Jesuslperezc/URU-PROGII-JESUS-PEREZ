@@ -197,6 +197,19 @@ bool Doctor::removerPaciente(int idPaciente) {
     }
     return false; // paciente no encontrado
 }
+    void Doctor::eliminarCitaID(int citaID){
+        int slots = sizeof(this->citasIDs) / sizeof(this->citasIDs[0]);
+        for(int i = 0; i < slots; ++i){
+            if(this->citasIDs[i] == citaID){
+                this->citasIDs[i] = -1;
+                if(this->cantidadCitas > 0) --this->cantidadCitas;
+                fechaModificacion = time(nullptr);
+                
+                return;
+                
+            }
+        }
+    }
 
 
 Doctor::~Doctor() {

@@ -1,6 +1,6 @@
 #ifndef OPERACIONCITA_HPP
 #define OPERACIONCITA_HPP
-#include "Citas/Citas.hpp"
+#include "Citas.hpp"
 #include "../persistencia/GestionArchivos.hpp"
 #include "../utilidades/utilidad.hpp"
 #include "../Doctores/Doctores.hpp"
@@ -13,7 +13,7 @@
 Cita agendarCita(Hospital* hospital, int idPaciente, int idDoctor,
                  const char* fecha, const char* hora, const char* motivo);
 
-bool cancelarCita(Hospital* hospital, int idCita);
+bool eliminarCita( int idCita);
 void obtenerCitasPorFecha(const char* fechaBuscada);
 void listarCitasPendientes();
 bool atenderCita(Hospital* hospital, int idCita, const char* diagnostico,

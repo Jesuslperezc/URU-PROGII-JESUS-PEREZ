@@ -5,6 +5,9 @@
 #include "../Pacientes/Pacientes.hpp"
 #include "../Doctores/Doctores.hpp"
 #include "../Hospital/Hospital.hpp"
+#include "../utilidades/utilidad.hpp"
+#include "../utilidades/formato.hpp"
+#include "../utilidades/validaciones.hpp"
 #include <filesystem>
 #include <vector>
 namespace fs = std::filesystem;
@@ -23,7 +26,7 @@ bool GestorArchivos:: inicializarArchivo(const char* nombreArchivo) {
     return true;
 }
 
-bool GestorArchivos:: verificarArchivo(const char* nombreArchivo) {
+bool  verificarArchivo(const char* nombreArchivo) {
     fstream archivo(nombreArchivo, ios::binary | ios::in);
     if (!archivo.is_open()) {
         cout << "Error al abrir el archivo: " << nombreArchivo << endl;
@@ -79,7 +82,7 @@ bool GestorArchivos:: actualizarHeader(const char* nombreArchivo, ArchivoHeader 
     archivo.close();
     return true;
 }
-bool GestorArchivos::asegurarArchivo(const char* nombreArchivo) {
+bool asegurarArchivo(const char* nombreArchivo) {
     // Intentar abrir el archivo en modo lectura
     fstream archivo(nombreArchivo, ios::binary | ios::in);
     if (archivo.is_open()) {
@@ -106,7 +109,7 @@ bool GestorArchivos::asegurarArchivo(const char* nombreArchivo) {
 
     return true;
 }
-void GestorArchivos::verificarArchivos() {
+void verificarArchivos() {
     cout << "\n=== Verificación de Archivos ===\n";
     verificarArchivo("hospital.bin");
     verificarArchivo("pacientes.bin");
@@ -118,7 +121,7 @@ void GestorArchivos::verificarArchivos() {
 
 
 
-void GestorArchivos:: hacerRespaldo() {
+void  hacerRespaldo() {
     cout << "\n=== Creando respaldo ===\n";
     fs::create_directory("backup");
 
@@ -131,7 +134,7 @@ void GestorArchivos:: hacerRespaldo() {
         cout << "Respaldo creado: " << nombre << "\n";
     }
 }
-void GestorArchivos:: restaurarRespaldo() {
+void restaurarRespaldo() {
     cout << "\n=== Restaurando respaldo ===\n";
     vector<string> archivos = {
         "hospital.bin", "pacientes.bin", "doctores.bin", "citas.bin", "historiales.bin"
@@ -147,7 +150,7 @@ void GestorArchivos:: restaurarRespaldo() {
         }
     }
 }
-void GestorArchivos::mostrarEstadisticasArchivos() {
+void mostrarEstadisticasArchivos() {
     cout << "\n=== Estadísticas de Archivos ===\n";
 
     std::vector<const char*> archivos = {
@@ -160,7 +163,8 @@ void GestorArchivos::mostrarEstadisticasArchivos() {
 
     for (const char* nombreArchivo : archivos) {
         ArchivoHeader header;
-        if (leerArchivoHeader(nombreArchivo, header)) {
+        GestorArchivos gestor;
+        if (gestor.leerArchivoHeader(nombreArchivo, header)) {
             cout << nombreArchivo << ":\n";
             cout << "  Registros totales: " << header.cantidadRegistros << "\n";
             cout << "  Registros activos: " << header.registrosActivos << "\n";
@@ -281,72 +285,77 @@ bool GestorArchivos:: guardarDoctores (const Doctor& doctor){
     return true;
 }
   
-bool GestorArchivos::compararCaseInsensitive(const char* a, const char* b) {
-    while (*a && *b) {
-        if (tolower((unsigned char)*a) != tolower((unsigned char)*b))
-            return false;
-        ++a;
-        ++b;
-    }
-    return *a == *b;
-}
-bool GestorArchivos::validarCedula(const char* cedula){
-    if (cedula == nullptr) return false;
-    if (cedula[0] == '\0') return false;
-    size_t len = strlen(cedula);
-    if (len > 19) { // deja espacio para el terminador
-        cout << "Excede el limite de caracteres para cédula.\n";
-        return false;
-    }
-    // Solo dígitos
-    for (size_t i = 0; i < len; ++i) {
-        if (!isdigit((unsigned char)cedula[i])) {
-            cout << "La cédula debe contener solo números.\n";
-            return false;
+
+
+void mostrarMenuMantenimiento() {
+    int subop;
+
+    do {
+        system("cls"); // Limpiar pantalla
+
+        // Título
+        Formato::titulo("MANTENIMIENTO DE ARCHIVOS", '=');
+
+        // Opciones
+        Formato::mensaje("1. Verificar integridad de archivos", Formato::CYAN);
+        Formato::mensaje("2. Hacer respaldo de datos", Formato::CYAN);
+        Formato::mensaje("3. Restaurar desde respaldo", Formato::CYAN);
+        Formato::mensaje("4. Estadisticas de uso de archivos", Formato::CYAN);
+        Formato::mensaje("5. Compactar archivos", Formato::CYAN);
+        Formato::mensaje("6. Salir", Formato::CYAN);
+
+        Formato::mensaje("Opcion: ", Formato::AMARILLO);
+        std::cin >> subop;
+
+        // Validar entrada
+        if (std::cin.fail()) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            subop = 0;
         }
-    }
-    return true;
-}
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // limpiar buffer
 
-bool GestorArchivos::validarNombreSinEspacios(const char* nombre) {
-    if (nombre == nullptr) return false;
-    if (nombre[0] == '\0') return false;
-    // No permitir espacios en blanco
-    for (size_t i = 0; i < strlen(nombre); ++i) {
-        if (isspace((unsigned char)nombre[i])) {
-            cout << "El nombre/apellido no debe contener espacios.\n";
-            return false;
+        switch (subop) {
+            case 1:
+                Formato::mensaje("\nVerificando integridad de archivos...\n", Formato::VERDE);
+                verificarArchivos();
+                break;
+
+            case 2:
+                Formato::mensaje("\nRealizando respaldo de datos...\n", Formato::VERDE);
+                hacerRespaldo();
+                break;
+
+            case 3:
+                Formato::mensaje("\nRestaurando desde respaldo...\n", Formato::VERDE);
+                restaurarRespaldo();
+                break;
+
+            case 4:
+                Formato::mensaje("\nMostrando estadisticas de uso de archivos...\n", Formato::VERDE);
+                mostrarEstadisticasArchivos();
+                break;
+
+            case 5:
+                Formato::mensaje("\nCompactando archivos...\n", Formato::VERDE);
+                compactarArchivo<Paciente>("pacientes.bin");
+                compactarArchivo<Doctor>("doctores.bin");
+                compactarArchivo<Cita>("citas.bin");
+                compactarArchivo<Historial>("historiales.bin");
+                break;
+
+            case 6:
+                Formato::mensaje("\nSaliendo del menú de mantenimiento...\n", Formato::AMARILLO);
+                break;
+
+            default:
+                Formato::mensaje("\nOpción inválida. Intente nuevamente.\n", Formato::ROJO);
         }
-    }
-    return true;
-}
 
-bool GestorArchivos::validarEdad(int edad) {
-    if (edad < 0) {
-        cout << "La edad no puede ser negativa.\n";
-        return false;
-    }
-    if (edad > 120) {
-        cout << "La edad supera el límite razonable (120).\n";
-        return false;
-    }
-    return true;
-}
+        if (subop != 6) {
+            Formato::mensaje("\nPresione ENTER para continuar...", Formato::AZUL);
+            std::cin.get();
+        }
 
-bool GestorArchivos::validarFormatoHora(const char* hora) {
-    int hh, mm;
-    return (sscanf(hora, "%2d:%2d", &hh, &mm) == 2 && hh >= 0 && hh < 24 && mm >= 0 && mm < 60);
-}
-
-bool GestorArchivos::validarFormatoFecha(const char* fecha) {
-    int anio, mes, dia;
-    return (sscanf(fecha, "%4d-%2d-%2d", &anio, &mes, &dia) == 3 &&
-            anio > 1900 && mes >= 1 && mes <= 12 && dia >= 1 && dia <= 31);
-}
-
-bool GestorArchivos::validarSexoChar(char sexo) {
-    char s = toupper((unsigned char)sexo);
-    if (s == 'M' || s == 'F') return true;
-    cout << "Sexo inválido. Use M o F.\n";
-    return false;
+    } while (subop != 6);
 }

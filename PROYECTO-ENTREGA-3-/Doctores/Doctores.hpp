@@ -75,6 +75,7 @@ public:
     void inicializarPaciente(int index); // pone pacientesIDs[index] = -1
     void inicializarCita(int index); 
     bool removerPaciente(int idPaciente);
+    void eliminarCitaID(int citaID);
 
     //Destructor
     ~Doctor();

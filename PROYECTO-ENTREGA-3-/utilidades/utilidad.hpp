@@ -124,6 +124,7 @@ T buscarRegistroPorNombre(const char* nombreArchivo, const char* nombreBuscado) 
 template <typename T>
 bool escribirRegistro(const char* nombreArchivo, const T& registro, int indice) {
     std::fstream archivo(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
+
     if (!archivo.is_open()) {
         // Crear archivo con header si no existe
         archivo.open(nombreArchivo, std::ios::binary | std::ios::out);
@@ -132,10 +133,16 @@ bool escribirRegistro(const char* nombreArchivo, const T& registro, int indice) 
             return false;
         }
 
-        ArchivoHeader header{0, 1, 0, 1};
+        ArchivoHeader header{};
+        header.cantidadRegistros = 0;
+        header.registrosActivos = 0;
+        header.proximoID = 1;
+        header.version = 1;
+
         archivo.write(reinterpret_cast<const char*>(&header), sizeof(ArchivoHeader));
         archivo.close();
 
+        // Reabrir para escritura real
         archivo.open(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
         if (!archivo.is_open()) return false;
     }
@@ -271,8 +278,82 @@ int encontrarIndicePorID(const char* nombreArchivo, int idBuscado) {
         }
     }
 
+
     archivo.close();
     return -1; // no encontrado
+}
+template<typename T>
+bool compactarArchivo(const char* nombreArchivo) {
+    std::fstream archivoOriginal(nombreArchivo, std::ios::binary | std::ios::in);
+    if (!archivoOriginal.is_open()) {
+        std::cout << "No se pudo abrir " << nombreArchivo << "\n";
+        return false;
+    }
+
+    // Leer header
+    ArchivoHeader header;
+    archivoOriginal.read(reinterpret_cast<char*>(&header), sizeof(ArchivoHeader));
+
+    // Crear archivo temporal
+    const char* archivoTemp = "temp.bin";
+    std::fstream archivoTempOut(archivoTemp, std::ios::binary | std::ios::out);
+    if (!archivoTempOut.is_open()) {
+        std::cout << "No se pudo crear archivo temporal\n";
+        archivoOriginal.close();
+        return false;
+    }
+
+    archivoTempOut.write(reinterpret_cast<const char*>(&header), sizeof(ArchivoHeader));
+
+    T registro;
+    int nuevoId = 1;
+    int registrosValidos = 0;
+
+    for (int i = 0; i < header.cantidadRegistros; i++) {
+        archivoOriginal.seekg(sizeof(ArchivoHeader) + i * sizeof(T));
+        archivoOriginal.read(reinterpret_cast<char*>(&registro), sizeof(T));
+
+        if (!registro.isEliminado()) {
+            // Reasignar ID según tipo
+            if constexpr (std::is_same_v<T, Historial>) {
+                registro.setHistorialID(nuevoId++);
+            } else {
+                registro.setId(nuevoId++);
+            }
+
+            archivoTempOut.write(reinterpret_cast<const char*>(&registro), sizeof(T));
+            registrosValidos++;
+        }
+    }
+
+    archivoOriginal.close();
+    archivoTempOut.close();
+
+    // Actualizar header en temporal
+    std::fstream archivoTempHeader(archivoTemp, std::ios::binary | std::ios::in | std::ios::out);
+    if (!archivoTempHeader.is_open()) {
+        std::cout << "No se pudo abrir archivo temporal para actualizar header\n";
+        return false;
+    }
+
+    header.cantidadRegistros = registrosValidos;
+    header.proximoID = registrosValidos + 1;
+    archivoTempHeader.seekp(0);
+    archivoTempHeader.write(reinterpret_cast<const char*>(&header), sizeof(ArchivoHeader));
+    archivoTempHeader.close();
+
+    // Reemplazar archivo original
+    if (std::remove(nombreArchivo) != 0) {
+        std::cout << "Error al eliminar archivo original\n";
+        return false;
+    }
+    if (std::rename(archivoTemp, nombreArchivo) != 0) {
+        std::cout << "Error al renombrar archivo temporal\n";
+        return false;
+    }
+
+    std::cout << "Archivo " << nombreArchivo << " compactado correctamente.\n";
+    return true;
 }
 
 
